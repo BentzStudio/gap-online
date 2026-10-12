@@ -44,23 +44,32 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p sg-built && chmod 777 sg-built
-          docker run --rm --user root -v "$PWD/sg-built:/out" --entrypoint bash "$GAP_IMAGE" -c '
-            set -e
-            PKG=$(find / -type d -name "semigroups-[0-9]*" -path "*/pkg/*" -not -path "/proc/*" 2>/dev/null | head -n 1 | tr -d "\r")
-            echo "Package dir: [$PKG]"
-            [ -n "$PKG" ] && [ -d "$PKG" ] || { echo "Could not find the Semigroups package folder"; exit 1; }
-            ls "$PKG" | head -n 30
-            if ! command -v g++ >/dev/null; then
-              apt-get update -qq && apt-get install -y -qq build-essential autoconf libtool
-            fi
-            cd "$PKG"
-            ./configure
-            make -j"$(nproc)"
-            mkdir -p /out/pkg
-            cp -a "$PKG/." /out/pkg/
-            echo "$PKG" > /out/path
-            chmod -R a+rX /out
-          '
+          cat > build-sg.sh <<'EOF'
+          set -e
+          echo 'Print(GAPInfo.PackagesInfo.semigroups[1].InstallationPath);QUIT;' > /tmp/p.g
+          PKG=$(gap -q -b /tmp/p.g < /dev/null 2>&1 | tr -d '\r' | tail -n 1) || true
+          echo "GAP reports package dir: [$PKG]"
+          if [ ! -d "$PKG" ]; then
+            echo "Not a directory; searching the filesystem instead:"
+            find / -iname "*semigroups*" -not -path "/proc/*" -not -path "/sys/*" 2>/dev/null | head -n 40
+            PKG=$(find / -type d -iname "semigroups*" -not -path "/proc/*" -not -path "/sys/*" 2>/dev/null | grep -i pkg | head -n 1)
+          fi
+          echo "Using package dir: [$PKG]"
+          [ -d "$PKG" ] || { echo "Could not find the Semigroups package folder"; exit 1; }
+          ls "$PKG" | head -n 30
+          if ! command -v g++ >/dev/null; then
+            apt-get update -qq && apt-get install -y -qq build-essential autoconf libtool
+          fi
+          cd "$PKG"
+          ./configure
+          make -j"$(nproc)"
+          mkdir -p /out/pkg
+          cp -a "$PKG/." /out/pkg/
+          echo "$PKG" > /out/path
+          chmod -R a+rX /out
+          EOF
+          docker run --rm --user root -v "$PWD/sg-built:/out" -v "$PWD/build-sg.sh:/build-sg.sh:ro" \
+            --entrypoint bash "$GAP_IMAGE" /build-sg.sh
 
       - name: Save compiled Semigroups
         if: steps.sgbuild.outcome == 'success'
