@@ -2,7 +2,7 @@
 
 A free, serverless online playground for [GAP](https://www.gap-system.org/) (Groups, Algorithms, Programming). Write GAP code in the browser, run it on GitHub Actions, and read the result on the page as raw text or typeset LaTeX.
 
-**Live sites:** `https://fraubentz.github.io/gap-online/` and `https://gap-online.pages.dev/`
+**Live site:** `https://gap-online.pages.dev/`
 
 ## How it works
 
@@ -27,7 +27,7 @@ A free, serverless online playground for [GAP](https://www.gap-system.org/) (Gro
 ## Usage
 
 - Press **Run** or Ctrl/⌘ + Enter.
-- GAP prints only what you tell it to, so use `Print(...)` or `Display(...)`.
+- Code behaves like the GAP prompt: `(1,2,3)^-1;` shows its value, and ending a statement with `;;` hides it. `Print(...)` works too.
 - Load packages with `LoadPackage("semigroups");`.
 - In LaTeX mode, text between `$...$` or `$$...$$` is typeset, and `Tex(obj)` prints an object as an equation.
 
