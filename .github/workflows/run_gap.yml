@@ -81,7 +81,7 @@ jobs:
         run: |
           mkdir work
           echo "$CODE_B64" | base64 -d > work/user.g
-          cat > work/main.g <<'EOF'
+          cat > work/helper.g <<'EOF'
           # Helper for the playground: Tex(obj) prints obj as a display equation.
           Tex := function(x)
             local s;
@@ -89,10 +89,9 @@ jobs:
             elif IsBoundGlobal("LaTeX") then s := ValueGlobal("LaTeX")(x);
             else s := String(x); fi;
             Print("$$", s, "$$\n");
-          end;
-          Read("/work/user.g");
-          QUIT;
+          end;;
           EOF
+          printf '\n' >> work/user.g
           chmod -R a+rX work
 
       - name: Run GAP (sandboxed)
@@ -102,10 +101,13 @@ jobs:
           if [ -f sg-built/path ]; then
             EXTRA=(-v "$PWD/sg-built/pkg:$(cat sg-built/path):ro")
           fi
-          timeout 120 docker run --rm --network none --memory 3g --pids-limit 512 \
+          # Code is fed on stdin, so GAP behaves like the interactive prompt
+          # and prints the value of every statement that ends in a single ';'.
+          timeout 120 docker run -i --rm --network none --memory 3g --pids-limit 512 \
             -v "$PWD/work:/work:ro" "${EXTRA[@]}" --entrypoint gap "$GAP_IMAGE" \
-            -q -b -o 2g /work/main.g > output.txt 2>&1
-          code=$?
+            -q -b -o 2g /work/helper.g < work/user.g 2>&1 \
+            | sed -u 's/\x1b\[[0-9;]*m//g' > output.txt
+          code=${PIPESTATUS[0]}
           if [ "$code" -eq 124 ]; then echo "" >> output.txt; echo "[Stopped: time limit of 120 s reached]" >> output.txt; fi
           head -c 1000000 output.txt > output.tmp && mv output.tmp output.txt
           exit 0
