@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>GAP Playground</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<style>
+  :root {
+    --bg: #14161f; --panel: #1c1f2c; --panel-2: #242839; --line: #343a52;
+    --text: #e8eaf3; --muted: #a2a8c0; --accent: #93a9ff; --accent-ink: #10132a;
+    --ok: #86d9b4; --bad: #ff9494;
+    --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--sans); }
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  header, main, footer { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+  header { padding-top: 24px; padding-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; }
+  h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.01em; }
+  header p { margin: 0; color: var(--muted); }
+  main { flex: 1; display: grid; gap: 16px; padding-bottom: 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  .bar h2 { margin: 0; font-size: .95rem; font-weight: 600; margin-right: auto; }
+  label, legend { font-size: .875rem; color: var(--muted); }
+  select, input[type=text], input[type=password], textarea, button { font: inherit; color: inherit; }
+  select, input[type=text], input[type=password] { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-height: 38px; }
+  button { cursor: pointer; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 7px 14px; min-height: 38px; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 650; }
+  button.primary:hover { filter: brightness(1.08); }
+  button:disabled { opacity: .55; cursor: progress; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  #code { flex: 1; min-height: 340px; width: 100%; resize: vertical; border: 0; background: transparent; padding: 14px; font: .95rem/1.55 var(--mono); tab-size: 2; }
+  #code:focus-visible { outline-offset: -3px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 0; padding: 0; }
+  .seg label { display: flex; padding: 0; color: var(--text); }
+  .seg input { position: absolute; opacity: 0; }
+  .seg span { padding: 7px 12px; min-height: 36px; display: flex; align-items: center; cursor: pointer; }
+  .seg input:checked + span { background: var(--accent); color: var(--accent-ink); font-weight: 650; }
+  .seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: -3px; }
+  #status { padding: 8px 14px; font-size: .875rem; color: var(--muted); border-bottom: 1px solid var(--line); min-height: 38px; }
+  #status.ok { color: var(--ok); } #status.err { color: var(--bad); }
+  #out { flex: 1; min-height: 300px; max-height: 70vh; overflow: auto; padding: 14px; font: .95rem/1.55 var(--mono); white-space: pre-wrap; word-break: break-word; background: #0f111a; }
+  #out.latex { font-family: var(--sans); font-size: 1.02rem; }
+  #out .katex { color: var(--text); font-size: 1.12em; }
+  #out .katex-display { margin: .8em 0; overflow-x: auto; overflow-y: hidden; }
+  #out .placeholder { color: var(--muted); }
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  summary { padding: 12px 14px; cursor: pointer; font-weight: 600; }
+  .settings { display: grid; gap: 12px; padding: 0 14px 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .settings div { display: grid; gap: 4px; }
+  .settings .wide { grid-column: 1 / -1; }
+  .hint { font-size: .8125rem; color: var(--muted); margin: 0; }
+  footer { padding-bottom: 24px; font-size: .8125rem; color: var(--muted); }
+  code { font-family: var(--mono); background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
+  @media (min-width: 960px) { main { grid-template-columns: 1fr 1fr; } details { grid-column: 1 / -1; } }
+  @media (prefers-reduced-motion: no-preference) { button { transition: filter .15s, border-color .15s; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>GAP Playground</h1>
+  <p>Write GAP code, run it on a fresh GitHub Actions machine, and read the result here.</p>
+</header>
+
+<main>
+  <details id="settings">
+    <summary>Connection settings</summary>
+    <div class="settings">
+      <div>
+        <label for="repo">Repository (owner/name)</label>
+        <input type="text" id="repo" placeholder="your-name/gap-playground" autocomplete="off" spellcheck="false">
+      </div>
+      <div>
+        <label for="token">Personal Access Token</label>
+        <input type="password" id="token" placeholder="github_pat_…" autocomplete="off" spellcheck="false">
+      </div>
+      <p class="hint wide">
+        Use a fine-grained token limited to this one repository with <strong>Contents: read &amp; write</strong>
+        (sends the run request), <strong>Actions: read</strong> (downloads the result) and
+        <strong>Checks: read</strong> (backup output channel). The token is kept only in this browser's
+        local storage and is sent only to api.github.com.
+      </p>
+      <div class="wide"><button type="button" id="save">Save settings</button></div>
+    </div>
+  </details>
+
+  <section class="panel" aria-labelledby="edTitle">
+    <div class="bar">
+      <h2 id="edTitle">GAP code</h2>
+      <label for="examples" class="sr" style="position:absolute;left:-9999px">Load an example</label>
+      <select id="examples" aria-label="Load an example"></select>
+      <button type="button" class="primary" id="run">Run</button>
+    </div>
+    <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="GAP code editor"></textarea>
+  </section>
+
+  <section class="panel" aria-labelledby="outTitle">
+    <div class="bar">
+      <h2 id="outTitle">Output</h2>
+      <fieldset class="seg" aria-label="Output format">
+        <label><input type="radio" name="fmt" value="raw" checked><span>Raw text</span></label>
+        <label><input type="radio" name="fmt" value="latex"><span>LaTeX</span></label>
+      </fieldset>
+    </div>
+    <div id="status" role="status" aria-live="polite">Ready. Press Run or Ctrl/⌘ + Enter.</div>
+    <div id="out" tabindex="0" aria-label="Program output"><span class="placeholder">Output appears here.</span></div>
+  </section>
+</main>
+
+<footer>
+  GAP prints nothing by itself in a script: use <code>Print(…)</code> or <code>Display(…)</code>.
+  In LaTeX mode, anything between <code>$…$</code> or <code>$$…$$</code> is typeset, and
+  <code>Tex(obj)</code> prints an object as a display equation.
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const EXAMPLES = {
+  "Groups and LaTeX": [
+    'G := AlternatingGroup(5);;',
+    'Print("Order: ", Size(G), "\\n");',
+    'Print("Structure: ", StructureDescription(G), "\\n");',
+    'Print("Conjugacy classes: ", Length(ConjugacyClasses(G)), "\\n");',
+    'Print("$$|A_5| = \\\\frac{5!}{2} = ", Size(G), "$$\\n");',
+    'x := Indeterminate(Rationals, "x");;',
+    'Tex((x+1)^3);'
+  ].join("\n"),
+  "Semigroups": [
+    'LoadPackage("semigroups");',
+    'S := FullTransformationMonoid(4);;',
+    'Print("Size: ", Size(S), "\\n");',
+    'Print("Green R-classes: ", Length(RClasses(S)), "\\n");',
+    'Print("Idempotents: ", Length(Idempotents(S)), "\\n");'
+  ].join("\n"),
+  "Small groups": [
+    'for n in [1..12] do',
+    '  Print(n, ": ", NrSmallGroups(n), " group(s)\\n");',
+    'od;',
+    'Print(StructureDescription(SmallGroup(12, 3)), "\\n");'
+  ].join("\n")
+};
+
+const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+                set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+let cfg = { repo: store.get("gap.repo") || "", token: store.get("gap.token") || "" };
+let lastOutput = null, busy = false;
+
+// Guess owner/repo when served from <owner>.github.io/<repo>/
+if (!cfg.repo && /\.github\.io$/.test(location.hostname)) {
+  const repoName = location.pathname.split("/")[1];
+  if (repoName) cfg.repo = location.hostname.replace(".github.io", "") + "/" + repoName;
+}
+$("repo").value = cfg.repo; $("token").value = cfg.token;
+if (!cfg.repo || !cfg.token) $("settings").open = true;
+
+for (const name of Object.keys(EXAMPLES)) $("examples").add(new Option(name, name));
+$("code").value = store.get("gap.code") || EXAMPLES["Groups and LaTeX"];
+$("examples").onchange = () => { $("code").value = EXAMPLES[$("examples").value]; };
+$("code").addEventListener("input", () => store.set("gap.code", $("code").value));
+
+$("save").onclick = () => {
+  cfg = { repo: $("repo").value.trim(), token: $("token").value.trim() };
+  store.set("gap.repo", cfg.repo); store.set("gap.token", cfg.token);
+  setStatus("Settings saved.", "ok"); $("settings").open = false;
+};
+
+function setStatus(msg, kind = "") { const s = $("status"); s.textContent = msg; s.className = kind; }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function gh(path, opts = {}) {
+  return fetch("https://api.github.com/repos/" + cfg.repo + path, {
+    ...opts,
+    headers: { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28",
+               Authorization: "Bearer " + cfg.token, ...(opts.headers || {}) }
+  });
+}
+async function ghJson(path) {
+  const r = await gh(path);
+  if (!r.ok) throw new Error("GitHub API " + r.status + " on " + path.split("?")[0]);
+  return r.json();
+}
+
+function toBase64(str) {
+  const bytes = new TextEncoder().encode(str); let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+function render() {
+  const out = $("out"), latex = document.querySelector('input[name=fmt]:checked').value === "latex";
+  if (lastOutput === null) return;
+  out.className = latex ? "latex" : "";
+  out.textContent = lastOutput.trim() ? lastOutput : "(no output)";
+  if (latex && window.renderMathInElement) {
+    renderMathInElement(out, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true }, { left: "\\[", right: "\\]", display: true },
+        { left: "\\(", right: "\\)", display: false }, { left: "$", right: "$", display: false }
+      ],
+      throwOnError: false, ignoredTags: ["script", "noscript", "style", "textarea"]
+    });
+  }
+}
+document.querySelectorAll("input[name=fmt]").forEach(el => el.addEventListener("change", render));
+
+async function findRun(title, since) {
+  const deadline = Date.now() + 90000;
+  while (Date.now() < deadline) {
+    const d = await ghJson("/actions/runs?event=repository_dispatch&per_page=30");
+    const hit = d.workflow_runs.find(r => r.display_title === title && new Date(r.created_at) >= since);
+    if (hit) return hit;
+    await sleep(2500);
+  }
+  throw new Error("The workflow didn't start within 90 s. Check that .github/workflows/run_gap.yml is on the default branch and Actions is enabled.");
+}
+
+async function readArtifact(runId) {
+  const list = await ghJson("/actions/runs/" + runId + "/artifacts");
+  const art = list.artifacts.find(a => a.name === "gap-output");
+  if (!art) throw new Error("no artifact");
+  const r = await gh("/actions/artifacts/" + art.id + "/zip");
+  if (!r.ok) throw new Error("artifact download " + r.status);
+  const zip = await JSZip.loadAsync(await r.blob());
+  return zip.file("output.txt").async("string");
+}
+
+async function readAnnotation(runId) {
+  const jobs = await ghJson("/actions/runs/" + runId + "/jobs");
+  for (const job of jobs.jobs) {
+    const ann = await ghJson("/check-runs/" + job.id + "/annotations");
+    const hit = ann.find(a => a.title === "GAP output");
+    if (hit) return hit.message;
+  }
+  throw new Error("no annotation");
+}
+
+async function run() {
+  if (busy) return;
+  if (!cfg.repo || !cfg.token) { $("settings").open = true; setStatus("Add your repository and token first.", "err"); return; }
+  const code = $("code").value;
+  if (!code.trim()) { setStatus("Write some GAP code first.", "err"); return; }
+  const code_b64 = toBase64(code);
+  if (code_b64.length > 60000) { setStatus("Code is too long (limit about 45 KB).", "err"); return; }
+
+  busy = true; $("run").disabled = true;
+  const runId = "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const since = new Date(Date.now() - 60000), t0 = Date.now();
+  try {
+    setStatus("Sending to GitHub…");
+    const res = await gh("/dispatches", { method: "POST", body: JSON.stringify({ event_type: "run_gap", client_payload: { run_id: runId, code_b64 } }) });
+    if (res.status === 401) throw new Error("Token rejected (401). Check it hasn't expired.");
+    if (res.status === 403 || res.status === 404) throw new Error("Access denied (" + res.status + "). Check the repository name and that the token has Contents: read & write.");
+    if (res.status !== 204) throw new Error("Dispatch failed (" + res.status + ").");
+
+    setStatus("Waiting for a runner…");
+    const found = await findRun("GAP " + runId, since);
+    let run = found;
+    while (run.status !== "completed") {
+      if (Date.now() - t0 > 600000) throw new Error("Timed out after 10 minutes.");
+      setStatus((run.status === "in_progress" ? "Running GAP" : "Queued") + "… " + Math.round((Date.now() - t0) / 1000) + " s");
+      await sleep(3000); run = await ghJson("/actions/runs/" + found.id);
+    }
+    setStatus("Fetching output…");
+    let text;
+    try { text = await readArtifact(run.id); }
+    catch (e1) {
+      try { text = await readAnnotation(run.id); }
+      catch (e2) { throw new Error("Run " + run.conclusion + ", but its output couldn't be read. Open the run: " + run.html_url); }
+    }
+    lastOutput = text; render();
+    setStatus("Finished in " + Math.round((Date.now() - t0) / 1000) + " s.", "ok");
+  } catch (e) {
+    setStatus(e.message, "err");
+  } finally {
+    busy = false; $("run").disabled = false;
+  }
+}
+$("run").onclick = run;
+document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); } });
+</script>
+</body>
+</html>
