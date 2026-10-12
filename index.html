@@ -55,7 +55,9 @@
   .settings div { display: grid; gap: 4px; }
   .settings .wide { grid-column: 1 / -1; }
   .hint { font-size: .8125rem; color: var(--muted); margin: 0; }
-  footer { padding-bottom: 24px; font-size: .8125rem; color: var(--muted); }
+  footer { padding-bottom: 24px; font-size: .875rem; color: var(--muted); }
+  footer p { margin: 0 0 6px; }
+  a { color: var(--accent); }
   code { font-family: var(--mono); background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
   @media (min-width: 960px) { main { grid-template-columns: 1fr 1fr; } details { grid-column: 1 / -1; } }
   @media (prefers-reduced-motion: no-preference) { button { transition: filter .15s, border-color .15s; } }
@@ -68,6 +70,22 @@
 </header>
 
 <main>
+  <details id="help">
+    <summary>How to use this playground</summary>
+    <div class="settings">
+      <p class="hint wide" style="font-size:.95rem;color:var(--text)">
+        Type GAP code on the left and press <strong>Run</strong> (or Ctrl/⌘ + Enter). Your code runs on a fresh
+        GitHub machine with the full GAP bundle, and the result appears on the right, usually within a minute.
+        A run that has to wait for a machine can take a little longer.
+      </p>
+      <p class="hint wide" style="font-size:.95rem;color:var(--text)">
+        GAP shows only what you print, so use <code>Print(…)</code> or <code>Display(…)</code>.
+        Load packages with <code>LoadPackage("semigroups");</code>. Runs stop after 120 seconds.
+        Choose <strong>LaTeX</strong> above the output to typeset any maths written between <code>$…$</code> or <code>$$…$$</code>.
+      </p>
+    </div>
+  </details>
+
   <details id="settings">
     <summary>Connection settings</summary>
     <div class="settings">
@@ -113,9 +131,16 @@
 </main>
 
 <footer>
-  GAP prints nothing by itself in a script: use <code>Print(…)</code> or <code>Display(…)</code>.
-  In LaTeX mode, anything between <code>$…$</code> or <code>$$…$$</code> is typeset, and
-  <code>Tex(obj)</code> prints an object as a display equation.
+  <p>
+    GAP documentation:
+    <a href="https://docs.gap-system.org/doc/tut/chap0_mj.html" target="_blank" rel="noopener">Tutorial</a>,
+    <a href="https://docs.gap-system.org/doc/ref/chap0_mj.html" target="_blank" rel="noopener">Reference Manual</a>,
+    <a href="https://docs.gap-system.org/pkg/semigroups/doc/chap0.html" target="_blank" rel="noopener">Semigroups manual</a>,
+    <a href="https://www.gap-system.org/" target="_blank" rel="noopener">gap-system.org</a>
+  </p>
+  <p>GAP prints nothing by itself in a script: use <code>Print(…)</code> or <code>Display(…)</code>.
+  In LaTeX mode, <code>Tex(obj)</code> prints an object as a display equation.</p>
+  <p>&copy; <span id="year">2026</span> &middot; Designed and maintained by PY.</p>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -284,6 +309,7 @@ async function run() {
     busy = false; $("run").disabled = false;
   }
 }
+$("year").textContent = new Date().getFullYear();
 $("run").onclick = run;
 document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); } });
 </script>
