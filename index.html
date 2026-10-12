@@ -265,7 +265,7 @@ async function run() {
     const found = await findRun("GAP " + runId, since);
     let run = found;
     while (run.status !== "completed") {
-      if (Date.now() - t0 > 600000) throw new Error("Timed out after 10 minutes.");
+      if (Date.now() - t0 > 2400000) throw new Error("Timed out after 40 minutes. Check the Actions tab of your repository.");
       setStatus((run.status === "in_progress" ? "Running GAP" : "Queued") + "… " + Math.round((Date.now() - t0) / 1000) + " s");
       await sleep(3000); run = await ghJson("/actions/runs/" + found.id);
     }
