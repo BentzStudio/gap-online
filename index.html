@@ -135,10 +135,10 @@ const EXAMPLES = {
     'Tex((x+1)^3);'
   ].join("\n"),
   "Semigroups": [
-    'LoadPackage("semigroups");',
+    'Print("Semigroups loaded: ", LoadPackage("semigroups"), "\\n");',
     'S := FullTransformationMonoid(4);;',
     'Print("Size: ", Size(S), "\\n");',
-    'Print("Green R-classes: ", Length(RClasses(S)), "\\n");',
+    'Print("Green R-classes: ", Length(GreensRClasses(S)), "\\n");',
     'Print("Idempotents: ", Length(Idempotents(S)), "\\n");'
   ].join("\n"),
   "Small groups": [
