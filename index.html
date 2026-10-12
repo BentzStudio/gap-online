@@ -79,8 +79,8 @@
         A run that has to wait for a machine can take a little longer.
       </p>
       <p class="hint wide" style="font-size:.95rem;color:var(--text)">
-        GAP shows only what you print, so use <code>Print(…)</code> or <code>Display(…)</code>.
-        Load packages with <code>LoadPackage("semigroups");</code>. Runs stop after 120 seconds.
+        Like the GAP prompt, a statement ending in <code>;</code> shows its value (for example <code>(1,2,3)^-1;</code>),
+        while <code>;;</code> hides it. <code>Print(…)</code> works too. Load packages with <code>LoadPackage("semigroups");</code>. Runs stop after 120 seconds.
         Choose <strong>LaTeX</strong> above the output to typeset any maths written between <code>$…$</code> or <code>$$…$$</code>.
       </p>
     </div>
@@ -138,7 +138,7 @@
     <a href="https://docs.gap-system.org/pkg/semigroups/doc/chap0.html" target="_blank" rel="noopener">Semigroups manual</a>,
     <a href="https://www.gap-system.org/" target="_blank" rel="noopener">gap-system.org</a>
   </p>
-  <p>GAP prints nothing by itself in a script: use <code>Print(…)</code> or <code>Display(…)</code>.
+  <p>A statement ending in <code>;</code> shows its value; end it with <code>;;</code> to hide it.
   In LaTeX mode, <code>Tex(obj)</code> prints an object as a display equation.</p>
   <p>&copy; <span id="year">2026</span> &middot; Designed and maintained by PY.</p>
 </footer>
