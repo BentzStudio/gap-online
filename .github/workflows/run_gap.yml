@@ -1,0 +1,80 @@
+name: Run GAP
+# The playground finds its run by this title, so keep the "GAP " prefix.
+run-name: GAP ${{ github.event.client_payload.run_id }}
+
+on:
+  repository_dispatch:
+    types: [run_gap]
+
+permissions:
+  contents: read
+
+jobs:
+  run-gap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Official GAP image with every deposited package compiled
+      # (Semigroups, Digraphs, GRAPE, AtlasRep, ...). Change the tag to update GAP.
+      GAP_IMAGE: ghcr.io/gap-system/gap:4.15.1-full
+      # Passed via env (never interpolated into shell) so user input can't inject commands.
+      CODE_B64: ${{ github.event.client_payload.code_b64 }}
+      RUN_ID: ${{ github.event.client_payload.run_id }}
+    steps:
+      - name: Validate payload
+        run: |
+          [[ "$RUN_ID" =~ ^[A-Za-z0-9_-]{6,64}$ ]] || { echo "Invalid run_id"; exit 1; }
+          [[ -n "$CODE_B64" ]] || { echo "Empty code payload"; exit 1; }
+
+      - name: Pull GAP (full bundle)
+        run: docker pull "$GAP_IMAGE"
+
+      - name: Prepare input
+        run: |
+          mkdir work
+          echo "$CODE_B64" | base64 -d > work/user.g
+          cat > work/main.g <<'EOF'
+          # Helper for the playground: Tex(obj) prints obj as a display equation.
+          Tex := function(x)
+            local s;
+            if IsBoundGlobal("LaTeXObj") then s := ValueGlobal("LaTeXObj")(x);
+            elif IsBoundGlobal("LaTeX") then s := ValueGlobal("LaTeX")(x);
+            else s := String(x); fi;
+            Print("$$", s, "$$\n");
+          end;
+          Read("/work/user.g");
+          QUIT;
+          EOF
+          chmod -R a+rX work
+
+      - name: Run GAP (sandboxed)
+        run: |
+          set +e
+          timeout 120 docker run --rm --network none --memory 3g --pids-limit 512 \
+            -v "$PWD/work:/work:ro" --entrypoint gap "$GAP_IMAGE" \
+            -q -b -o 2g /work/main.g > output.txt 2>&1
+          code=$?
+          if [ "$code" -eq 124 ]; then echo "" >> output.txt; echo "[Stopped: time limit of 120 s reached]" >> output.txt; fi
+          head -c 1000000 output.txt > output.tmp && mv output.tmp output.txt
+          exit 0
+
+      # Fallback channel: the page can read this annotation through the API
+      # if the browser is blocked from downloading the artifact zip.
+      - name: Publish output annotation
+        run: |
+          python3 - <<'PY'
+          d = open('output.txt', 'rb').read()[:60000].decode('utf-8', 'ignore')
+          if not d.strip():
+              d = '(no output)'
+          e = d.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print(f"::notice title=GAP output::{e}")
+          PY
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gap-output
+          path: output.txt
+          retention-days: 1
+          if-no-files-found: ignore
