@@ -12,7 +12,7 @@ permissions:
 jobs:
   run-gap:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 40
     env:
       # Official GAP image with every deposited package compiled
       # (Semigroups, Digraphs, GRAPE, AtlasRep, ...). Change the tag to update GAP.
@@ -28,6 +28,44 @@ jobs:
 
       - name: Pull GAP (full bundle)
         run: docker pull "$GAP_IMAGE"
+
+      # The image ships Semigroups without its compiled kernel module, so it
+      # can't load. Compile it once here and cache the result for later runs.
+      - name: Restore compiled Semigroups
+        id: sgcache
+        uses: actions/cache/restore@v4
+        with:
+          path: sg-built
+          key: semigroups-built-v1-${{ env.GAP_IMAGE }}
+
+      - name: Build Semigroups (first run only)
+        id: sgbuild
+        if: steps.sgcache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        run: |
+          mkdir -p sg-built && chmod 777 sg-built
+          docker run --rm --user root -v "$PWD/sg-built:/out" --entrypoint bash "$GAP_IMAGE" -c '
+            set -e
+            PKG=$(gap -q -b -c "Print(GAPInfo.PackagesInfo.semigroups[1].InstallationPath);QUIT;")
+            echo "Package dir: $PKG"
+            if ! command -v g++ >/dev/null; then
+              apt-get update -qq && apt-get install -y -qq build-essential autoconf libtool
+            fi
+            cd "$PKG"
+            ./configure
+            make -j"$(nproc)"
+            mkdir -p /out/pkg
+            cp -a "$PKG/." /out/pkg/
+            echo "$PKG" > /out/path
+            chmod -R a+rX /out
+          '
+
+      - name: Save compiled Semigroups
+        if: steps.sgbuild.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: sg-built
+          key: semigroups-built-v1-${{ env.GAP_IMAGE }}
 
       - name: Prepare input
         run: |
@@ -50,8 +88,12 @@ jobs:
       - name: Run GAP (sandboxed)
         run: |
           set +e
+          EXTRA=()
+          if [ -f sg-built/path ]; then
+            EXTRA=(-v "$PWD/sg-built/pkg:$(cat sg-built/path):ro")
+          fi
           timeout 120 docker run --rm --network none --memory 3g --pids-limit 512 \
-            -v "$PWD/work:/work:ro" --entrypoint gap "$GAP_IMAGE" \
+            -v "$PWD/work:/work:ro" "${EXTRA[@]}" --entrypoint gap "$GAP_IMAGE" \
             -q -b -o 2g /work/main.g > output.txt 2>&1
           code=$?
           if [ "$code" -eq 124 ]; then echo "" >> output.txt; echo "[Stopped: time limit of 120 s reached]" >> output.txt; fi
