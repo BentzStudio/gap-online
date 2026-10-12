@@ -46,8 +46,10 @@ jobs:
           mkdir -p sg-built && chmod 777 sg-built
           docker run --rm --user root -v "$PWD/sg-built:/out" --entrypoint bash "$GAP_IMAGE" -c '
             set -e
-            PKG=$(gap -q -b -c "Print(GAPInfo.PackagesInfo.semigroups[1].InstallationPath);QUIT;")
-            echo "Package dir: $PKG"
+            PKG=$(find / -type d -name "semigroups-[0-9]*" -path "*/pkg/*" -not -path "/proc/*" 2>/dev/null | head -n 1 | tr -d "\r")
+            echo "Package dir: [$PKG]"
+            [ -n "$PKG" ] && [ -d "$PKG" ] || { echo "Could not find the Semigroups package folder"; exit 1; }
+            ls "$PKG" | head -n 30
             if ! command -v g++ >/dev/null; then
               apt-get update -qq && apt-get install -y -qq build-essential autoconf libtool
             fi
