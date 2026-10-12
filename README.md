@@ -2,7 +2,7 @@
 
 A free, serverless online playground for [GAP](https://www.gap-system.org/) (Groups, Algorithms, Programming). Write GAP code in the browser, run it on GitHub Actions, and read the result on the page as raw text or typeset LaTeX.
 
-**Live site:** `https://<your-username>.github.io/<repo-name>/`
+**Live site:** `https://gap-online.pages.dev/`
 
 ## How it works
 
