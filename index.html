@@ -33,12 +33,12 @@
   .theme-btn:hover { border-color: var(--accent); }
   main { flex: 1; display: grid; gap: 16px; padding-bottom: 20px; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
-  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
   .bar h2 { margin: 0; font-size: .95rem; font-weight: 600; margin-right: auto; }
   label, legend { font-size: .875rem; color: var(--muted); }
   select, input[type=text], input[type=password], textarea, button { font: inherit; color: inherit; }
   select, input[type=text], input[type=password] { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-height: 38px; }
-  button { cursor: pointer; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 7px 14px; min-height: 38px; }
+  button { cursor: pointer; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 7px 12px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
   button:hover { border-color: var(--accent); }
   button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 650; }
   button.primary:hover { filter: brightness(1.08); }
@@ -122,7 +122,17 @@
       </p>
       <p class="hint wide" style="font-size:.95rem;color:var(--text)">
         <strong>Lean 4 + Mathlib 4:</strong> pick Lean 4 next to the editor title. Import modules like <code>import Mathlib.Algebra.Group.Basic</code> or <code>import Mathlib.Tactic</code>. Use tactics such as <code>linarith</code>, <code>ring</code>, <code>rw</code>, and <code>induction</code>, or run evaluations with <code>#eval</code> and <code>#check</code>. If your proof has no errors, the output confirms all goals are accomplished.
-      </p>
+      <div class="wide" style="border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px;">
+        <p class="hint" style="font-size:.9rem; color: var(--accent); font-weight:600; margin-bottom: 4px;">
+          💡 First time here or collaborating with PY? (GitHub setup for mathematicians)
+        </p>
+        <p class="hint" style="font-size:.875rem; color: var(--text); line-height: 1.5; margin: 0;">
+          Calculations run in the cloud on GitHub Actions runners. To run code, you need a free GitHub account and a Personal Access Token (PAT).
+          If PY invited you as a collaborator on <code>fraubentz/gap-online</code>, you can run directly on that repository using your own token!
+          Alternatively, click Fork on GitHub to run on your own free account.
+          Expand <strong>Connection settings</strong> below for the 60-second step-by-step guide.
+        </p>
+      </div>
     </div>
   </details>
 
@@ -130,19 +140,63 @@
     <summary>Connection settings</summary>
     <form id="settingsForm" class="settings">
       <div>
-        <label for="repo">Repository (owner/name)</label>
-        <input type="text" id="repo" placeholder="your-name/gap-playground" autocomplete="off" spellcheck="false" required>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label for="repo">Repository (owner/name)</label>
+          <button type="button" id="useDefaultRepo" style="background:none; border:none; color:var(--accent); font-size:.8rem; padding:0; cursor:pointer; text-decoration:underline;" title="Click to prefill fraubentz/gap-online">Target fraubentz/gap-online</button>
+        </div>
+        <input type="text" id="repo" placeholder="fraubentz/gap-online" autocomplete="off" spellcheck="false" required>
       </div>
       <div>
         <label for="token">Personal Access Token</label>
         <input type="password" id="token" placeholder="github_pat_…" autocomplete="off" spellcheck="false" required>
       </div>
       <p class="hint wide">
-        Use a fine-grained token limited to this one repository with <strong>Contents: read &amp; write</strong>
-        (sends the run request), <strong>Actions: read</strong> (downloads the result) and
-        <strong>Checks: read</strong> (backup output channel). The token is kept only in this browser's
-        local storage and is sent only to api.github.com.
+        Use a fine-grained token limited to this repository with <strong>Contents: read &amp; write</strong>
+        (dispatches runs), <strong>Actions: read</strong> (downloads outputs) and
+        <strong>Checks: read</strong> (backup output channel).
       </p>
+      <div class="wide">
+        <details class="guide" style="border: 1px solid var(--line); border-radius: 8px; background: var(--bg); margin: 6px 0 10px;" open>
+          <summary style="padding: 10px 14px; font-size: .885rem; color: var(--accent); font-weight: 650; cursor: pointer;">
+            📘 Step-by-Step for Mathematicians: How to get your own token in 1 minute
+          </summary>
+          <div style="padding: 8px 14px 14px; font-size: .875rem; line-height: 1.6; color: var(--text);">
+            <p style="margin: 0 0 10px;">
+              <strong>Why a token?</strong> Computations run on GitHub's cloud runners. GitHub uses tokens to know who is requesting the computation so you can run jobs securely.
+            </p>
+
+            <div style="display: grid; gap: 8px; margin-bottom: 12px; padding: 10px; background: var(--panel-2); border-radius: 6px; border-left: 3px solid var(--accent);">
+              <div>
+                <strong>Option A &mdash; Running on PY's repository (<code>fraubentz/gap-online</code>):</strong><br>
+                <span>If PY has invited you as a collaborator on GitHub (Settings &rarr; Collaborators), accept the invite email. Then generate a token selecting <code>fraubentz/gap-online</code> and enter that repository name above.</span>
+              </div>
+              <div>
+                <strong>Option B &mdash; Running independently on your own account (No invite needed):</strong><br>
+                <span>Click <a href="https://github.com/fraubentz/gap-online" target="_blank" rel="noopener"><strong>Fork</strong> on GitHub</a> to copy this repository to your account. Then generate a token selecting your fork, and enter <code>your-username/gap-online</code> above. GitHub gives you 2,000 free runner minutes per month!</span>
+              </div>
+            </div>
+
+            <strong>Generating your token in 5 easy clicks:</strong>
+            <ol style="margin: 6px 0 10px; padding-left: 20px;">
+              <li>Sign in to GitHub and open the <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener"><strong>Fine-grained tokens page</strong></a>.</li>
+              <li>Click <strong>Generate new token</strong>. Set a token name (e.g. <em>GAP Playground</em>) and an expiration date.</li>
+              <li>Under <strong>Repository access</strong>, select <strong>Only select repositories</strong> and pick <code>fraubentz/gap-online</code> (or your fork).</li>
+              <li>Under <strong>Permissions &rarr; Repository permissions</strong>, set:
+                <ul style="margin: 4px 0 6px;">
+                  <li><strong>Contents</strong>: <code>Access: Read and write</code> (sends computation requests)</li>
+                  <li><strong>Actions</strong>: <code>Access: Read-only</code> (downloads run results)</li>
+                  <li><strong>Checks</strong>: <code>Access: Read-only</code> (backup output channel)</li>
+                </ul>
+              </li>
+              <li>Click <strong>Generate token</strong> at the bottom. Copy the token (starts with <code>github_pat_...</code>).</li>
+              <li>Paste the repository name above (e.g. <code>fraubentz/gap-online</code>) and your token, then click <strong>Save settings</strong>. You're ready to compute!</li>
+            </ol>
+            <p class="hint" style="margin-top: 8px; font-size: .8125rem;">
+              🔒 <strong>Complete Privacy Guarantee:</strong> Your token is stored <em>only</em> in your own browser's local storage (<code>localStorage</code>) and sent directly to <code>api.github.com</code>. It is never transmitted to any third party, database, or server, and nobody else can ever see it.
+            </p>
+          </div>
+        </details>
+      </div>
       <div class="wide"><button type="submit" id="save">Save settings</button></div>
     </form>
   </details>
@@ -159,6 +213,7 @@
       </select>
       <label for="examples" class="sr-only">Load an example</label>
       <select id="examples" aria-label="Load an example"></select>
+      <button type="button" id="shareBtn" title="Copy shareable link with this code" aria-label="Share snippet">🔗 Share</button>
       <button type="button" class="primary" id="run" title="Run code (Ctrl/⌘ + Enter)">Run</button>
     </div>
     <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
@@ -167,6 +222,11 @@
   <section class="panel" aria-labelledby="outTitle">
     <div class="bar">
       <h2 id="outTitle">Output</h2>
+      <button type="button" id="copyOutBtn" title="Copy output text to clipboard">📋 Copy</button>
+      <label for="historySel" class="sr-only">Recent runs history</label>
+      <select id="historySel" aria-label="Recent runs history" title="View previous run results">
+        <option value="">History (0)</option>
+      </select>
       <fieldset class="seg" id="fmtset" aria-label="Output format">
         <label><input type="radio" name="fmt" value="raw" checked><span>Raw text</span></label>
         <label><input type="radio" name="fmt" value="latex"><span>LaTeX</span></label>
@@ -222,6 +282,28 @@ $("themeToggle").onclick = () => {
 };
 
 const GAP_EXAMPLES = {
+  "Green's D-classes & Egg-boxes": [
+    'LoadPackage("semigroups");;',
+    'S := FullTransformationMonoid(4);;',
+    'Print("Size of T_4: ", Size(S), "\\n");',
+    'Print("Number of idempotents: ", Length(Idempotents(S)), "\\n");',
+    'dclasses := GreensDClasses(S);;',
+    'Print("Total Green D-classes: ", Length(dclasses), "\\n");',
+    'D := dclasses[2];;',
+    'Print("D-class 2 size: ", Size(D), "\\n");',
+    'Print("R-classes in D: ", Length(GreensRClasses(D)), "\\n");',
+    'Print("L-classes in D: ", Length(GreensLClasses(D)), "\\n");',
+    'Print("H-classes in D: ", Length(GreensHClasses(D)), "\\n");',
+    'Print("Is regular D-class: ", IsRegularDClass(D), "\\n");'
+  ].join("\n"),
+  "Inverse Semigroups (IS_4)": [
+    'LoadPackage("semigroups");;',
+    'S := SymmetricInverseMonoid(4);;',
+    'Print("Size of IS_4: ", Size(S), "\\n");',
+    'Print("Is inverse semigroup: ", IsInverseSemigroup(S), "\\n");',
+    'Print("Idempotent semilattice size: ", Length(Idempotents(S)), "\\n");',
+    'Print("Maximal subsemigroups: ", Length(MaximalSubsemigroups(S)), "\\n");'
+  ].join("\n"),
   "Groups and LaTeX": [
     'G := AlternatingGroup(5);;',
     'Print("Order: ", Size(G), "\\n");',
@@ -230,13 +312,6 @@ const GAP_EXAMPLES = {
     'Print("$$|A_5| = \\\\frac{5!}{2} = ", Size(G), "$$\\n");',
     'x := Indeterminate(Rationals, "x");;',
     'Tex((x+1)^3);'
-  ].join("\n"),
-  "Semigroups": [
-    'Print("Semigroups loaded: ", LoadPackage("semigroups"), "\\n");',
-    'S := FullTransformationMonoid(4);;',
-    'Print("Size: ", Size(S), "\\n");',
-    'Print("Green R-classes: ", Length(GreensRClasses(S)), "\\n");',
-    'Print("Idempotents: ", Length(Idempotents(S)), "\\n");'
   ].join("\n"),
   "Small groups": [
     'for n in [1..12] do',
@@ -275,6 +350,21 @@ const PROVER9_EXAMPLES = {
 };
 
 const MACE4_EXAMPLES = {
+  "Left regular band (counterexample)": [
+    "% A band (x * x = x) that is left regular (x * y * x = x * y)",
+    "% but not right regular (x * y * x = y * x).",
+    "assign(domain_size, 3).",
+    "",
+    "formulas(assumptions).",
+    "  (x * y) * z = x * (y * z).",
+    "  x * x = x.",
+    "  x * (y * x) = x * y.",
+    "end_of_list.",
+    "",
+    "formulas(goals).",
+    "  x * (y * x) = y * x.",
+    "end_of_list."
+  ].join("\n"),
   "Non-abelian group of order 6": [
     "% Is every group of order 6 commutative? Mace4 looks for a counterexample.",
     "assign(domain_size, 6).",
@@ -305,37 +395,48 @@ const MACE4_EXAMPLES = {
 };
 
 const LEAN_EXAMPLES = {
-  "Group theory": [
-    'import Mathlib.Algebra.Group.Basic',
-    'import Mathlib.Tactic',
+  "Semigroup idempotents": [
+    'import Mathlib',
     '',
-    '-- In any group, the identity element is unique',
+    '-- In a commutative semigroup, the product of idempotents is idempotent',
+    'def IsIdempotent {S : Type*} [Semigroup S] (e : S) : Prop :=',
+    '  e * e = e',
+    '',
+    'theorem mul_idempotent {S : Type*} [CommSemigroup S] (e f : S)',
+    '    (he : IsIdempotent e) (hf : IsIdempotent f) :',
+    '    IsIdempotent (e * f) := by',
+    '  unfold IsIdempotent at *',
+    '  calc (e * f) * (e * f) = (e * e) * (f * f) := by rw [mul_assoc, mul_left_comm f, ← mul_assoc]',
+    '       _                 = e * f             := by rw [he, hf]'
+  ].join("\n"),
+  "Inverse elements": [
+    'import Mathlib',
+    '',
+    '-- In an inverse semigroup or group, inverse elements satisfy x*y*x = x and y*x*y = y',
+    'def IsInversePair {S : Type*} [Semigroup S] (x y : S) : Prop :=',
+    '  x * y * x = x ∧ y * x * y = y',
+    '',
+    'theorem group_inv_is_inverse_pair {G : Type*} [Group G] (x : G) :',
+    '    IsInversePair x (x⁻¹) := by',
+    '  constructor',
+    '  · simp',
+    '  · simp'
+  ].join("\n"),
+  "Group identity uniqueness": [
+    'import Mathlib',
+    '',
+    '-- In any group, the left identity is strictly unique',
     'theorem group_id_unique {G : Type*} [Group G] (e : G) (h : ∀ x : G, e * x = x) :',
     '    e = 1 := by',
-    '  have h1 : e * 1 = 1 := h 1',
-    '  have h2 : e * 1 = e := mul_one e',
-    '  rw [← h2, h1]'
+    '  calc e = e * 1 := (mul_one e).symm',
+    '       _ = 1     := h 1'
   ].join("\n"),
   "Real inequalities (linarith)": [
-    'import Mathlib.Data.Real.Basic',
-    'import Mathlib.Tactic',
+    'import Mathlib',
     '',
-    '-- Basic linear arithmetic with reals',
+    '-- Linear arithmetic with real numbers',
     'example (x y : ℝ) (h1 : 2 * x + y ≤ 5) (h2 : y ≥ 1) : x ≤ 2 := by',
     '  linarith'
-  ].join("\n"),
-  "Number theory (induction)": [
-    'import Mathlib.Data.Nat.Basic',
-    'import Mathlib.Tactic',
-    '',
-    '-- Induction proof for sum of first n integers: 2 * sum = n * (n + 1)',
-    'theorem sum_range_id (n : ℕ) :',
-    '    2 * (Finset.range (n + 1)).sum id = n * (n + 1) := by',
-    '  induction n with',
-    '  | zero => simp',
-    '  | succ k ih =>',
-    '    rw [Finset.sum_range_succ, mul_add, ih]',
-    '    linarith'
   ].join("\n"),
   "Computations (#eval)": [
     'import Mathlib',
@@ -343,7 +444,7 @@ const LEAN_EXAMPLES = {
     '#eval 2^64 - 1',
     '#eval (List.range 10).map (fun n => n * n)',
     '#check Ring',
-    '#check TopologicalSpace'
+    '#check Semigroup'
   ].join("\n")
 };
 
@@ -362,10 +463,43 @@ if (!cfg.repo && /\.github\.io$/.test(location.hostname)) {
   const repoName = location.pathname.split("/")[1];
   if (repoName) cfg.repo = location.hostname.replace(".github.io", "") + "/" + repoName;
 }
+if (!cfg.repo) {
+  cfg.repo = "fraubentz/gap-online";
+}
 $("repo").value = cfg.repo; $("token").value = cfg.token;
-if (!cfg.repo || !cfg.token) $("settings").open = true;
+if (!cfg.token) $("settings").open = true;
+
+const defRepoBtn = $("useDefaultRepo");
+if (defRepoBtn) {
+  defRepoBtn.onclick = () => {
+    $("repo").value = "fraubentz/gap-online";
+    $("repo").focus();
+  };
+}
+
+// URL Hash Permalinks (#tool=...&code=...)
+function loadFromHash() {
+  const hash = location.hash.slice(1);
+  if (!hash) return false;
+  try {
+    const params = new URLSearchParams(hash);
+    const t = params.get("tool");
+    const c = params.get("code");
+    if (t && TOOLS[t]) {
+      tool = t;
+      store.set("gap.tool", tool);
+      if (c !== null) {
+        store.set(TOOLS[tool].codeKey, c);
+        return true;
+      }
+    }
+  } catch (e) {}
+  return false;
+}
 
 let tool = TOOLS[store.get("gap.tool")] ? store.get("gap.tool") : "gap";
+loadFromHash();
+
 function applyTool() {
   const t = TOOLS[tool], names = Object.keys(t.examples), sel = $("examples");
   $("tool").value = tool;
@@ -382,6 +516,74 @@ $("examples").onchange = () => {
   store.set(TOOLS[tool].codeKey, $("code").value);
 };
 $("code").addEventListener("input", () => store.set(TOOLS[tool].codeKey, $("code").value));
+
+// Share Link button
+$("shareBtn").onclick = () => {
+  const params = new URLSearchParams();
+  params.set("tool", tool);
+  params.set("code", $("code").value);
+  const shareUrl = location.origin + location.pathname + "#" + params.toString();
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    const old = $("shareBtn").textContent;
+    $("shareBtn").textContent = "Copied!";
+    setTimeout(() => { $("shareBtn").textContent = old; }, 1500);
+  }).catch(() => {
+    prompt("Copy share link:", shareUrl);
+  });
+};
+
+// Copy Output button
+$("copyOutBtn").onclick = () => {
+  if (!lastOutput) return;
+  navigator.clipboard.writeText(lastOutput).then(() => {
+    const old = $("copyOutBtn").textContent;
+    $("copyOutBtn").textContent = "Copied!";
+    setTimeout(() => { $("copyOutBtn").textContent = old; }, 1500);
+  });
+};
+
+/* ---- Run History (Last 5 runs) ---- */
+function getHistory() {
+  try { return JSON.parse(store.get("gap.history") || "[]"); } catch { return []; }
+}
+function saveHistoryItem(item) {
+  const h = getHistory();
+  h.unshift(item);
+  while (h.length > 5) h.pop();
+  store.set("gap.history", JSON.stringify(h));
+  updateHistoryDropdown();
+}
+function updateHistoryDropdown() {
+  const h = getHistory();
+  const sel = $("historySel");
+  sel.length = 0;
+  sel.add(new Option(`History (${h.length})`, ""));
+  h.forEach((item, idx) => {
+    const time = new Date(item.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const label = `#${idx + 1} [${TOOLS[item.tool] ? TOOLS[item.tool].label : item.tool}] ${item.desc} (${time})`;
+    sel.add(new Option(label, String(idx)));
+  });
+}
+updateHistoryDropdown();
+$("historySel").onchange = () => {
+  const val = $("historySel").value;
+  if (val === "") return;
+  const h = getHistory();
+  const item = h[parseInt(val, 10)];
+  if (item) {
+    if (item.tool && TOOLS[item.tool]) {
+      tool = item.tool;
+      store.set("gap.tool", tool);
+      applyTool();
+    }
+    $("code").value = item.code;
+    store.set(TOOLS[tool].codeKey, item.code);
+    lastOutput = item.out;
+    lastTool = item.tool;
+    render();
+    setStatus(`Loaded run #${parseInt(val, 10) + 1} from ${new Date(item.ts).toLocaleTimeString()}.`, "ok");
+  }
+};
 
 $("settingsForm").onsubmit = e => {
   e.preventDefault();
@@ -562,8 +764,8 @@ async function run() {
   try {
     setStatus("Sending to GitHub…");
     const res = await gh("/dispatches", { method: "POST", body: JSON.stringify({ event_type: "run_gap", client_payload: { run_id: runId, code_b64, tool: runTool } }) });
-    if (res.status === 401) throw new Error("Token rejected (401). Check it hasn't expired.");
-    if (res.status === 403 || res.status === 404) throw new Error("Access denied (" + res.status + "). Check the repository name and that the token has Contents: read & write.");
+    if (res.status === 401) throw new Error("Token rejected (401). Check that the token hasn't expired.");
+    if (res.status === 403 || res.status === 404) throw new Error("Access denied (" + res.status + "). If targeting " + cfg.repo + ", verify you have collaborator access (or use your own fork) and that your token has 'Contents: read & write'.");
     if (res.status !== 204) throw new Error("Dispatch failed (" + res.status + ").");
 
     setStatus("Waiting for a runner…");
@@ -582,7 +784,18 @@ async function run() {
       catch (e2) { throw new Error("Run " + run.conclusion + ", but its output couldn't be read. Open the run: " + run.html_url); }
     }
     lastOutput = text; lastTool = runTool; render();
-    setStatus("Finished in " + Math.round((Date.now() - t0) / 1000) + " s.", "ok");
+    const duration = Math.round((Date.now() - t0) / 1000);
+    setStatus("Finished in " + duration + " s.", "ok");
+
+    // Save to history
+    saveHistoryItem({
+      tool: runTool,
+      code: code,
+      desc: code.trim().split("\n")[0].replace(/^[%#\/\-\s]+/, "").slice(0, 30) || TOOLS[runTool].label,
+      out: text,
+      ts: Date.now(),
+      dur: duration
+    });
   } catch (e) {
     setStatus(e.message, "err");
   } finally {

@@ -218,18 +218,19 @@ jobs:
         with:
           path: |
             ~/.elan
-            lean-project/.lake
-          key: lean4-mathlib-v1-4.15.0-${{ runner.os }}
+            lean-project
+          key: lean4-mathlib-v2-4.15.0-${{ runner.os }}
 
       - name: Setup Lean 4 & Mathlib 4 (first run only)
         if: env.TOOL == 'lean' && steps.leancache.outputs.cache-hit != 'true'
         run: |
           set -e
-          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain leanprover/lean4:v4.15.0
           export PATH="$HOME/.elan/bin:$PATH"
-          mkdir -p lean-project && cd lean-project
-          echo "leanprover/lean4:v4.15.0" > lean-toolchain
-          cat > lakefile.lean <<'EOF'
+          elan default leanprover/lean4:v4.15.0
+          mkdir -p lean-project
+          echo "leanprover/lean4:v4.15.0" > lean-project/lean-toolchain
+          cat > lean-project/lakefile.lean <<'EOF'
           import Lake
           open Lake DSL
 
@@ -238,6 +239,7 @@ jobs:
           require mathlib from git
             "https://github.com/leanprover-community/mathlib4.git" @ "v4.15.0"
           EOF
+          cd lean-project
           lake update
           lake exe cache get || true
           cd ..
@@ -246,6 +248,18 @@ jobs:
         if: env.TOOL == 'lean'
         run: |
           mkdir -p lean-project/work
+          echo "leanprover/lean4:v4.15.0" > lean-project/lean-toolchain
+          if [ ! -f lean-project/lakefile.lean ]; then
+            cat > lean-project/lakefile.lean <<'EOF'
+          import Lake
+          open Lake DSL
+
+          package «playground»
+
+          require mathlib from git
+            "https://github.com/leanprover-community/mathlib4.git" @ "v4.15.0"
+          EOF
+          fi
           echo "$CODE_B64" | base64 -d > lean-project/work/UserCode.lean
           printf '\n' >> lean-project/work/UserCode.lean
 
@@ -254,6 +268,10 @@ jobs:
         run: |
           set +e
           export PATH="$HOME/.elan/bin:$PATH"
+          if ! command -v elan >/dev/null 2>&1; then
+            curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain leanprover/lean4:v4.15.0
+          fi
+          elan default leanprover/lean4:v4.15.0 2>/dev/null || true
           cd lean-project
           timeout 120 lake env lean work/UserCode.lean 2>&1 | sed -u 's/\x1b\[[0-9;]*m//g' > ../output.txt
           code=${PIPESTATUS[0]}
