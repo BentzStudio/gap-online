@@ -1,5 +1,6 @@
 name: Run GAP
-# The playground finds its run by this title, so keep the "GAP " prefix.
+# The playground finds its run by this title, so keep the "GAP " prefix
+# (it is used for every tool, including Prover9 and Mace4).
 run-name: GAP ${{ github.event.client_payload.run_id }}
 
 on:
@@ -17,22 +18,39 @@ jobs:
       # Official GAP image with every deposited package compiled
       # (Semigroups, Digraphs, GRAPE, AtlasRep, ...). Change the tag to update GAP.
       GAP_IMAGE: ghcr.io/gap-system/gap:4.15.1-full
+      # Prover9 and Mace4 (LADR) are built from this exact commit and cached.
+      # To update them, change the commit (and bump "v1" in the cache keys below).
+      LADR_REPO: proof-theory/Prover9
+      LADR_COMMIT: cdca95a51d3c3459b8fd2ebbb5ac1504be2172e3
       # Passed via env (never interpolated into shell) so user input can't inject commands.
       CODE_B64: ${{ github.event.client_payload.code_b64 }}
       RUN_ID: ${{ github.event.client_payload.run_id }}
+      TOOL_IN: ${{ github.event.client_payload.tool }}
     steps:
       - name: Validate payload
         run: |
           [[ "$RUN_ID" =~ ^[A-Za-z0-9_-]{6,64}$ ]] || { echo "Invalid run_id"; exit 1; }
           [[ -n "$CODE_B64" ]] || { echo "Empty code payload"; exit 1; }
+          # Older versions of the page send no tool, which means GAP.
+          TOOL="${TOOL_IN:-gap}"
+          case "$TOOL" in
+            gap|prover9|mace4) ;;
+            *) echo "Unknown tool"; exit 1 ;;
+          esac
+          echo "TOOL=$TOOL" >> "$GITHUB_ENV"
 
+      # ------------------------------------------------------------------
+      # GAP
+      # ------------------------------------------------------------------
       - name: Pull GAP (full bundle)
+        if: env.TOOL == 'gap'
         run: docker pull "$GAP_IMAGE"
 
       # The image ships Semigroups without its compiled kernel module, so it
       # can't load. Compile it once here and cache the result for later runs.
       - name: Restore compiled Semigroups
         id: sgcache
+        if: env.TOOL == 'gap'
         uses: actions/cache/restore@v4
         with:
           path: sg-built
@@ -40,7 +58,7 @@ jobs:
 
       - name: Build Semigroups (first run only)
         id: sgbuild
-        if: steps.sgcache.outputs.cache-hit != 'true'
+        if: env.TOOL == 'gap' && steps.sgcache.outputs.cache-hit != 'true'
         continue-on-error: true
         run: |
           mkdir -p sg-built && chmod 777 sg-built
@@ -77,7 +95,8 @@ jobs:
           path: sg-built
           key: semigroups-built-v1-${{ env.GAP_IMAGE }}
 
-      - name: Prepare input
+      - name: Prepare input (GAP)
+        if: env.TOOL == 'gap'
         run: |
           mkdir work
           echo "$CODE_B64" | base64 -d > work/user.g
@@ -95,6 +114,7 @@ jobs:
           chmod -R a+rX work
 
       - name: Run GAP (sandboxed)
+        if: env.TOOL == 'gap'
         run: |
           set +e
           EXTRA=()
@@ -112,6 +132,79 @@ jobs:
           head -c 1000000 output.txt > output.tmp && mv output.tmp output.txt
           exit 0
 
+      # ------------------------------------------------------------------
+      # Prover9 and Mace4
+      # Ubuntu 24.04 only packages the Prover9 manual, not the programs, so
+      # they are compiled once from a pinned commit and cached (seconds to
+      # build, no extra packages needed).
+      # ------------------------------------------------------------------
+      - name: Restore compiled Prover9 and Mace4
+        id: ladrcache
+        if: env.TOOL != 'gap'
+        uses: actions/cache/restore@v4
+        with:
+          path: ladr-bin
+          key: ladr-bin-v1-${{ env.LADR_COMMIT }}-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Build Prover9 and Mace4 (first run only)
+        id: ladrbuild
+        if: env.TOOL != 'gap' && steps.ladrcache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        run: |
+          set -e
+          git init -q ladr-src
+          cd ladr-src
+          git fetch -q --depth 1 "https://github.com/$LADR_REPO.git" "$LADR_COMMIT"
+          git checkout -q FETCH_HEAD
+          make all -j"$(nproc)"
+          cd ..
+          mkdir -p ladr-bin
+          cp ladr-src/bin/prover9 ladr-src/bin/mace4 ladr-bin/
+          # Smoke test: x = x must be proved.
+          printf 'formulas(goals).\n  x = x.\nend_of_list.\n' | ladr-bin/prover9 | grep -a 'THEOREM PROVED'
+
+      - name: Save compiled Prover9 and Mace4
+        if: steps.ladrbuild.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: ladr-bin
+          key: ladr-bin-v1-${{ env.LADR_COMMIT }}-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Prepare input (Prover9 / Mace4)
+        if: env.TOOL != 'gap'
+        run: |
+          mkdir work
+          echo "$CODE_B64" | base64 -d > work/input.in
+          printf '\n' >> work/input.in
+          chmod -R a+rX work
+
+      - name: Run Prover9 / Mace4 (sandboxed)
+        if: env.TOOL != 'gap'
+        run: |
+          set +e
+          BIN="$PWD/ladr-bin/$TOOL"
+          if [ ! -x "$BIN" ]; then
+            echo "[$TOOL is not available because building it failed. Open this run's log on GitHub for details.]" > output.txt
+            exit 0
+          fi
+          # Sandbox: own empty network namespace (no network), privileges dropped
+          # back to the normal runner user, 3 GB address-space cap and a hard
+          # 120 s limit. The program is also told to stop itself after 100 s
+          # (-t 100) so it can print its statistics and an explanation.
+          sudo unshare --net -- \
+            setpriv --reuid="$(id -u)" --regid="$(id -g)" --clear-groups -- \
+            timeout -k 5 120 \
+            prlimit --as=3221225472 -- \
+            "$BIN" -t 100 -f work/input.in 2>&1 \
+            | sed -u 's/\x1b\[[0-9;]*m//g; s/\x07//g' > output.txt
+          code=${PIPESTATUS[0]}
+          if [ "$code" -eq 124 ]; then echo "" >> output.txt; echo "[Stopped: time limit of 120 s reached]" >> output.txt; fi
+          head -c 1000000 output.txt > output.tmp && mv output.tmp output.txt
+          exit 0
+
+      # ------------------------------------------------------------------
+      # Shared: publish the result
+      # ------------------------------------------------------------------
       # Fallback channel: the page can read this annotation through the API
       # if the browser is blocked from downloading the artifact zip.
       - name: Publish output annotation

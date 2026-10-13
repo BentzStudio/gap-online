@@ -39,6 +39,8 @@
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 0; padding: 0; }
   .seg label { display: flex; padding: 0; color: var(--text); }
   .seg input { position: absolute; opacity: 0; }
+  .seg:disabled { opacity: .5; }
+  .seg:disabled span { cursor: not-allowed; }
   .seg span { padding: 7px 12px; min-height: 36px; display: flex; align-items: center; cursor: pointer; }
   .seg input:checked + span { background: var(--accent); color: var(--accent-ink); font-weight: 650; }
   .seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: -3px; }
@@ -66,7 +68,7 @@
 <body>
 <header>
   <h1>GAP Playground</h1>
-  <p>Write GAP code, run it on a fresh GitHub Actions machine, and read the result here.</p>
+  <p>Write GAP code (or Prover9 / Mace4 input), run it on a fresh GitHub Actions machine, and read the result here.</p>
 </header>
 
 <main>
@@ -82,6 +84,14 @@
         Like the GAP prompt, a statement ending in <code>;</code> shows its value (for example <code>(1,2,3)^-1;</code>),
         while <code>;;</code> hides it. <code>Print(…)</code> works too. Load packages with <code>LoadPackage("semigroups");</code>. Runs stop after 120 seconds.
         Choose <strong>LaTeX</strong> above the output to typeset GAP results (permutations, matrices, fractions, powers, groups) automatically, plus any maths written between <code>$…$</code> or <code>$$…$$</code>.
+      </p>
+      <p class="hint wide" style="font-size:.95rem;color:var(--text)">
+        <strong>Prover9 and Mace4:</strong> pick the tool next to the editor title. Both read the same input language
+        (<code>formulas(assumptions).</code> … <code>end_of_list.</code>, then <code>formulas(goals).</code> … <code>end_of_list.</code>).
+        Prover9 searches for a proof; Mace4 searches for a finite model or counterexample
+        (use <code>assign(domain_size, 6).</code> to fix the size).
+        They stop themselves after 100 seconds and their output is always shown as raw text.
+        The first Prover9/Mace4 run compiles the programs, so it waits a little longer.
       </p>
     </div>
   </details>
@@ -110,6 +120,12 @@
   <section class="panel" aria-labelledby="edTitle">
     <div class="bar">
       <h2 id="edTitle">GAP code</h2>
+      <label for="tool" class="sr" style="position:absolute;left:-9999px">Tool</label>
+      <select id="tool" aria-label="Tool">
+        <option value="gap">GAP</option>
+        <option value="prover9">Prover9</option>
+        <option value="mace4">Mace4</option>
+      </select>
       <label for="examples" class="sr" style="position:absolute;left:-9999px">Load an example</label>
       <select id="examples" aria-label="Load an example"></select>
       <button type="button" class="primary" id="run">Run</button>
@@ -120,7 +136,7 @@
   <section class="panel" aria-labelledby="outTitle">
     <div class="bar">
       <h2 id="outTitle">Output</h2>
-      <fieldset class="seg" aria-label="Output format">
+      <fieldset class="seg" id="fmtset" aria-label="Output format">
         <label><input type="radio" name="fmt" value="raw" checked><span>Raw text</span></label>
         <label><input type="radio" name="fmt" value="latex"><span>LaTeX</span></label>
       </fieldset>
@@ -136,7 +152,8 @@
     <a href="https://docs.gap-system.org/doc/tut/chap0_mj.html" target="_blank" rel="noopener">Tutorial</a>,
     <a href="https://docs.gap-system.org/doc/ref/chap0_mj.html" target="_blank" rel="noopener">Reference Manual</a>,
     <a href="https://docs.gap-system.org/pkg/semigroups/doc/chap0.html" target="_blank" rel="noopener">Semigroups manual</a>,
-    <a href="https://www.gap-system.org/" target="_blank" rel="noopener">gap-system.org</a>
+    <a href="https://www.gap-system.org/" target="_blank" rel="noopener">gap-system.org</a>,
+    <a href="https://www.cs.unm.edu/~mccune/prover9/" target="_blank" rel="noopener">Prover9 &amp; Mace4</a>
   </p>
   <p>A statement ending in <code>;</code> shows its value; end it with <code>;;</code> to hide it.
   In LaTeX mode, <code>Tex(obj)</code> prints an object as a display equation.</p>
@@ -149,7 +166,7 @@
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
-const EXAMPLES = {
+const GAP_EXAMPLES = {
   "Groups and LaTeX": [
     'G := AlternatingGroup(5);;',
     'Print("Order: ", Size(G), "\\n");',
@@ -174,10 +191,72 @@ const EXAMPLES = {
   ].join("\n")
 };
 
+const PROVER9_EXAMPLES = {
+  "Group: right identity": [
+    "% A right identity follows from the left-sided group axioms.",
+    "formulas(assumptions).",
+    "  (x * y) * z = x * (y * z).",
+    "  e * x = x.",
+    "  x' * x = e.",
+    "end_of_list.",
+    "",
+    "formulas(goals).",
+    "  x * e = x.",
+    "end_of_list."
+  ].join("\n"),
+  "Exponent 2 is abelian": [
+    "% Every group in which x * x = e is commutative.",
+    "formulas(assumptions).",
+    "  (x * y) * z = x * (y * z).",
+    "  e * x = x.",
+    "  x * e = x.",
+    "  x * x = e.",
+    "end_of_list.",
+    "",
+    "formulas(goals).",
+    "  x * y = y * x.",
+    "end_of_list."
+  ].join("\n")
+};
+const MACE4_EXAMPLES = {
+  "Non-abelian group of order 6": [
+    "% Is every group of order 6 commutative? Mace4 looks for a counterexample.",
+    "assign(domain_size, 6).",
+    "",
+    "formulas(assumptions).",
+    "  (x * y) * z = x * (y * z).",
+    "  e * x = x.",
+    "  x * e = x.",
+    "  x' * x = e.",
+    "  x * x' = e.",
+    "end_of_list.",
+    "",
+    "formulas(goals).",
+    "  x * y = y * x.",
+    "end_of_list."
+  ].join("\n"),
+  "Commutative, not idempotent": [
+    "% A commutative semigroup in which x * x = x fails.",
+    "formulas(assumptions).",
+    "  (x * y) * z = x * (y * z).",
+    "  x * y = y * x.",
+    "end_of_list.",
+    "",
+    "formulas(goals).",
+    "  x * x = x.",
+    "end_of_list."
+  ].join("\n")
+};
+const TOOLS = {
+  gap:     { label: "GAP",     title: "GAP code",      examples: GAP_EXAMPLES,     codeKey: "gap.code" },
+  prover9: { label: "Prover9", title: "Prover9 input", examples: PROVER9_EXAMPLES, codeKey: "gap.code.prover9" },
+  mace4:   { label: "Mace4",   title: "Mace4 input",   examples: MACE4_EXAMPLES,   codeKey: "gap.code.mace4" }
+};
+
 const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } },
                 set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
 let cfg = { repo: store.get("gap.repo") || "", token: store.get("gap.token") || "" };
-let lastOutput = null, busy = false;
+let lastOutput = null, lastTool = "gap", busy = false;
 
 // Guess owner/repo when served from <owner>.github.io/<repo>/
 if (!cfg.repo && /\.github\.io$/.test(location.hostname)) {
@@ -187,10 +266,23 @@ if (!cfg.repo && /\.github\.io$/.test(location.hostname)) {
 $("repo").value = cfg.repo; $("token").value = cfg.token;
 if (!cfg.repo || !cfg.token) $("settings").open = true;
 
-for (const name of Object.keys(EXAMPLES)) $("examples").add(new Option(name, name));
-$("code").value = store.get("gap.code") || EXAMPLES["Groups and LaTeX"];
-$("examples").onchange = () => { $("code").value = EXAMPLES[$("examples").value]; };
-$("code").addEventListener("input", () => store.set("gap.code", $("code").value));
+let tool = TOOLS[store.get("gap.tool")] ? store.get("gap.tool") : "gap";
+function applyTool() {
+  const t = TOOLS[tool], names = Object.keys(t.examples), sel = $("examples");
+  $("tool").value = tool;
+  $("edTitle").textContent = t.title;
+  $("code").setAttribute("aria-label", t.title + " editor");
+  sel.length = 0;
+  for (const name of names) sel.add(new Option(name, name));
+  $("code").value = store.get(t.codeKey) || t.examples[names[0]];
+}
+applyTool();
+$("tool").onchange = () => { tool = $("tool").value; store.set("gap.tool", tool); applyTool(); };
+$("examples").onchange = () => {
+  $("code").value = TOOLS[tool].examples[$("examples").value];
+  store.set(TOOLS[tool].codeKey, $("code").value);
+};
+$("code").addEventListener("input", () => store.set(TOOLS[tool].codeKey, $("code").value));
 
 $("save").onclick = () => {
   cfg = { repo: $("repo").value.trim(), token: $("token").value.trim() };
@@ -305,7 +397,10 @@ function latexify(text) {
 }
 
 function render() {
-  const out = $("out"), latex = document.querySelector('input[name=fmt]:checked').value === "latex";
+  const gapOutput = lastTool === "gap";
+  const out = $("out"), latex = gapOutput && document.querySelector('input[name=fmt]:checked').value === "latex";
+  $("fmtset").disabled = !gapOutput;
+  $("fmtset").title = gapOutput ? "" : "LaTeX typesetting is only available for GAP output";
   if (lastOutput === null) return;
   out.className = latex ? "latex" : "";
   out.textContent = lastOutput.trim() ? (latex ? latexify(lastOutput) : lastOutput) : "(no output)";
@@ -356,7 +451,8 @@ async function run() {
   if (busy) return;
   if (!cfg.repo || !cfg.token) { $("settings").open = true; setStatus("Add your repository and token first.", "err"); return; }
   const code = $("code").value;
-  if (!code.trim()) { setStatus("Write some GAP code first.", "err"); return; }
+  if (!code.trim()) { setStatus("The editor is empty. Write something first.", "err"); return; }
+  const runTool = tool;
   const code_b64 = toBase64(code);
   if (code_b64.length > 60000) { setStatus("Code is too long (limit about 45 KB).", "err"); return; }
 
@@ -365,7 +461,7 @@ async function run() {
   const since = new Date(Date.now() - 60000), t0 = Date.now();
   try {
     setStatus("Sending to GitHub…");
-    const res = await gh("/dispatches", { method: "POST", body: JSON.stringify({ event_type: "run_gap", client_payload: { run_id: runId, code_b64 } }) });
+    const res = await gh("/dispatches", { method: "POST", body: JSON.stringify({ event_type: "run_gap", client_payload: { run_id: runId, code_b64, tool: runTool } }) });
     if (res.status === 401) throw new Error("Token rejected (401). Check it hasn't expired.");
     if (res.status === 403 || res.status === 404) throw new Error("Access denied (" + res.status + "). Check the repository name and that the token has Contents: read & write.");
     if (res.status !== 204) throw new Error("Dispatch failed (" + res.status + ").");
@@ -375,7 +471,7 @@ async function run() {
     let run = found;
     while (run.status !== "completed") {
       if (Date.now() - t0 > 2400000) throw new Error("Timed out after 40 minutes. Check the Actions tab of your repository.");
-      setStatus((run.status === "in_progress" ? "Running GAP" : "Queued") + "… " + Math.round((Date.now() - t0) / 1000) + " s");
+      setStatus((run.status === "in_progress" ? "Running " + TOOLS[runTool].label : "Queued") + "… " + Math.round((Date.now() - t0) / 1000) + " s");
       await sleep(3000); run = await ghJson("/actions/runs/" + found.id);
     }
     setStatus("Fetching output…");
@@ -385,7 +481,7 @@ async function run() {
       try { text = await readAnnotation(run.id); }
       catch (e2) { throw new Error("Run " + run.conclusion + ", but its output couldn't be read. Open the run: " + run.html_url); }
     }
-    lastOutput = text; render();
+    lastOutput = text; lastTool = runTool; render();
     setStatus("Finished in " + Math.round((Date.now() - t0) / 1000) + " s.", "ok");
   } catch (e) {
     setStatus(e.message, "err");
