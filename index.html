@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="dark light">
 <title>GAP Playground</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <style>
@@ -11,16 +11,26 @@
     --bg: #14161f; --panel: #1c1f2c; --panel-2: #242839; --line: #343a52;
     --text: #e8eaf3; --muted: #a2a8c0; --accent: #93a9ff; --accent-ink: #10132a;
     --ok: #86d9b4; --bad: #ff9494;
+    --out-bg: #0f111a;
     --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
+  :root[data-theme="light"] {
+    --bg: #f6f8fa; --panel: #ffffff; --panel-2: #f0f3f6; --line: #d0d7de;
+    --text: #1f2328; --muted: #59636e; --accent: #0969da; --accent-ink: #ffffff;
+    --ok: #1a7f37; --bad: #cf222e;
+    --out-bg: #f8fafc;
+  }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--sans); }
-  body { min-height: 100vh; display: flex; flex-direction: column; }
+  body { min-height: 100vh; display: flex; flex-direction: column; transition: background .15s ease, color .15s ease; }
   header, main, footer { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 20px; }
-  header { padding-top: 24px; padding-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; }
+  header { padding-top: 24px; padding-bottom: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px 20px; }
+  .title-group { flex: 1; min-width: 260px; }
   h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.01em; }
   header p { margin: 0; color: var(--muted); }
+  .theme-btn { display: inline-flex; align-items: center; gap: 6px; font-size: .875rem; font-weight: 500; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; transition: border-color .15s, background .15s; }
+  .theme-btn:hover { border-color: var(--accent); }
   main { flex: 1; display: grid; gap: 16px; padding-bottom: 20px; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
   .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
@@ -32,13 +42,14 @@
   button:hover { border-color: var(--accent); }
   button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 650; }
   button.primary:hover { filter: brightness(1.08); }
+  button.primary:active { filter: brightness(0.96); }
   button:disabled { opacity: .55; cursor: progress; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  #code { flex: 1; min-height: 340px; width: 100%; resize: vertical; border: 0; background: transparent; padding: 14px; font: .95rem/1.55 var(--mono); tab-size: 2; }
+  #code { flex: 1; min-height: 340px; width: 100%; resize: vertical; border: 0; background: transparent; padding: 14px; font: .95rem/1.55 var(--mono); tab-size: 2; color: inherit; }
   #code:focus-visible { outline-offset: -3px; }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 0; padding: 0; }
   .seg label { display: flex; padding: 0; color: var(--text); }
-  .seg input { position: absolute; opacity: 0; }
+  .seg input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .seg:disabled { opacity: .5; }
   .seg:disabled span { cursor: not-allowed; }
   .seg span { padding: 7px 12px; min-height: 36px; display: flex; align-items: center; cursor: pointer; }
@@ -46,7 +57,7 @@
   .seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: -3px; }
   #status { padding: 8px 14px; font-size: .875rem; color: var(--muted); border-bottom: 1px solid var(--line); min-height: 38px; }
   #status.ok { color: var(--ok); } #status.err { color: var(--bad); }
-  #out { flex: 1; min-height: 300px; max-height: 70vh; overflow: auto; padding: 14px; font: .95rem/1.55 var(--mono); white-space: pre-wrap; word-break: break-word; background: #0f111a; }
+  #out { flex: 1; min-height: 300px; max-height: 70vh; overflow: auto; padding: 14px; font: .95rem/1.55 var(--mono); white-space: pre-wrap; word-break: break-word; background: var(--out-bg); }
   #out.latex { font-family: var(--sans); font-size: 1.02rem; }
   #out .katex { color: var(--text); font-size: 1.12em; }
   #out .katex-display { margin: .8em 0; overflow-x: auto; overflow-y: hidden; }
@@ -61,14 +72,33 @@
   footer p { margin: 0 0 6px; }
   a { color: var(--accent); }
   code { font-family: var(--mono); background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
+
+  /* Standard accessible visually-hidden pattern for screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   @media (min-width: 960px) { main { grid-template-columns: 1fr 1fr; } details { grid-column: 1 / -1; } }
   @media (prefers-reduced-motion: no-preference) { button { transition: filter .15s, border-color .15s; } }
 </style>
 </head>
 <body>
 <header>
-  <h1>GAP Playground</h1>
-  <p>Write GAP code (or Prover9 / Mace4 input), run it on a fresh GitHub Actions machine, and read the result here.</p>
+  <div class="title-group">
+    <h1>GAP Playground</h1>
+    <p>Write GAP code (or Prover9 / Mace4 input), run it on a fresh GitHub Actions machine, and read the result here.</p>
+  </div>
+  <button type="button" class="theme-btn" id="themeToggle" aria-label="Switch to light mode" title="Toggle theme">
+    <span id="themeIcon" aria-hidden="true">☀️</span> <span id="themeText">Light mode</span>
+  </button>
 </header>
 
 <main>
@@ -98,14 +128,14 @@
 
   <details id="settings">
     <summary>Connection settings</summary>
-    <div class="settings">
+    <form id="settingsForm" class="settings">
       <div>
         <label for="repo">Repository (owner/name)</label>
-        <input type="text" id="repo" placeholder="your-name/gap-playground" autocomplete="off" spellcheck="false">
+        <input type="text" id="repo" placeholder="your-name/gap-playground" autocomplete="off" spellcheck="false" required>
       </div>
       <div>
         <label for="token">Personal Access Token</label>
-        <input type="password" id="token" placeholder="github_pat_…" autocomplete="off" spellcheck="false">
+        <input type="password" id="token" placeholder="github_pat_…" autocomplete="off" spellcheck="false" required>
       </div>
       <p class="hint wide">
         Use a fine-grained token limited to this one repository with <strong>Contents: read &amp; write</strong>
@@ -113,22 +143,22 @@
         <strong>Checks: read</strong> (backup output channel). The token is kept only in this browser's
         local storage and is sent only to api.github.com.
       </p>
-      <div class="wide"><button type="button" id="save">Save settings</button></div>
-    </div>
+      <div class="wide"><button type="submit" id="save">Save settings</button></div>
+    </form>
   </details>
 
   <section class="panel" aria-labelledby="edTitle">
     <div class="bar">
       <h2 id="edTitle">GAP code</h2>
-      <label for="tool" class="sr" style="position:absolute;left:-9999px">Tool</label>
-      <select id="tool" aria-label="Tool">
+      <label for="tool" class="sr-only">Select tool</label>
+      <select id="tool" aria-label="Select tool">
         <option value="gap">GAP</option>
         <option value="prover9">Prover9</option>
         <option value="mace4">Mace4</option>
       </select>
-      <label for="examples" class="sr" style="position:absolute;left:-9999px">Load an example</label>
+      <label for="examples" class="sr-only">Load an example</label>
       <select id="examples" aria-label="Load an example"></select>
-      <button type="button" class="primary" id="run">Run</button>
+      <button type="button" class="primary" id="run" title="Run code (Ctrl/⌘ + Enter)">Run</button>
     </div>
     <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="GAP code editor"></textarea>
   </section>
@@ -141,7 +171,7 @@
         <label><input type="radio" name="fmt" value="latex"><span>LaTeX</span></label>
       </fieldset>
     </div>
-    <div id="status" role="status" aria-live="polite">Ready. Press Run or Ctrl/⌘ + Enter.</div>
+    <div id="status" role="status" aria-live="polite" aria-atomic="true">Ready. Press Run or Ctrl/⌘ + Enter.</div>
     <div id="out" tabindex="0" aria-label="Program output"><span class="placeholder">Output appears here.</span></div>
   </section>
 </main>
@@ -153,7 +183,7 @@
     <a href="https://docs.gap-system.org/doc/ref/chap0_mj.html" target="_blank" rel="noopener">Reference Manual</a>,
     <a href="https://docs.gap-system.org/pkg/semigroups/doc/chap0.html" target="_blank" rel="noopener">Semigroups manual</a>,
     <a href="https://www.gap-system.org/" target="_blank" rel="noopener">gap-system.org</a>,
-    <a href="https://www.cs.unm.edu/~mccune/prover9/" target="_blank" rel="noopener">Prover9 &amp; Mace4</a>
+    <a href="https://prover9.org/" target="_blank" rel="noopener">Prover9 &amp; Mace4</a>
   </p>
   <p>A statement ending in <code>;</code> shows its value; end it with <code>;;</code> to hide it.
   In LaTeX mode, <code>Tex(obj)</code> prints an object as a display equation.</p>
@@ -166,6 +196,28 @@
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
+const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+                set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+
+/* ---- Theme support (Light / Dark) ---- */
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  store.set("gap.theme", theme);
+  const isLight = theme === "light";
+  $("themeIcon").textContent = isLight ? "🌙" : "☀️";
+  $("themeText").textContent = isLight ? "Dark mode" : "Light mode";
+  $("themeToggle").setAttribute("aria-label", isLight ? "Switch to dark mode" : "Switch to light mode");
+}
+let currentTheme = store.get("gap.theme");
+if (!currentTheme) {
+  currentTheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+applyTheme(currentTheme);
+$("themeToggle").onclick = () => {
+  const current = document.documentElement.getAttribute("data-theme") || "dark";
+  applyTheme(current === "light" ? "dark" : "light");
+};
+
 const GAP_EXAMPLES = {
   "Groups and LaTeX": [
     'G := AlternatingGroup(5);;',
@@ -253,8 +305,6 @@ const TOOLS = {
   mace4:   { label: "Mace4",   title: "Mace4 input",   examples: MACE4_EXAMPLES,   codeKey: "gap.code.mace4" }
 };
 
-const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } },
-                set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
 let cfg = { repo: store.get("gap.repo") || "", token: store.get("gap.token") || "" };
 let lastOutput = null, lastTool = "gap", busy = false;
 
@@ -284,7 +334,8 @@ $("examples").onchange = () => {
 };
 $("code").addEventListener("input", () => store.set(TOOLS[tool].codeKey, $("code").value));
 
-$("save").onclick = () => {
+$("settingsForm").onsubmit = e => {
+  e.preventDefault();
   cfg = { repo: $("repo").value.trim(), token: $("token").value.trim() };
   store.set("gap.repo", cfg.repo); store.set("gap.token", cfg.token);
   setStatus("Settings saved.", "ok"); $("settings").open = false;
