@@ -94,7 +94,7 @@
 <header>
   <div class="title-group">
     <h1>GAP Playground</h1>
-    <p>Write GAP code (or Prover9 / Mace4 input), run it on a fresh GitHub Actions machine, and read the result here.</p>
+    <p>Write GAP code, Prover9 / Mace4 input, or Lean 4 + Mathlib proofs, run them on a fresh GitHub Actions machine, and read results here.</p>
   </div>
   <button type="button" class="theme-btn" id="themeToggle" aria-label="Switch to light mode" title="Toggle theme">
     <span id="themeIcon" aria-hidden="true">☀️</span> <span id="themeText">Light mode</span>
@@ -106,12 +106,11 @@
     <summary>How to use this playground</summary>
     <div class="settings">
       <p class="hint wide" style="font-size:.95rem;color:var(--text)">
-        Type GAP code on the left and press <strong>Run</strong> (or Ctrl/⌘ + Enter). Your code runs on a fresh
-        GitHub machine with the full GAP bundle, and the result appears on the right, usually within a minute.
-        A run that has to wait for a machine can take a little longer.
+        Type code on the left and press <strong>Run</strong> (or Ctrl/⌘ + Enter). Your code runs on a fresh
+        GitHub machine, and the result appears on the right, usually within a minute.
       </p>
       <p class="hint wide" style="font-size:.95rem;color:var(--text)">
-        Like the GAP prompt, a statement ending in <code>;</code> shows its value (for example <code>(1,2,3)^-1;</code>),
+        <strong>GAP:</strong> Like the GAP prompt, a statement ending in <code>;</code> shows its value,
         while <code>;;</code> hides it. <code>Print(…)</code> works too. Load packages with <code>LoadPackage("semigroups");</code>. Runs stop after 120 seconds.
         Choose <strong>LaTeX</strong> above the output to typeset GAP results (permutations, matrices, fractions, powers, groups) automatically, plus any maths written between <code>$…$</code> or <code>$$…$$</code>.
       </p>
@@ -120,8 +119,9 @@
         (<code>formulas(assumptions).</code> … <code>end_of_list.</code>, then <code>formulas(goals).</code> … <code>end_of_list.</code>).
         Prover9 searches for a proof; Mace4 searches for a finite model or counterexample
         (use <code>assign(domain_size, 6).</code> to fix the size).
-        They stop themselves after 100 seconds and their output is always shown as raw text.
-        The first Prover9/Mace4 run compiles the programs, so it waits a little longer.
+      </p>
+      <p class="hint wide" style="font-size:.95rem;color:var(--text)">
+        <strong>Lean 4 + Mathlib 4:</strong> pick Lean 4 next to the editor title. Import modules like <code>import Mathlib.Algebra.Group.Basic</code> or <code>import Mathlib.Tactic</code>. Use tactics such as <code>linarith</code>, <code>ring</code>, <code>rw</code>, and <code>induction</code>, or run evaluations with <code>#eval</code> and <code>#check</code>. If your proof has no errors, the output confirms all goals are accomplished.
       </p>
     </div>
   </details>
@@ -155,12 +155,13 @@
         <option value="gap">GAP</option>
         <option value="prover9">Prover9</option>
         <option value="mace4">Mace4</option>
+        <option value="lean">Lean 4</option>
       </select>
       <label for="examples" class="sr-only">Load an example</label>
       <select id="examples" aria-label="Load an example"></select>
       <button type="button" class="primary" id="run" title="Run code (Ctrl/⌘ + Enter)">Run</button>
     </div>
-    <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="GAP code editor"></textarea>
+    <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
   </section>
 
   <section class="panel" aria-labelledby="outTitle">
@@ -178,14 +179,16 @@
 
 <footer>
   <p>
-    GAP documentation:
-    <a href="https://docs.gap-system.org/doc/tut/chap0_mj.html" target="_blank" rel="noopener">Tutorial</a>,
+    Documentation &amp; tools:
+    <a href="https://docs.gap-system.org/doc/tut/chap0_mj.html" target="_blank" rel="noopener">GAP Tutorial</a>,
     <a href="https://docs.gap-system.org/doc/ref/chap0_mj.html" target="_blank" rel="noopener">Reference Manual</a>,
     <a href="https://docs.gap-system.org/pkg/semigroups/doc/chap0.html" target="_blank" rel="noopener">Semigroups manual</a>,
     <a href="https://www.gap-system.org/" target="_blank" rel="noopener">gap-system.org</a>,
-    <a href="https://prover9.org/" target="_blank" rel="noopener">Prover9 &amp; Mace4</a>
+    <a href="https://prover9.org/" target="_blank" rel="noopener">Prover9 &amp; Mace4</a>,
+    <a href="https://lean-lang.org/" target="_blank" rel="noopener">Lean 4</a>,
+    <a href="https://leanprover-community.github.io/mathlib4_docs/" target="_blank" rel="noopener">Mathlib 4 docs</a>
   </p>
-  <p>A statement ending in <code>;</code> shows its value; end it with <code>;;</code> to hide it.
+  <p>In GAP, a statement ending in <code>;</code> shows its value; end it with <code>;;</code> to hide it.
   In LaTeX mode, <code>Tex(obj)</code> prints an object as a display equation.</p>
   <p>&copy; <span id="year">2026</span> &middot; Designed and maintained by PY. Made for WB, with love. </p>
 </footer>
@@ -270,6 +273,7 @@ const PROVER9_EXAMPLES = {
     "end_of_list."
   ].join("\n")
 };
+
 const MACE4_EXAMPLES = {
   "Non-abelian group of order 6": [
     "% Is every group of order 6 commutative? Mace4 looks for a counterexample.",
@@ -299,10 +303,55 @@ const MACE4_EXAMPLES = {
     "end_of_list."
   ].join("\n")
 };
+
+const LEAN_EXAMPLES = {
+  "Group theory": [
+    'import Mathlib.Algebra.Group.Basic',
+    'import Mathlib.Tactic',
+    '',
+    '-- In any group, the identity element is unique',
+    'theorem group_id_unique {G : Type*} [Group G] (e : G) (h : ∀ x : G, e * x = x) :',
+    '    e = 1 := by',
+    '  have h1 : e * 1 = 1 := h 1',
+    '  have h2 : e * 1 = e := mul_one e',
+    '  rw [← h2, h1]'
+  ].join("\n"),
+  "Real inequalities (linarith)": [
+    'import Mathlib.Data.Real.Basic',
+    'import Mathlib.Tactic',
+    '',
+    '-- Basic linear arithmetic with reals',
+    'example (x y : ℝ) (h1 : 2 * x + y ≤ 5) (h2 : y ≥ 1) : x ≤ 2 := by',
+    '  linarith'
+  ].join("\n"),
+  "Number theory (induction)": [
+    'import Mathlib.Data.Nat.Basic',
+    'import Mathlib.Tactic',
+    '',
+    '-- Induction proof for sum of first n integers: 2 * sum = n * (n + 1)',
+    'theorem sum_range_id (n : ℕ) :',
+    '    2 * (Finset.range (n + 1)).sum id = n * (n + 1) := by',
+    '  induction n with',
+    '  | zero => simp',
+    '  | succ k ih =>',
+    '    rw [Finset.sum_range_succ, mul_add, ih]',
+    '    linarith'
+  ].join("\n"),
+  "Computations (#eval)": [
+    'import Mathlib',
+    '',
+    '#eval 2^64 - 1',
+    '#eval (List.range 10).map (fun n => n * n)',
+    '#check Ring',
+    '#check TopologicalSpace'
+  ].join("\n")
+};
+
 const TOOLS = {
   gap:     { label: "GAP",     title: "GAP code",      examples: GAP_EXAMPLES,     codeKey: "gap.code" },
   prover9: { label: "Prover9", title: "Prover9 input", examples: PROVER9_EXAMPLES, codeKey: "gap.code.prover9" },
-  mace4:   { label: "Mace4",   title: "Mace4 input",   examples: MACE4_EXAMPLES,   codeKey: "gap.code.mace4" }
+  mace4:   { label: "Mace4",   title: "Mace4 input",   examples: MACE4_EXAMPLES,   codeKey: "gap.code.mace4" },
+  lean:    { label: "Lean 4",  title: "Lean 4 code",   examples: LEAN_EXAMPLES,    codeKey: "gap.code.lean" }
 };
 
 let cfg = { repo: store.get("gap.repo") || "", token: store.get("gap.token") || "" };

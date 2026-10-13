@@ -1,4 +1,6 @@
 name: Run GAP
+# The playground finds its run by this title, so keep the "GAP " prefix
+# (it is used for every tool, including Prover9 and Mace4).
 run-name: GAP ${{ github.event.client_payload.run_id }}
 
 on:
@@ -13,9 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
+      # Official GAP image with every deposited package compiled
+      # (Semigroups, Digraphs, GRAPE, AtlasRep, ...). Change the tag to update GAP.
       GAP_IMAGE: ghcr.io/gap-system/gap:4.15.1-full
+      # Prover9 and Mace4 (LADR) are built from this modernized commit and cached.
+      # To update them, change the commit (and bump "v2" in the cache keys below).
       LADR_REPO: AlgorithmicTruth/Prover9
       LADR_COMMIT: 62ae6ff62fbe85b12c69d8625db1d358973c3d2f
+      # Passed via env (never interpolated into shell) so user input can't inject commands.
       CODE_B64: ${{ github.event.client_payload.code_b64 }}
       RUN_ID: ${{ github.event.client_payload.run_id }}
       TOOL_IN: ${{ github.event.client_payload.tool }}
@@ -24,17 +31,23 @@ jobs:
         run: |
           [[ "$RUN_ID" =~ ^[A-Za-z0-9_-]{6,64}$ ]] || { echo "Invalid run_id"; exit 1; }
           [[ -n "$CODE_B64" ]] || { echo "Empty code payload"; exit 1; }
+          # Older versions of the page send no tool, which means GAP.
           TOOL="${TOOL_IN:-gap}"
           case "$TOOL" in
-            gap|prover9|mace4) ;;
+            gap|prover9|mace4|lean) ;;
             *) echo "Unknown tool"; exit 1 ;;
           esac
           echo "TOOL=$TOOL" >> "$GITHUB_ENV"
 
+      # ------------------------------------------------------------------
+      # GAP
+      # ------------------------------------------------------------------
       - name: Pull GAP (full bundle)
         if: env.TOOL == 'gap'
         run: docker pull "$GAP_IMAGE"
 
+      # The image ships Semigroups without its compiled kernel module, so it
+      # can't load. Compile it once here and cache the result for later runs.
       - name: Restore compiled Semigroups
         id: sgcache
         if: env.TOOL == 'gap'
@@ -88,6 +101,7 @@ jobs:
           mkdir work
           echo "$CODE_B64" | base64 -d > work/user.g
           cat > work/helper.g <<'EOF'
+          # Helper for the playground: Tex(obj) prints obj as a display equation.
           Tex := function(x)
             local s;
             if IsBoundGlobal("LaTeXObj") then s := ValueGlobal("LaTeXObj")(x);
@@ -107,6 +121,8 @@ jobs:
           if [ -f sg-built/path ]; then
             EXTRA=(-v "$PWD/sg-built/pkg:$(cat sg-built/path):ro")
           fi
+          # Code is fed on stdin, so GAP behaves like the interactive prompt
+          # and prints the value of every statement that ends in a single ';'.
           timeout 120 docker run -i --rm --network none --memory 3g --pids-limit 512 \
             -v "$PWD/work:/work:ro" "${EXTRA[@]}" --entrypoint gap "$GAP_IMAGE" \
             -q -b -o 2g /work/helper.g < work/user.g 2>&1 \
@@ -116,9 +132,15 @@ jobs:
           head -c 1000000 output.txt > output.tmp && mv output.tmp output.txt
           exit 0
 
+      # ------------------------------------------------------------------
+      # Prover9 and Mace4
+      # Ubuntu 24.04 only packages the Prover9 manual, not the programs, so
+      # they are compiled once from a pinned commit and cached (seconds to
+      # build, no extra packages needed).
+      # ------------------------------------------------------------------
       - name: Restore compiled Prover9 and Mace4
         id: ladrcache
-        if: env.TOOL != 'gap'
+        if: env.TOOL == 'prover9' || env.TOOL == 'mace4'
         uses: actions/cache/restore@v4
         with:
           path: ladr-bin
@@ -126,7 +148,7 @@ jobs:
 
       - name: Build Prover9 and Mace4 (first run only)
         id: ladrbuild
-        if: env.TOOL != 'gap' && steps.ladrcache.outputs.cache-hit != 'true'
+        if: (env.TOOL == 'prover9' || env.TOOL == 'mace4') && steps.ladrcache.outputs.cache-hit != 'true'
         continue-on-error: true
         run: |
           set -e
@@ -141,6 +163,7 @@ jobs:
           mkdir -p ladr-bin
           cp ladr-src/bin/prover9 ladr-src/bin/mace4 ladr-bin/
           chmod +x ladr-bin/prover9 ladr-bin/mace4
+          # Smoke test: x = x must be proved.
           printf 'formulas(goals).\n  x = x.\nend_of_list.\n' | ladr-bin/prover9 | grep -a 'THEOREM PROVED'
 
       - name: Save compiled Prover9 and Mace4
@@ -151,7 +174,7 @@ jobs:
           key: ladr-bin-v2-${{ env.LADR_COMMIT }}-${{ runner.os }}-${{ runner.arch }}
 
       - name: Prepare input (Prover9 / Mace4)
-        if: env.TOOL != 'gap'
+        if: env.TOOL == 'prover9' || env.TOOL == 'mace4'
         run: |
           mkdir work
           echo "$CODE_B64" | base64 -d > work/input.in
@@ -159,7 +182,7 @@ jobs:
           chmod -R a+rX work
 
       - name: Run Prover9 / Mace4 (sandboxed)
-        if: env.TOOL != 'gap'
+        if: env.TOOL == 'prover9' || env.TOOL == 'mace4'
         run: |
           set +e
           BIN="$PWD/ladr-bin/$TOOL"
@@ -183,6 +206,70 @@ jobs:
           head -c 1000000 output.txt > output.tmp && mv output.tmp output.txt
           exit 0
 
+      # ------------------------------------------------------------------
+      # Lean 4 & Mathlib 4
+      # Toolchain and prebuilt Mathlib olean caches are downloaded and kept
+      # in GitHub Actions cache for instant subsequent runs.
+      # ------------------------------------------------------------------
+      - name: Cache Lean 4 toolchain and Mathlib
+        id: leancache
+        if: env.TOOL == 'lean'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.elan
+            lean-project/.lake
+          key: lean4-mathlib-v1-4.15.0-${{ runner.os }}
+
+      - name: Setup Lean 4 & Mathlib 4 (first run only)
+        if: env.TOOL == 'lean' && steps.leancache.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+          export PATH="$HOME/.elan/bin:$PATH"
+          mkdir -p lean-project && cd lean-project
+          echo "leanprover/lean4:v4.15.0" > lean-toolchain
+          cat > lakefile.lean <<'EOF'
+          import Lake
+          open Lake DSL
+
+          package «playground»
+
+          require mathlib from git
+            "https://github.com/leanprover-community/mathlib4.git" @ "v4.15.0"
+          EOF
+          lake update
+          lake exe cache get || true
+          cd ..
+
+      - name: Prepare input (Lean 4)
+        if: env.TOOL == 'lean'
+        run: |
+          mkdir -p lean-project/work
+          echo "$CODE_B64" | base64 -d > lean-project/work/UserCode.lean
+          printf '\n' >> lean-project/work/UserCode.lean
+
+      - name: Run Lean 4 (sandboxed)
+        if: env.TOOL == 'lean'
+        run: |
+          set +e
+          export PATH="$HOME/.elan/bin:$PATH"
+          cd lean-project
+          timeout 120 lake env lean work/UserCode.lean 2>&1 | sed -u 's/\x1b\[[0-9;]*m//g' > ../output.txt
+          code=${PIPESTATUS[0]}
+          cd ..
+          if [ ! -s output.txt ] && [ "$code" -eq 0 ]; then
+            echo "All goals accomplished. No errors found." > output.txt
+          fi
+          if [ "$code" -eq 124 ]; then echo "" >> output.txt; echo "[Stopped: time limit of 120 s reached]" >> output.txt; fi
+          head -c 1000000 output.txt > output.tmp && mv output.tmp output.txt
+          exit 0
+
+      # ------------------------------------------------------------------
+      # Shared: publish the result
+      # ------------------------------------------------------------------
+      # Fallback channel: the page can read this annotation through the API
+      # if the browser is blocked from downloading the artifact zip.
       - name: Publish output annotation
         run: |
           python3 - <<'PY'
