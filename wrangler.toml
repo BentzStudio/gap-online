@@ -1,0 +1,11 @@
+name = "gap-online"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+[build]
+command = "npm run build"
