@@ -1,103 +1,130 @@
-# GAP Playground
+# GAP & Mathematical Provers Playground
 
-A free, serverless online playground for [GAP](https://www.gap-system.org/) (Groups, Algorithms, Programming), [Prover9](https://prover9.org/), [Mace4](https://prover9.org/), and [Lean 4](https://lean-lang.org/) with [Mathlib 4](https://leanprover-community.github.io/mathlib4_docs/). Write code in the browser, run it on GitHub Actions runners, and view results in raw text or typeset LaTeX.
+A free, serverless, privacy-preserving computational laboratory for [GAP](https://www.gap-system.org/) (Groups, Algorithms, Programming), [Prover9](https://prover9.org/), [Mace4](https://prover9.org/), and [Lean 4](https://lean-lang.org/) with [Mathlib 4](https://leanprover-community.github.io/mathlib4_docs/). Write code in your browser, dispatch runs to isolated cloud runners, and view output in high-precision raw text or typeset LaTeX.
 
-**Live site:** `https://gap-online.pages.dev/`
+---
 
-## Features
+## Key Features
 
-- **Multi-Engine Support**: 
-  - **GAP**: Computations in algebra, group theory, semigroup theory, and combinatorics (with the compiled `semigroups` package).
-  - **Prover9**: Automated first-order theorem proving.
-  - **Mace4**: Finite model and counterexample search.
-  - **Lean 4 + Mathlib 4**: Interactive formal theorem proving with the complete community mathematics library.
-- **Rich Semigroup Presets**:
-  - Green's $\mathcal{D}$-classes and egg-box coordinate analysis in transformation monoids ($T_4$).
-  - Symmetric inverse monoids ($\mathcal{IS}_4$) and maximal subsemigroups.
-  - Left-regular band countermodel searches in Mace4.
-  - Formal inverse pair definitions in Lean 4.
-- **URL Permalink Sharing**: Click **🔗 Share** to copy a direct link encoding your exact code and tool in the URL hash for easy collaboration.
-- **Run History**: Switch between your last 5 runs with code and outputs saved locally in `localStorage`.
-- **Output Clipboard Copy**: One-click **📋 Copy** to transfer proof trees, Cayley tables, or LaTeX output directly into papers or Overleaf.
-- **LaTeX Math Rendering**: Automatic translation of GAP cycles, matrices, fractions, and group expressions to LaTeX with KaTeX, plus support for `$…$` and `$$…$$` math and `Tex(obj)` display formulas.
-- **Light & Dark Mode**: One-click theme toggle with automatic system preference detection and localStorage persistence.
-- **Zero-Dependency Frontend**: Pure, single-file HTML, CSS, and vanilla JavaScript using CDN-hosted KaTeX and JSZip. No build tools or node_modules needed for hosting.
-- **Automated Caching**: Pre-configured GitHub Actions workflow compiling and caching LADR-2026 binaries, Semigroups kernel modules, and Mathlib oleans for fast runs.
+- **Four Computational Engines**:
+  - **GAP 4.15.1**: Computational discrete algebra, group theory, representation theory, and semigroup theory (with pre-compiled `semigroups`, `digraphs`, `grape`, and `atlasrep`).
+  - **Prover9 (LADR)**: Automated first-order theorem proving and equational reasoning.
+  - **Mace4 (LADR)**: Finite model generation and counterexample search.
+  - **Lean 4 + Mathlib 4**: Interactive formal theorem proving powered by the community `mathlib4` library and `elan` toolchain manager.
+- **Run History (Up to 10 Runs)**:
+  - Quickly browse, review, and reload past computations and outputs from your current browser session (stored locally in `localStorage`).
+- **Continue in Local Prover**:
+  - One-click script export with copy-ready native CLI commands (`gap`, `prover9`, `mace4`, `lake`) and zero-install Docker commands (`ghcr.io/gap-system/gap:4.15.1-full`).
+- **Scour arXiv & GitHub Public Repos**:
+  - Automatically extracts recognized mathematical concepts (e.g. *Alternating Group*, *Structure Description*, *Conjugacy Classes*, *Green's Relations*, *Mathlib*) into clean, natural multi-word phrases.
+  - Live preprints preview via the built-in server proxy `/api/arxiv` with automatic fallback to OpenAlex and 1-click deep links to arXiv Mathematics, zbMATH Open, Google Scholar, and GitHub theorem code.
+- **Privacy & Presentation / Classroom Mode**:
+  - One-click toggle masks repository names and credentials on screen during classroom lectures, recordings, or screen-sharing sessions.
+  - Personal Access Tokens reside strictly in your client browser's `localStorage` and communicate directly with GitHub's HTTPS API. No server-side databases or analytics trackers.
+- **Tasteful Colophon & Author's Note**:
+  - A traditional mathematical colophon documenting the engines, typesetting standards (KaTeX), security guarantees, and carbon-reduction design.
+  - Dedicated slot for the maintainer's personal note to students, collaborators, and researchers.
+- **Power-Saving OLED Black & Dark Modes**:
+  - Pure `#000000` OLED Black theme reduces display power draw on modern laptop screens, OLED monitors, and mobile devices.
+- **URL Permalink Sharing**:
+  - Click **🔗 Share** to copy a direct link encoding your exact code and tool choice in the URL fragment for zero-friction collaboration.
 
-## Files
+---
+
+## Repository Files
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | The complete application: editor, output, settings, themes |
-| `.github/workflows/run_gap.yml` | GitHub Actions workflow executing GAP, Prover9, Mace4, and Lean 4 |
+| `index.html` | The complete single-page application: editor, output panel, settings, modals, and themes |
+| `server.js` | Zero-dependency production Node.js server that serves `dist/` and proxies `/api/arxiv` to avoid browser CORS restrictions |
+| `vite.config.js` | Vite development and preview server configuration with `/api/arxiv` middleware proxy |
+| `package.json` | Project scripts (`dev`, `build`, `preview`, `start`) and metadata |
+| `.github/workflows/run_gap.yml` | GitHub Actions workflow executing GAP, Prover9, Mace4, and Lean 4 in sandboxed runners |
+| `README.md` | Complete architectural documentation, setup guides, and mathematical user guide |
 
-## Setup & Collaboration
+---
 
-1. Put `index.html` and `.github/workflows/run_gap.yml` in a GitHub repository on your default branch (`main`).
-2. Enable **GitHub Actions** under repository Settings.
-3. Turn on **Settings → Pages** (deploy from branch) or link to Cloudflare Pages.
-4. Generate a **fine-grained personal access token** limited to this repository with:
-   - **Contents**: Read and write (to dispatch run events)
-   - **Actions**: Read-only (to download output artifacts)
-   - **Checks**: Read-only (backup output channel)
-5. Open the playground, expand **Connection settings**, enter `owner/repo` and your token, then click **Save settings**.
+## Deployment & Hosting Options
 
-## Guide for Mathematicians & Collaborators: Using Your Own GitHub Token
+### Option 1: Static Hosting (Cloudflare Pages, GitHub Pages)
+You can deploy `index.html` as a purely static site:
+- Direct API queries to GitHub Actions work completely client-side.
+- If `/api/arxiv` is not hosted on a server, the frontend automatically falls back to the open, CORS-enabled **OpenAlex** research index and provides 1-click search links to arXiv, zbMATH Open, and Google Scholar.
 
-If you are a mathematician, collaborator, or student using this playground, you do **not** need to install GAP, Prover9, Mace4, or Lean 4 locally. Every calculation and formal proof runs on GitHub's cloud compute runners.
+### Option 2: Full-Stack Node.js (Render, Fly.io, Railway, Google Cloud Run)
+Run the included production server:
+```bash
+npm install
+npm run build
+npm start
+```
+`server.js` serves the production build on port 3000 and handles the live `/api/arxiv` proxy with automatic Atom XML parsing and caching.
 
-Because GitHub powers these runs, GitHub requires users to authenticate with a free GitHub account and a **Personal Access Token (PAT)**. This confirms who is dispatching the job and ensures secure access.
+### Option 3: Local Development
+```bash
+npm install
+npm run dev
+```
+Starts the Vite development server with hot-reload and the `/api/arxiv` proxy active.
 
-### Two Ways to Connect
+---
 
-#### Option 1: Running on the Shared Repository (`fraubentz/gap-online`)
-If you are collaborating with PY (like WB):
-1. Share your GitHub username with PY so they can invite you as a collaborator on GitHub (**Settings → Collaborators → Add people**).
-2. Open your email or GitHub notifications and click **Accept invitation**.
-3. Generate your own fine-grained token targeting `fraubentz/gap-online` (see the step-by-step instructions below).
-4. In the playground under **Connection settings**, enter `fraubentz/gap-online` and paste your token. Click **Save settings**.
+## GitHub Actions Setup & Token Guide
 
-#### Option 2: Running Independently on Your Own Fork (No Invite Needed)
-If you prefer complete independence or have heavy computational workloads:
-1. Visit [github.com/fraubentz/gap-online](https://github.com/fraubentz/gap-online) and click **Fork** (top-right).
+### Two Connection Methods
+
+#### Method A: Shared Department / Lab Repository
+If you are collaborating with the repository owner:
+1. Provide your GitHub username to the owner to receive a collaborator invite (**Settings → Collaborators**).
+2. Accept the invitation.
+3. Generate a fine-grained personal access token selecting that repository.
+4. Enter the repository (`owner/repo`) and your token in **Connection settings**, then click **Save settings**.
+
+#### Method B: Independent Fork (Zero Collaboration Needed)
+1. Fork this repository to your own personal GitHub account.
 2. In your fork, ensure Actions are enabled (**Settings → Actions → General**).
-3. Generate a personal access token selecting your fork (`your-username/gap-online`).
-4. In the playground under **Connection settings**, enter `your-username/gap-online` and paste your token. Click **Save settings**.
-5. Every free GitHub account receives **2,000 free Actions runner minutes every month**!
+3. Generate a fine-grained token selecting your fork (`your-username/repo-name`).
+4. Enter your fork name and token in **Connection settings**.
+5. Every free GitHub account receives **2,000 free Actions runner minutes per month**!
 
 ---
 
-### Step-by-Step: Creating a GitHub Token in 60 Seconds
+### Creating Your Token in 60 Seconds
 
-1. Sign in to your account at [github.com](https://github.com).
-2. Open the [**Fine-grained Personal Access Tokens** settings page](https://github.com/settings/tokens?type=beta) (or go to your profile icon top-right → **Settings** → **Developer settings** at the bottom of the left sidebar → **Personal access tokens** → **Fine-grained tokens**).
-3. Click **Generate new token**.
-4. Configure the token details:
-   - **Token name**: e.g., `GAP Playground`
-   - **Expiration**: Choose 30, 60, 90 days, or a custom duration (GitHub emails a reminder before expiration).
-   - **Repository access**: Select **Only select repositories**, then choose `fraubentz/gap-online` (if invited) or your fork (`your-username/gap-online`).
-5. Under **Permissions → Repository permissions**, configure these 3 permissions:
-   - **Contents**: change to **Access: Read and write** *(required to dispatch computations)*
-   - **Actions**: change to **Access: Read-only** *(required to download results)*
-   - **Checks**: change to **Access: Read-only** *(backup output channel)*
-6. Scroll down and click **Generate token**.
-7. Copy the generated token string (starts with `github_pat_...`).
-8. Return to the GAP Playground, open **Connection settings**, verify the repository name, paste your token, and click **Save settings**. You are ready to compute!
+1. Open GitHub's [**Fine-grained Personal Access Tokens** page](https://github.com/settings/tokens?type=beta).
+2. Click **Generate new token**. Name it `Math Playground`.
+3. Under **Repository access**, select **Only select repositories** and pick your repository.
+4. Under **Permissions → Repository permissions**, configure:
+   - **Contents**: `Access: Read and write` *(required to dispatch workflow runs)*
+   - **Actions**: `Access: Read-only` *(required to retrieve calculation output)*
+   - **Checks**: `Access: Read-only` *(backup result channel)*
+5. Click **Generate token**, copy the string, and paste it into the playground's settings.
 
 ---
 
-### Security & Privacy Guarantee
+## Lean 4 & Mathlib 4 Toolchain Configuration
 
-- **Local Storage Only**: Your token is saved **exclusively in your own browser's localStorage**.
-- **Direct API Calls**: Your browser communicates directly and securely with `https://api.github.com`.
-- **Zero Token Leakage**: The token is never transmitted to PY, AI Studio, or any third-party server. Nobody else can ever see or access your token.
+If you see an error such as:
+> `error: no default toolchain configured. run elan default stable to install & configure the latest Lean 4 stable release.`
 
-## Documentation & Tools
+This indicates `elan` (the Lean version manager) needs an explicit default toolchain selected. In `.github/workflows/run_gap.yml`, this is automatically resolved:
+1. `elan default leanprover/lean4:v4.15.0 2>/dev/null || elan default stable`
+2. `elan override set leanprover/lean4:v4.15.0 2>/dev/null || elan override set stable`
+3. A self-healing fallback checks the output file; if the error is detected, it runs `elan default stable` and re-executes.
+4. The workflow utilizes `actions/cache@v4` on `~/.elan` and prebuilt Mathlib olean files, reducing subsequent Lean run times from minutes to seconds.
 
-- **GAP**: [Tutorial](https://docs.gap-system.org/doc/tut/chap0_mj.html), [Reference Manual](https://docs.gap-system.org/doc/ref/chap0_mj.html), [Semigroups Manual](https://docs.gap-system.org/pkg/semigroups/doc/chap0.html), and [gap-system.org](https://www.gap-system.org/)
-- **Prover9 & Mace4**: [Documentation and manual](https://prover9.org/)
-- **Lean 4 & Mathlib**: [Lean 4 Documentation](https://lean-lang.org/) and [Mathlib 4 Docs](https://leanprover-community.github.io/mathlib4_docs/)
+---
 
-## Credits
+## Colophon & Maintainer's Note
 
-Designed and maintained by PY. Made for WB, with love. Built on [GAP](https://www.gap-system.org/), [KaTeX](https://katex.org/), [JSZip](https://stuk.github.io/jszip/), [LADR-2026](https://prover9.org/), and [Lean 4 / Mathlib](https://lean-lang.org/).
+The application features a built-in **Colophon & Architectural Notes** dialog (accessible from the header button or footer link). It documents:
+- **Engines:** GAP 4.15.1, LADR Prover9 & Mace4, and Lean 4 / Mathlib 4.
+- **Typesetting:** Real-time KaTeX LaTeX math rendering with auto-rendering of cycles, matrices, and expressions.
+- **Privacy Guarantee:** Zero trackers, zero cookies, and client-only token storage.
+- **Author's Note Slot:** An elegant, distinct quote block in `index.html` where the maintainer can add their personal dedication or message to students and researchers.
+
+---
+
+## Credits & License
+
+Designed and maintained by PY. Dedicated to WB, with love. Built on [GAP](https://www.gap-system.org/), [KaTeX](https://katex.org/), [JSZip](https://stuk.github.io/jszip/), [LADR-2026](https://prover9.org/), and [Lean 4 / Mathlib](https://lean-lang.org/).

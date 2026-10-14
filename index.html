@@ -2,117 +2,388 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
+<meta name="description" content="Computational mathematics playground for GAP, Prover9, Mace4, and Lean 4 running on GitHub Actions.">
 <title>GAP Playground</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <style>
   :root {
-    --bg: #14161f; --panel: #1c1f2c; --panel-2: #242839; --line: #343a52;
-    --text: #e8eaf3; --muted: #a2a8c0; --accent: #93a9ff; --accent-ink: #10132a;
-    --ok: #86d9b4; --bad: #ff9494;
-    --out-bg: #0f111a;
-    --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
-    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --bg: #11131a; --panel: #1a1d29; --panel-2: #222636; --line: #32384e;
+    --text: #e8eaf3; --muted: #a2a8c0; --accent: #8ba2ff; --accent-ink: #0d1024;
+    --ok: #7ee787; --bad: #ff7b72;
+    --out-bg: #0c0e14;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  }
+  :root[data-theme="oled"] {
+    --bg: #000000; --panel: #0a0a0d; --panel-2: #141419; --line: #262630;
+    --text: #f0f2f8; --muted: #959bb4; --accent: #7995ff; --accent-ink: #000000;
+    --ok: #56d364; --bad: #f85149;
+    --out-bg: #000000;
   }
   :root[data-theme="light"] {
     --bg: #f6f8fa; --panel: #ffffff; --panel-2: #f0f3f6; --line: #d0d7de;
     --text: #1f2328; --muted: #59636e; --accent: #0969da; --accent-ink: #ffffff;
     --ok: #1a7f37; --bad: #cf222e;
-    --out-bg: #f8fafc;
+    --out-bg: #ffffff;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--sans); }
-  body { min-height: 100vh; display: flex; flex-direction: column; transition: background .15s ease, color .15s ease; }
-  header, main, footer { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 20px; }
-  header { padding-top: 24px; padding-bottom: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px 20px; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 var(--sans);
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    transition: background .15s ease, color .15s ease;
+  }
+  header, main, footer { width: 100%; max-width: 1320px; margin: 0 auto; padding: 0 12px; }
+  header {
+    padding-bottom: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px 18px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 16px;
+  }
   .title-group { flex: 1; min-width: 260px; }
-  h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.01em; }
-  header p { margin: 0; color: var(--muted); }
-  .theme-btn { display: inline-flex; align-items: center; gap: 6px; font-size: .875rem; font-weight: 500; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; transition: border-color .15s, background .15s; }
-  .theme-btn:hover { border-color: var(--accent); }
-  main { flex: 1; display: grid; gap: 16px; padding-bottom: 20px; }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
-  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
-  .bar h2 { margin: 0; font-size: .95rem; font-weight: 600; margin-right: auto; }
-  label, legend { font-size: .875rem; color: var(--muted); }
+  h1 { margin: 0; font-size: 1.45rem; font-weight: 700; letter-spacing: -.02em; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: .875rem; }
+  .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* Buttons & Inputs */
   select, input[type=text], input[type=password], textarea, button { font: inherit; color: inherit; }
-  select, input[type=text], input[type=password] { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-height: 38px; }
-  button { cursor: pointer; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 7px 12px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+  input[type=text], input[type=password], select {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    min-height: 44px; /* iOS min touch target */
+    font-size: 16px; /* Prevents auto-zoom in iOS Safari */
+  }
+  button {
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 8px 12px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-weight: 500;
+    touch-action: manipulation;
+    transition: border-color .15s, background .15s, filter .15s;
+  }
   button:hover { border-color: var(--accent); }
   button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 650; }
   button.primary:hover { filter: brightness(1.08); }
   button.primary:active { filter: brightness(0.96); }
   button:disabled { opacity: .55; cursor: progress; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  #code { flex: 1; min-height: 340px; width: 100%; resize: vertical; border: 0; background: transparent; padding: 14px; font: .95rem/1.55 var(--mono); tab-size: 2; color: inherit; }
+
+  /* Mobile tabs switcher */
+  .mobile-tabs {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    background: var(--panel-2);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    margin-bottom: 12px;
+  }
+  .mobile-tab-btn {
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--muted);
+    min-height: 40px;
+  }
+  .mobile-tab-btn.active {
+    background: var(--panel);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  main { flex: 1; display: grid; gap: 16px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar h2 { margin: 0; font-size: .95rem; font-weight: 650; margin-right: auto; }
+
+  #code {
+    flex: 1;
+    min-height: 380px;
+    width: 100%;
+    resize: vertical;
+    border: 0;
+    background: transparent;
+    padding: 14px;
+    font: .9375rem/1.55 var(--mono);
+    tab-size: 2;
+    color: inherit;
+    -webkit-overflow-scrolling: touch;
+  }
   #code:focus-visible { outline-offset: -3px; }
+
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 0; padding: 0; }
   .seg label { display: flex; padding: 0; color: var(--text); }
-  .seg input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .seg input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
   .seg:disabled { opacity: .5; }
   .seg:disabled span { cursor: not-allowed; }
-  .seg span { padding: 7px 12px; min-height: 36px; display: flex; align-items: center; cursor: pointer; }
+  .seg span { padding: 6px 11px; min-height: 36px; display: flex; align-items: center; cursor: pointer; font-size: .85rem; }
   .seg input:checked + span { background: var(--accent); color: var(--accent-ink); font-weight: 650; }
   .seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: -3px; }
-  #status { padding: 8px 14px; font-size: .875rem; color: var(--muted); border-bottom: 1px solid var(--line); min-height: 38px; }
-  #status.ok { color: var(--ok); } #status.err { color: var(--bad); }
-  #out { flex: 1; min-height: 300px; max-height: 70vh; overflow: auto; padding: 14px; font: .95rem/1.55 var(--mono); white-space: pre-wrap; word-break: break-word; background: var(--out-bg); }
+
+  #status {
+    padding: 10px 14px;
+    font-size: .875rem;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+  }
+  #status.ok { color: var(--ok); }
+  #status.err { color: var(--bad); }
+  #status.running { color: var(--accent); font-weight: 600; }
+
+  #out {
+    flex: 1;
+    min-height: 320px;
+    max-height: 72vh;
+    overflow: auto;
+    padding: 14px;
+    font: .9375rem/1.55 var(--mono);
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--out-bg);
+    -webkit-overflow-scrolling: touch;
+  }
   #out.latex { font-family: var(--sans); font-size: 1.02rem; }
   #out .katex { color: var(--text); font-size: 1.12em; }
   #out .katex-display { margin: .8em 0; overflow-x: auto; overflow-y: hidden; }
   #out .placeholder { color: var(--muted); }
+
   details { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
-  summary { padding: 12px 14px; cursor: pointer; font-weight: 600; }
+  summary { padding: 12px 14px; cursor: pointer; font-weight: 600; user-select: none; }
   .settings { display: grid; gap: 12px; padding: 0 14px 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
   .settings div { display: grid; gap: 4px; }
   .settings .wide { grid-column: 1 / -1; }
-  .hint { font-size: .8125rem; color: var(--muted); margin: 0; }
-  footer { padding-bottom: 24px; font-size: .875rem; color: var(--muted); }
-  footer p { margin: 0 0 6px; }
-  a { color: var(--accent); }
-  code { font-family: var(--mono); background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
+  .hint { font-size: .8125rem; color: var(--muted); margin: 0; line-height: 1.5; }
 
-  /* Standard accessible visually-hidden pattern for screen readers */
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+  /* Modals / Dialogs */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 1000;
+  }
+  .modal-backdrop[hidden] { display: none; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 640px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+    display: flex;
+    flex-direction: column;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .modal-header h3 { margin: 0; font-size: 1.05rem; font-weight: 650; }
+  .modal-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .modal-footer {
+    padding: 12px 18px;
+    background: var(--panel-2);
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .cmd-block {
+    background: var(--out-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: .875rem;
+    overflow-x: auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .cmd-block code {
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .cmd-block button {
+    flex-shrink: 0;
+    min-height: 32px;
+    padding: 4px 10px;
+    font-size: .8rem;
   }
 
-  @media (min-width: 960px) { main { grid-template-columns: 1fr 1fr; } details { grid-column: 1 / -1; } }
-  @media (prefers-reduced-motion: no-preference) { button { transition: filter .15s, border-color .15s; } }
+  .scour-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 9999px;
+    padding: 3px 10px;
+    font-size: .8125rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .scour-chip button {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: .85rem;
+    line-height: 1;
+    padding: 0;
+    min-height: auto;
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .scour-chip button:hover {
+    color: var(--bad);
+    background: rgba(239, 68, 68, 0.15);
+  }
+
+  footer {
+    padding: 24px 12px 12px;
+    font-size: .85rem;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    margin-top: 24px;
+  }
+  footer p { margin: 0 0 6px; }
+  a { color: var(--accent); text-decoration-thickness: 1px; }
+  code { font-family: var(--mono); background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+
+  /* Responsive layout */
+  @media (min-width: 960px) {
+    main { grid-template-columns: 1fr 1fr; }
+    details { grid-column: 1 / -1; }
+    .mobile-tabs { display: none !important; }
+    .panel { display: flex !important; }
+  }
+  @media (max-width: 959px) {
+    .mobile-tabs { display: grid; }
+    .panel.mobile-hidden { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
 </style>
 </head>
 <body>
 <header>
   <div class="title-group">
     <h1>GAP Playground</h1>
-    <p>Write GAP code, Prover9 / Mace4 input, or Lean 4 + Mathlib proofs, run them on a fresh GitHub Actions machine, and read results here.</p>
+    <p>Run GAP, Prover9, Mace4, and Lean 4 proofs in isolated cloud runners.</p>
   </div>
-  <button type="button" class="theme-btn" id="themeToggle" aria-label="Switch to light mode" title="Toggle theme">
-    <span id="themeIcon" aria-hidden="true">☀️</span> <span id="themeText">Light mode</span>
-  </button>
+  <div class="header-actions">
+    <button type="button" id="openColophonBtn" title="View Colophon, Dedication & Architecture">📜 Colophon</button>
+    <!-- Theme Switcher: Dark / OLED Black / Light (Carbon & Battery Saver) -->
+    <label for="themeSelect" class="sr-only">Display Theme</label>
+    <select id="themeSelect" aria-label="Display theme and power mode" title="Select theme / energy-saving mode">
+      <option value="dark">🌙 Dark (Slate)</option>
+      <option value="oled">🖤 OLED Black (Eco / Zero-Power)</option>
+      <option value="light">☀️ Light</option>
+    </select>
+  </div>
 </header>
 
+<!-- Mobile switcher for phone screens -->
+<div class="mobile-tabs" role="tablist" aria-label="Editor and output panels">
+  <button type="button" class="mobile-tab-btn active" id="tabBtnEditor" role="tab" aria-selected="true" aria-controls="editorPanel">
+    📝 Code Editor
+  </button>
+  <button type="button" class="mobile-tab-btn" id="tabBtnOutput" role="tab" aria-selected="false" aria-controls="outputPanel">
+    📊 Output &amp; Results
+  </button>
+</div>
+
 <main>
+  <!-- Documentation & Guide -->
   <details id="help">
     <summary>How to use this playground</summary>
     <div class="settings">
       <p class="hint wide" style="font-size:.95rem;color:var(--text)">
-        Type code on the left and press <strong>Run</strong> (or Ctrl/⌘ + Enter). Your code runs on a fresh
-        GitHub machine, and the result appears on the right, usually within a minute.
+        Type code on the left and press <strong>Run</strong> (or <code>⌘/Ctrl + Enter</code>). Your code runs in an isolated runner, and results appear on the right, usually within a minute.
+      </p>
+      <p class="hint wide" style="font-size:.875rem; color: var(--muted); background: var(--panel-2); border-left: 3px solid var(--ok); padding: 8px 12px; border-radius: 4px; margin-top: 4px;">
+        ⚡ <strong>Batch Execution Model:</strong> Each run executes the complete script in your editor from top to bottom in a clean, isolated cloud sandbox. All variables, functions, and theorems defined within your editor work together seamlessly. Because each run starts fresh, there is no lingering or hidden state from previous runs&mdash;ensuring 100% reproducible computations and proofs.
       </p>
       <p class="hint wide" style="font-size:.95rem;color:var(--text)">
         <strong>GAP:</strong> Like the GAP prompt, a statement ending in <code>;</code> shows its value,
         while <code>;;</code> hides it. <code>Print(…)</code> works too. Load packages with <code>LoadPackage("semigroups");</code>. Runs stop after 120 seconds.
-        Choose <strong>LaTeX</strong> above the output to typeset GAP results (permutations, matrices, fractions, powers, groups) automatically, plus any maths written between <code>$…$</code> or <code>$$…$$</code>.
+        Choose <strong>LaTeX</strong> above the output to typeset GAP results automatically, plus any maths between <code>$…$</code> or <code>$$…$$</code>.
       </p>
       <p class="hint wide" style="font-size:.95rem;color:var(--text)">
         <strong>Prover9 and Mace4:</strong> pick the tool next to the editor title. Both read the same input language
@@ -121,66 +392,63 @@
         (use <code>assign(domain_size, 6).</code> to fix the size).
       </p>
       <p class="hint wide" style="font-size:.95rem;color:var(--text)">
-        <strong>Lean 4 + Mathlib 4:</strong> pick Lean 4 next to the editor title. Import modules like <code>import Mathlib.Algebra.Group.Basic</code> or <code>import Mathlib.Tactic</code>. Use tactics such as <code>linarith</code>, <code>ring</code>, <code>rw</code>, and <code>induction</code>, or run evaluations with <code>#eval</code> and <code>#check</code>. If your proof has no errors, the output confirms all goals are accomplished.
-      <div class="wide" style="border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px;">
-        <p class="hint" style="font-size:.9rem; color: var(--accent); font-weight:600; margin-bottom: 4px;">
-          💡 First time here or collaborating with PY? (GitHub setup for mathematicians)
-        </p>
-        <p class="hint" style="font-size:.875rem; color: var(--text); line-height: 1.5; margin: 0;">
-          Calculations run in the cloud on GitHub Actions runners. To run code, you need a free GitHub account and a Personal Access Token (PAT).
-          If PY invited you as a collaborator on <code>fraubentz/gap-online</code>, you can run directly on that repository using your own token!
-          Alternatively, click Fork on GitHub to run on your own free account.
-          Expand <strong>Connection settings</strong> below for the 60-second step-by-step guide.
-        </p>
-      </div>
+        <strong>Lean 4 + Mathlib 4:</strong> pick Lean 4 next to the editor title. Import modules like <code>import Mathlib.Algebra.Group.Basic</code> or <code>import Mathlib.Tactic</code>. Use tactics such as <code>linarith</code>, <code>ring</code>, <code>rw</code>, and <code>induction</code>, or run evaluations with <code>#eval</code> and <code>#check</code>.
+      </p>
     </div>
   </details>
 
+  <!-- Connection & Privacy Settings -->
   <details id="settings">
-    <summary>Connection settings</summary>
+    <summary>Connection &amp; Privacy settings</summary>
     <form id="settingsForm" class="settings">
       <div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <label for="repo">Repository (owner/name)</label>
-          <button type="button" id="useDefaultRepo" style="background:none; border:none; color:var(--accent); font-size:.8rem; padding:0; cursor:pointer; text-decoration:underline;" title="Click to prefill fraubentz/gap-online">Target fraubentz/gap-online</button>
+        <label for="repo">Repository (owner/name)</label>
+        <div style="position:relative; display:flex; align-items:center;">
+          <input type="text" id="repo" placeholder="owner/repo (e.g. username/gap-online)" autocomplete="off" spellcheck="false" required style="width:100%;">
+          <button type="button" id="toggleMaskBtn" title="Toggle visibility / Presentation mode" aria-label="Toggle repository visibility" style="position:absolute; right:4px; min-height:36px; padding:4px 8px; border:none; background:transparent;">👁️</button>
         </div>
-        <input type="text" id="repo" placeholder="fraubentz/gap-online" autocomplete="off" spellcheck="false" required>
       </div>
       <div>
         <label for="token">Personal Access Token</label>
         <input type="password" id="token" placeholder="github_pat_…" autocomplete="off" spellcheck="false" required>
       </div>
+      <div class="wide" style="display:flex; align-items:center; gap:8px; margin-top:2px;">
+        <input type="checkbox" id="maskMode" style="width:18px; height:18px; cursor:pointer;">
+        <label for="maskMode" style="color:var(--text); cursor:pointer; font-size:.875rem;">
+          🔒 <strong>Presentation / Classroom Mode</strong> (Mask repository name and credentials on screen for screen sharing)
+        </label>
+      </div>
       <p class="hint wide">
-        Use a fine-grained token limited to this repository with <strong>Contents: read &amp; write</strong>
+        Use a fine-grained token limited to the target repository with <strong>Contents: read &amp; write</strong>
         (dispatches runs), <strong>Actions: read</strong> (downloads outputs) and
         <strong>Checks: read</strong> (backup output channel).
       </p>
+
       <div class="wide">
-        <details class="guide" style="border: 1px solid var(--line); border-radius: 8px; background: var(--bg); margin: 6px 0 10px;" open>
+        <details class="guide" style="border: 1px solid var(--line); border-radius: 8px; background: var(--bg); margin: 6px 0 10px;">
           <summary style="padding: 10px 14px; font-size: .885rem; color: var(--accent); font-weight: 650; cursor: pointer;">
             📘 Step-by-Step for Mathematicians: How to get your own token in 1 minute
           </summary>
           <div style="padding: 8px 14px 14px; font-size: .875rem; line-height: 1.6; color: var(--text);">
             <p style="margin: 0 0 10px;">
-              <strong>Why a token?</strong> Computations run on GitHub's cloud runners. GitHub uses tokens to know who is requesting the computation so you can run jobs securely.
+              <strong>Why a token?</strong> Computations run on GitHub's cloud runners. GitHub uses tokens to verify authorization so you can execute code safely.
             </p>
-
             <div style="display: grid; gap: 8px; margin-bottom: 12px; padding: 10px; background: var(--panel-2); border-radius: 6px; border-left: 3px solid var(--accent);">
               <div>
-                <strong>Option A &mdash; Running on PY's repository (<code>fraubentz/gap-online</code>):</strong><br>
-                <span>If PY has invited you as a collaborator on GitHub (Settings &rarr; Collaborators), accept the invite email. Then generate a token selecting <code>fraubentz/gap-online</code> and enter that repository name above.</span>
+                <strong>Option A &mdash; Running on a Shared / Department Repository:</strong><br>
+                <span>If you were invited as a collaborator on a shared runner repository, accept the invitation email. Then generate a fine-grained token selecting that repository and enter its <code>owner/name</code> above.</span>
               </div>
               <div>
-                <strong>Option B &mdash; Running independently on your own account (No invite needed):</strong><br>
-                <span>Click <a href="https://github.com/fraubentz/gap-online" target="_blank" rel="noopener"><strong>Fork</strong> on GitHub</a> to copy this repository to your account. Then generate a token selecting your fork, and enter <code>your-username/gap-online</code> above. GitHub gives you 2,000 free runner minutes per month!</span>
+                <strong>Option B &mdash; Running on Your Own GitHub Account:</strong><br>
+                <span>Fork the runner repository to your own account. Then generate a token selecting your fork, and enter <code>your-username/repo-name</code> above. Every free GitHub account receives 2,000 free runner minutes per month!</span>
               </div>
             </div>
 
             <strong>Generating your token in 5 easy clicks:</strong>
             <ol style="margin: 6px 0 10px; padding-left: 20px;">
               <li>Sign in to GitHub and open the <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener"><strong>Fine-grained tokens page</strong></a>.</li>
-              <li>Click <strong>Generate new token</strong>. Set a token name (e.g. <em>GAP Playground</em>) and an expiration date.</li>
-              <li>Under <strong>Repository access</strong>, select <strong>Only select repositories</strong> and pick <code>fraubentz/gap-online</code> (or your fork).</li>
+              <li>Click <strong>Generate new token</strong>. Set a token name (e.g. <em>Math Playground</em>) and an expiration date.</li>
+              <li>Under <strong>Repository access</strong>, select <strong>Only select repositories</strong> and pick your target repository.</li>
               <li>Under <strong>Permissions &rarr; Repository permissions</strong>, set:
                 <ul style="margin: 4px 0 6px;">
                   <li><strong>Contents</strong>: <code>Access: Read and write</code> (sends computation requests)</li>
@@ -189,19 +457,20 @@
                 </ul>
               </li>
               <li>Click <strong>Generate token</strong> at the bottom. Copy the token (starts with <code>github_pat_...</code>).</li>
-              <li>Paste the repository name above (e.g. <code>fraubentz/gap-online</code>) and your token, then click <strong>Save settings</strong>. You're ready to compute!</li>
+              <li>Paste the repository name above and your token, then click <strong>Save settings</strong>.</li>
             </ol>
             <p class="hint" style="margin-top: 8px; font-size: .8125rem;">
-              🔒 <strong>Complete Privacy Guarantee:</strong> Your token is stored <em>only</em> in your own browser's local storage (<code>localStorage</code>) and sent directly to <code>api.github.com</code>. It is never transmitted to any third party, database, or server, and nobody else can ever see it.
+              🔒 <strong>Complete Privacy Guarantee:</strong> Your token is stored <em>only</em> in your own browser's local storage (<code>localStorage</code>) and sent directly to GitHub's HTTPS API. It is never transmitted to any third party, database, or server.
             </p>
           </div>
         </details>
       </div>
-      <div class="wide"><button type="submit" id="save">Save settings</button></div>
+      <div class="wide"><button type="submit" id="save" class="primary">Save settings</button></div>
     </form>
   </details>
 
-  <section class="panel" aria-labelledby="edTitle">
+  <!-- Editor Section -->
+  <section class="panel" id="editorPanel" aria-labelledby="edTitle">
     <div class="bar">
       <h2 id="edTitle">GAP code</h2>
       <label for="tool" class="sr-only">Select tool</label>
@@ -213,13 +482,26 @@
       </select>
       <label for="examples" class="sr-only">Load an example</label>
       <select id="examples" aria-label="Load an example"></select>
-      <button type="button" id="shareBtn" title="Copy shareable link with this code" aria-label="Share snippet">🔗 Share</button>
-      <button type="button" class="primary" id="run" title="Run code (Ctrl/⌘ + Enter)">Run</button>
+      
+      <!-- Action Buttons -->
+      <button type="button" id="localBtn" title="Continue calculations in your own installed prover" aria-label="Continue calculations locally">
+        💻 Continue Locally
+      </button>
+      <button type="button" id="scourBtn" title="Scour arXiv and GitHub public repos for existing work" aria-label="Scour arXiv and GitHub">
+        🔍 Scour arXiv &amp; GitHub
+      </button>
+      <button type="button" id="shareBtn" title="Copy shareable link with this code" aria-label="Share snippet">
+        🔗 Share
+      </button>
+      <button type="button" class="primary" id="run" title="Run code (⌘/Ctrl + Enter)">
+        ▶ Run
+      </button>
     </div>
     <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
   </section>
 
-  <section class="panel" aria-labelledby="outTitle">
+  <!-- Output Section -->
+  <section class="panel mobile-hidden" id="outputPanel" aria-labelledby="outTitle">
     <div class="bar">
       <h2 id="outTitle">Output</h2>
       <button type="button" id="copyOutBtn" title="Copy output text to clipboard">📋 Copy</button>
@@ -232,10 +514,202 @@
         <label><input type="radio" name="fmt" value="latex"><span>LaTeX</span></label>
       </fieldset>
     </div>
-    <div id="status" role="status" aria-live="polite" aria-atomic="true">Ready. Press Run or Ctrl/⌘ + Enter.</div>
+    <div id="status" role="status" aria-live="polite" aria-atomic="true">Ready. Press Run or ⌘/Ctrl + Enter.</div>
     <div id="out" tabindex="0" aria-label="Program output"><span class="placeholder">Output appears here.</span></div>
   </section>
 </main>
+
+<!-- Modal 1: Continue Calculations Locally -->
+<div class="modal-backdrop" id="localModal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="localModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="localModalTitle">💻 Continue Calculations in Local Prover</h3>
+      <button type="button" class="modal-close" id="closeLocalModal" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0; font-size:.9rem; color:var(--text);">
+        You can export this computation directly to your local workstation or high-performance compute cluster to run with unlimited memory and time.
+      </p>
+
+      <div>
+        <label style="font-weight:600; display:block; margin-bottom:6px; color:var(--text);">1. Download script file:</label>
+        <button type="button" class="primary" id="downloadScriptBtn">
+          📥 Download <span id="localFilename">computation.g</span>
+        </button>
+      </div>
+
+      <div>
+        <label style="font-weight:600; display:block; margin-bottom:6px; color:var(--text);">2. Run via native command line:</label>
+        <div class="cmd-block">
+          <code id="nativeCmd">gap -q computation.g</code>
+          <button type="button" id="copyNativeCmd">Copy</button>
+        </div>
+      </div>
+
+      <div id="dockerBlock">
+        <label style="font-weight:600; display:block; margin-bottom:6px; color:var(--text);">3. Run via Docker (Zero installation):</label>
+        <div class="cmd-block">
+          <code id="dockerCmd">docker run --rm -it -v "$PWD":/work -w /work ghcr.io/gap-system/gap:4.15.1-full gap -q computation.g</code>
+          <button type="button" id="copyDockerCmd">Copy</button>
+        </div>
+      </div>
+
+      <div style="background:var(--panel-2); border-radius:8px; padding:10px 12px; font-size:.8125rem; line-height:1.5; color:var(--muted);">
+        <strong>Local Installation Cheat Sheet:</strong>
+        <ul style="margin:4px 0 0; padding-left:18px;">
+          <li><strong>GAP:</strong> <code>brew install gap</code> (macOS) or <code>sudo apt install gap</code> (Ubuntu/Debian)</li>
+          <li><strong>Prover9 &amp; Mace4:</strong> <code>brew install prover9</code> or download from <a href="https://prover9.org/" target="_blank" rel="noopener">prover9.org</a></li>
+          <li><strong>Lean 4:</strong> <code>curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh</code></li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" id="dismissLocalModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 2: Scour arXiv & GitHub Public Repos -->
+<div class="modal-backdrop" id="scourModal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="scourModalTitle">
+  <div class="modal" style="max-width:720px;">
+    <div class="modal-header">
+      <h3 id="scourModalTitle">🔍 Scour arXiv &amp; GitHub Public Repos</h3>
+      <button type="button" class="modal-close" id="closeScourModal" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0; font-size:.9rem; color:var(--text);">
+        Search mathematical literature and open-source theorem repositories to see if someone else has investigated this problem or proved a related result.
+      </p>
+
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+          <label for="scourQuery" style="font-weight:600; color:var(--text); margin:0;">Keywords &amp; Mathematical Terms:</label>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button type="button" id="btnFormatWords" style="min-height:28px; padding:2px 8px; font-size:.78rem;" title="Separate all words with spaces">Words</button>
+            <button type="button" id="btnFormatQuotes" style="min-height:28px; padding:2px 8px; font-size:.78rem;" title="Wrap multi-word terms in exact quotes">"Phrases"</button>
+            <button type="button" id="btnRefreshKeywords" style="min-height:28px; padding:2px 8px; font-size:.78rem;" title="Re-extract keywords from code">⚡ Re-extract</button>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="scourQuery" placeholder="e.g. Alternating Group Structure Description Conjugacy Classes" style="flex:1;">
+        </div>
+        <div style="margin-top:8px;">
+          <div style="font-size:.78rem; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+            <span>Recognized mathematical concepts (click ✕ to remove):</span>
+            <button type="button" id="btnAddTermPrompt" style="min-height:22px; padding:1px 6px; font-size:.75rem; background:transparent; border:1px dashed var(--line); color:var(--accent); cursor:pointer;">+ Add term</button>
+          </div>
+          <div id="scourChips" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-weight:600; display:block; margin-bottom:6px; color:var(--text);">Direct 1-Click Search Links:</label>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <a id="linkArxiv" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+            📄 Search arXiv (math.GR / math.LO) ↗
+          </a>
+          <a id="linkGithub" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+            🐙 GitHub Code Search (Public Repos) ↗
+          </a>
+          <a id="linkZbMath" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+            📚 zbMATH Open ↗
+          </a>
+          <a id="linkScholar" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+            🎓 Google Scholar ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- Live arXiv preprints preview -->
+      <div style="border-top:1px solid var(--line); padding-top:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong style="font-size:.9rem;">Live arXiv Mathematics Feed:</strong>
+          <button type="button" id="fetchArxivBtn" style="min-height:32px; padding:2px 10px; font-size:.8rem;">
+            🔄 Fetch Matching Papers
+          </button>
+        </div>
+        <div id="arxivResults" style="min-height:100px; max-height:260px; overflow-y:auto; background:var(--out-bg); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:.85rem; line-height:1.45;">
+          <span style="color:var(--muted);">Click "Fetch Matching Papers" to query the official arXiv public API in real-time.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" id="dismissScourModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 3: Colophon & Computational Architecture -->
+<div class="modal-backdrop" id="colophonModal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="colophonModalTitle">
+  <div class="modal" style="max-width:760px;">
+    <div class="modal-header">
+      <h3 id="colophonModalTitle">📜 Colophon &amp; Architectural Notes</h3>
+      <button type="button" class="modal-close" id="closeColophonModal" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="modal-body" style="font-size:.9rem; line-height:1.6; color:var(--text);">
+      
+      <!-- Personal Note Section from Maintainer / Author -->
+      <div id="colophonAuthorNote" style="background:var(--panel-2); border-left:4px solid var(--accent); border-radius:8px; padding:14px 16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:4px;">
+          <strong style="color:var(--accent); font-size:.95rem;">💌 A Note from the Author &amp; Maintainer</strong>
+          <span style="font-size:.75rem; color:var(--muted); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">Dedicated to WB, Collaborators &amp; Students</span>
+        </div>
+        <blockquote id="colophonNoteText" style="margin:0; font-style:italic; color:var(--text); line-height:1.6; border:none; padding:0;">
+          "Built to bring the joy of deep algebraic exploration, finite countermodel searches, and interactive theorem proving directly into hands-on mathematical practice&mdash;with zero installation hurdles, absolute student privacy, and complete transparency."
+        </blockquote>
+        <div style="font-size:.78rem; color:var(--muted); margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+          <span>&mdash; PY &amp; Collaborators</span>
+          <span style="font-size:.72rem; opacity:.85;">(Author personal note slot)</span>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
+        <div style="background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:12px;">
+          <h4 style="margin:0 0 6px; font-size:.85rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);">Computational Engines</h4>
+          <ul style="margin:0; padding-left:18px; font-size:.85rem;">
+            <li><strong>GAP 4.15.1:</strong> Groups, Algorithms, Programming with pre-compiled Semigroups kernel modules, Digraphs, GRAPE, and AtlasRep.</li>
+            <li><strong>LADR Prover9 &amp; Mace4:</strong> 64-bit automated first-order theorem prover and finite model / counterexample generator.</li>
+            <li><strong>Lean 4 &amp; Mathlib 4:</strong> Interactive Theorem Prover powered by the <code>elan</code> toolchain manager and pre-built olean caches.</li>
+          </ul>
+        </div>
+
+        <div style="background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:12px;">
+          <h4 style="margin:0 0 6px; font-size:.85rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);">Typography &amp; Mathematical Rendering</h4>
+          <ul style="margin:0; padding-left:18px; font-size:.85rem;">
+            <li><strong>KaTeX 0.16.9:</strong> High-performance math typesetting engine for real-time mathematical expressions, Cayley tables, and LaTeX cycles.</li>
+            <li><strong>Typography:</strong> System font stacks (San Francisco, Segoe UI, Roboto) paired with JetBrains Mono for zero layout shifts.</li>
+            <li><strong>Zero Tracking:</strong> Zero analytics, zero ad trackers, zero telemetry, and zero third-party cookies.</li>
+          </ul>
+        </div>
+
+        <div style="background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:12px;">
+          <h4 style="margin:0 0 6px; font-size:.85rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);">Security &amp; Privacy Model</h4>
+          <ul style="margin:0; padding-left:18px; font-size:.85rem;">
+            <li><strong>Ephemeral Runners:</strong> Clean Ubuntu Linux sandbox provisioned and destroyed for each calculation run.</li>
+            <li><strong>Client-Side Tokens:</strong> Personal access tokens reside strictly in your browser's private <code>localStorage</code>.</li>
+            <li><strong>Presentation Mode:</strong> One-click masking of repository identifiers and credentials during lectures and screen shares.</li>
+          </ul>
+        </div>
+
+        <div style="background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:12px;">
+          <h4 style="margin:0 0 6px; font-size:.85rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);">Carbon &amp; Energy Efficiency</h4>
+          <ul style="margin:0; padding-left:18px; font-size:.85rem;">
+            <li><strong>Scale-to-Zero Compute:</strong> Zero idle energy consumption; cloud compute runs strictly on-demand.</li>
+            <li><strong>OLED Black Mode:</strong> True black background (<code>#000000</code>) designed to minimize power draw on OLED / mobile displays.</li>
+            <li><strong>Binary Caching:</strong> Pre-compiled LADR, Semigroups, and Mathlib caches avoid duplicate cloud CPU cycles.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="background:var(--panel-2); border-radius:8px; padding:10px 14px; font-size:.8rem; color:var(--muted); line-height:1.5;">
+        <strong>Colophon &amp; Dedication:</strong> Designed and maintained by PY. Made for WB, with love. Built on the shoulders of the worldwide open-source mathematical software community.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" id="dismissColophonModal">Close</button>
+    </div>
+  </div>
+</div>
 
 <footer>
   <p>
@@ -250,7 +724,7 @@
   </p>
   <p>In GAP, a statement ending in <code>;</code> shows its value; end it with <code>;;</code> to hide it.
   In LaTeX mode, <code>Tex(obj)</code> prints an object as a display equation.</p>
-  <p>&copy; <span id="year">2026</span> &middot; Designed and maintained by PY. Made for WB, with love. </p>
+  <p>&copy; <span id="year">2026</span> &middot; Designed and maintained for mathematical researchers &amp; students &middot; <button type="button" id="footerColophonBtn" style="background:none; border:none; color:var(--accent); text-decoration:underline; cursor:pointer; font-size:inherit; padding:0;">📜 View Colophon &amp; Notes</button></p>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -259,28 +733,57 @@
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
-const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } },
-                set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+const store = {
+  get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }
+};
 
-/* ---- Theme support (Light / Dark) ---- */
+/* ---- Theme support (Dark / OLED Black / Light) ---- */
 function applyTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
+  if (theme === "light") {
+    document.documentElement.setAttribute("data-theme", "light");
+  } else if (theme === "oled") {
+    document.documentElement.setAttribute("data-theme", "oled");
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
   store.set("gap.theme", theme);
-  const isLight = theme === "light";
-  $("themeIcon").textContent = isLight ? "🌙" : "☀️";
-  $("themeText").textContent = isLight ? "Dark mode" : "Light mode";
-  $("themeToggle").setAttribute("aria-label", isLight ? "Switch to dark mode" : "Switch to light mode");
+  $("themeSelect").value = theme;
 }
 let currentTheme = store.get("gap.theme");
 if (!currentTheme) {
   currentTheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
 }
 applyTheme(currentTheme);
-$("themeToggle").onclick = () => {
-  const current = document.documentElement.getAttribute("data-theme") || "dark";
-  applyTheme(current === "light" ? "dark" : "light");
-};
+$("themeSelect").onchange = e => applyTheme(e.target.value);
 
+/* ---- Mobile Tab Switching ---- */
+const editorPanel = $("editorPanel");
+const outputPanel = $("outputPanel");
+const tabBtnEditor = $("tabBtnEditor");
+const tabBtnOutput = $("tabBtnOutput");
+
+function showPanel(target) {
+  if (target === "editor") {
+    editorPanel.classList.remove("mobile-hidden");
+    outputPanel.classList.add("mobile-hidden");
+    tabBtnEditor.classList.add("active");
+    tabBtnEditor.setAttribute("aria-selected", "true");
+    tabBtnOutput.classList.remove("active");
+    tabBtnOutput.setAttribute("aria-selected", "false");
+  } else {
+    outputPanel.classList.remove("mobile-hidden");
+    editorPanel.classList.add("mobile-hidden");
+    tabBtnOutput.classList.add("active");
+    tabBtnOutput.setAttribute("aria-selected", "true");
+    tabBtnEditor.classList.remove("active");
+    tabBtnEditor.setAttribute("aria-selected", "false");
+  }
+}
+tabBtnEditor.onclick = () => showPanel("editor");
+tabBtnOutput.onclick = () => showPanel("output");
+
+/* ---- Examples Definitions ---- */
 const GAP_EXAMPLES = {
   "Green's D-classes & Egg-boxes": [
     'LoadPackage("semigroups");;',
@@ -449,35 +952,65 @@ const LEAN_EXAMPLES = {
 };
 
 const TOOLS = {
-  gap:     { label: "GAP",     title: "GAP code",      examples: GAP_EXAMPLES,     codeKey: "gap.code" },
-  prover9: { label: "Prover9", title: "Prover9 input", examples: PROVER9_EXAMPLES, codeKey: "gap.code.prover9" },
-  mace4:   { label: "Mace4",   title: "Mace4 input",   examples: MACE4_EXAMPLES,   codeKey: "gap.code.mace4" },
-  lean:    { label: "Lean 4",  title: "Lean 4 code",   examples: LEAN_EXAMPLES,    codeKey: "gap.code.lean" }
+  gap:     { label: "GAP",     title: "GAP code",      ext: "g",    examples: GAP_EXAMPLES,     codeKey: "gap.code" },
+  prover9: { label: "Prover9", title: "Prover9 input", ext: "in",   examples: PROVER9_EXAMPLES, codeKey: "gap.code.prover9" },
+  mace4:   { label: "Mace4",   title: "Mace4 input",   ext: "in",   examples: MACE4_EXAMPLES,   codeKey: "gap.code.mace4" },
+  lean:    { label: "Lean 4",  title: "Lean 4 code",   ext: "lean", examples: LEAN_EXAMPLES,    codeKey: "gap.code.lean" }
 };
 
-let cfg = { repo: store.get("gap.repo") || "", token: store.get("gap.token") || "" };
+/* ---- Privacy & Repo Configuration ---- */
+// Stored in localStorage only. No hardcoded personal repository link exposed on website!
+let cfg = {
+  repo: store.get("gap.repo") || "",
+  token: store.get("gap.token") || "",
+  mask: store.get("gap.mask") === "true"
+};
 let lastOutput = null, lastTool = "gap", busy = false;
 
-// Guess owner/repo when served from <owner>.github.io/<repo>/
+// Auto-detect only if hosted under custom github.io page and repo is not set
 if (!cfg.repo && /\.github\.io$/.test(location.hostname)) {
   const repoName = location.pathname.split("/")[1];
   if (repoName) cfg.repo = location.hostname.replace(".github.io", "") + "/" + repoName;
 }
-if (!cfg.repo) {
-  cfg.repo = "fraubentz/gap-online";
-}
-$("repo").value = cfg.repo; $("token").value = cfg.token;
-if (!cfg.token) $("settings").open = true;
 
-const defRepoBtn = $("useDefaultRepo");
-if (defRepoBtn) {
-  defRepoBtn.onclick = () => {
-    $("repo").value = "fraubentz/gap-online";
-    $("repo").focus();
+$("repo").value = cfg.repo;
+$("token").value = cfg.token;
+$("maskMode").checked = cfg.mask;
+
+function applyMaskMode() {
+  const isMasked = $("maskMode").checked;
+  store.set("gap.mask", isMasked ? "true" : "false");
+  $("repo").type = isMasked ? "password" : "text";
+  $("toggleMaskBtn").textContent = isMasked ? "🙈" : "👁️";
+  $("toggleMaskBtn").title = isMasked ? "Currently masked (Click to reveal)" : "Click to mask";
+}
+applyMaskMode();
+
+$("maskMode").onchange = applyMaskMode;
+$("toggleMaskBtn").onclick = () => {
+  $("repo").type = $("repo").type === "password" ? "text" : "password";
+  $("toggleMaskBtn").textContent = $("repo").type === "password" ? "🙈" : "👁️";
+};
+
+if (!cfg.token || !cfg.repo) {
+  $("settings").open = true;
+}
+
+$("settingsForm").onsubmit = e => {
+  e.preventDefault();
+  cfg = {
+    repo: $("repo").value.trim(),
+    token: $("token").value.trim(),
+    mask: $("maskMode").checked
   };
-}
+  store.set("gap.repo", cfg.repo);
+  store.set("gap.token", cfg.token);
+  store.set("gap.mask", cfg.mask ? "true" : "false");
+  setStatus("Settings saved locally.", "ok");
+  $("settings").open = false;
+};
 
-// URL Hash Permalinks (#tool=...&code=...)
+// Tool state & permalink
 function loadFromHash() {
   const hash = location.hash.slice(1);
   if (!hash) return false;
@@ -542,14 +1075,14 @@ $("copyOutBtn").onclick = () => {
   });
 };
 
-/* ---- Run History (Last 5 runs) ---- */
+/* ---- Run History (Last 10 runs) ---- */
 function getHistory() {
   try { return JSON.parse(store.get("gap.history") || "[]"); } catch { return []; }
 }
 function saveHistoryItem(item) {
   const h = getHistory();
   h.unshift(item);
-  while (h.length > 5) h.pop();
+  while (h.length > 10) h.pop();
   store.set("gap.history", JSON.stringify(h));
   updateHistoryDropdown();
 }
@@ -582,24 +1115,26 @@ $("historySel").onchange = () => {
     lastTool = item.tool;
     render();
     setStatus(`Loaded run #${parseInt(val, 10) + 1} from ${new Date(item.ts).toLocaleTimeString()}.`, "ok");
+    showPanel("output");
   }
 };
 
-$("settingsForm").onsubmit = e => {
-  e.preventDefault();
-  cfg = { repo: $("repo").value.trim(), token: $("token").value.trim() };
-  store.set("gap.repo", cfg.repo); store.set("gap.token", cfg.token);
-  setStatus("Settings saved.", "ok"); $("settings").open = false;
-};
-
-function setStatus(msg, kind = "") { const s = $("status"); s.textContent = msg; s.className = kind; }
+function setStatus(msg, kind = "") {
+  const s = $("status");
+  s.textContent = msg;
+  s.className = kind;
+}
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function gh(path, opts = {}) {
   return fetch("https://api.github.com/repos/" + cfg.repo + path, {
     ...opts,
-    headers: { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28",
-               Authorization: "Bearer " + cfg.token, ...(opts.headers || {}) }
+    headers: {
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      Authorization: "Bearer " + cfg.token,
+      ...(opts.headers || {})
+    }
   });
 }
 async function ghJson(path) {
@@ -609,15 +1144,14 @@ async function ghJson(path) {
 }
 
 function toBase64(str) {
-  const bytes = new TextEncoder().encode(str); let bin = "";
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
   for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
   return btoa(bin);
 }
 
-
-/* ---- Automatic GAP-output -> LaTeX conversion (used in LaTeX mode) ---- */
+/* ---- Automatic GAP-output -> LaTeX conversion ---- */
 const OK_WORDS = new Set(["Group", "Alt", "Sym", "infinity"]);
-
 function parseGap(s) {
   let i = 0;
   const skipWs = () => { while (i < s.length && /\s/.test(s[i])) i++; };
@@ -718,9 +1252,10 @@ function render() {
 }
 document.querySelectorAll("input[name=fmt]").forEach(el => el.addEventListener("change", render));
 
-async function findRun(title, since) {
+async function findRun(title, since, onPoll) {
   const deadline = Date.now() + 90000;
   while (Date.now() < deadline) {
+    if (onPoll) onPoll();
     const d = await ghJson("/actions/runs?event=repository_dispatch&per_page=30");
     const hit = d.workflow_runs.find(r => r.display_title === title && new Date(r.created_at) >= since);
     if (hit) return hit;
@@ -751,7 +1286,11 @@ async function readAnnotation(runId) {
 
 async function run() {
   if (busy) return;
-  if (!cfg.repo || !cfg.token) { $("settings").open = true; setStatus("Add your repository and token first.", "err"); return; }
+  if (!cfg.repo || !cfg.token) {
+    $("settings").open = true;
+    setStatus("Add your repository and personal access token first.", "err");
+    return;
+  }
   const code = $("code").value;
   if (!code.trim()) { setStatus("The editor is empty. Write something first.", "err"); return; }
   const runTool = tool;
@@ -759,24 +1298,45 @@ async function run() {
   if (code_b64.length > 60000) { setStatus("Code is too long (limit about 45 KB).", "err"); return; }
 
   busy = true; $("run").disabled = true;
+  showPanel("output"); // Automatically switch view on mobile devices
+
   const runId = "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const since = new Date(Date.now() - 60000), t0 = Date.now();
+  const getElapsed = () => Math.round((Date.now() - t0) / 1000);
+
   try {
-    setStatus("Sending to GitHub…");
-    const res = await gh("/dispatches", { method: "POST", body: JSON.stringify({ event_type: "run_gap", client_payload: { run_id: runId, code_b64, tool: runTool } }) });
+    setStatus("[1/4] Triggering workflow on GitHub Actions…", "running");
+    const res = await gh("/dispatches", {
+      method: "POST",
+      body: JSON.stringify({
+        event_type: "run_gap",
+        client_payload: { run_id: runId, code_b64, tool: runTool }
+      })
+    });
     if (res.status === 401) throw new Error("Token rejected (401). Check that the token hasn't expired.");
-    if (res.status === 403 || res.status === 404) throw new Error("Access denied (" + res.status + "). If targeting " + cfg.repo + ", verify you have collaborator access (or use your own fork) and that your token has 'Contents: read & write'.");
+    if (res.status === 403 || res.status === 404) {
+      throw new Error("Access denied (" + res.status + "). Check that your token has 'Contents: read & write' for " + ($("maskMode").checked ? "the target repository" : cfg.repo) + ".");
+    }
     if (res.status !== 204) throw new Error("Dispatch failed (" + res.status + ").");
 
-    setStatus("Waiting for a runner…");
-    const found = await findRun("GAP " + runId, since);
+    setStatus(`[2/4] Waiting for GitHub runner to spin up (${getElapsed()}s)…`, "running");
+    const found = await findRun("GAP " + runId, since, () => {
+      setStatus(`[2/4] Waiting for GitHub runner to spin up (${getElapsed()}s)…`, "running");
+    });
     let run = found;
     while (run.status !== "completed") {
       if (Date.now() - t0 > 2400000) throw new Error("Timed out after 40 minutes. Check the Actions tab of your repository.");
-      setStatus((run.status === "in_progress" ? "Running " + TOOLS[runTool].label : "Queued") + "… " + Math.round((Date.now() - t0) / 1000) + " s");
-      await sleep(3000); run = await ghJson("/actions/runs/" + found.id);
+      const elapsed = getElapsed();
+      if (run.status === "in_progress") {
+        setStatus(`[3/4] Executing ${TOOLS[runTool].label} on cloud runner (${elapsed}s)…`, "running");
+      } else {
+        setStatus(`[2/4] Waiting in runner queue (${elapsed}s)…`, "running");
+      }
+      await sleep(3000);
+      run = await ghJson("/actions/runs/" + found.id);
     }
-    setStatus("Fetching output…");
+    const elapsedAtDone = getElapsed();
+    setStatus(`[4/4] Fetching & rendering output (${elapsedAtDone}s)…`, "running");
     let text;
     try { text = await readArtifact(run.id); }
     catch (e1) {
@@ -784,10 +1344,9 @@ async function run() {
       catch (e2) { throw new Error("Run " + run.conclusion + ", but its output couldn't be read. Open the run: " + run.html_url); }
     }
     lastOutput = text; lastTool = runTool; render();
-    const duration = Math.round((Date.now() - t0) / 1000);
+    const duration = getElapsed();
     setStatus("Finished in " + duration + " s.", "ok");
 
-    // Save to history
     saveHistoryItem({
       tool: runTool,
       code: code,
@@ -802,9 +1361,443 @@ async function run() {
     busy = false; $("run").disabled = false;
   }
 }
+
+/* ---- Feature 1: Continue Calculations Locally Modal ---- */
+function getLocalFileDetails() {
+  const code = $("code").value;
+  const t = TOOLS[tool];
+  let filename = "computation." + t.ext;
+  if (tool === "lean") filename = "Theorem.lean";
+  else if (tool === "prover9" || tool === "mace4") filename = "problem.in";
+
+  let native = "";
+  let docker = "";
+  if (tool === "gap") {
+    native = `gap -q ${filename}`;
+    docker = `docker run --rm -it -v "$PWD":/work -w /work ghcr.io/gap-system/gap:4.15.1-full gap -q ${filename}`;
+  } else if (tool === "prover9") {
+    native = `prover9 -f ${filename} > proof.out`;
+    docker = `docker run --rm -it -v "$PWD":/work -w /work ghcr.io/gap-system/gap:4.15.1-full prover9 -f ${filename}`;
+  } else if (tool === "mace4") {
+    native = `mace4 -c -f ${filename} > model.out`;
+    docker = `docker run --rm -it -v "$PWD":/work -w /work ghcr.io/gap-system/gap:4.15.1-full mace4 -c -f ${filename}`;
+  } else if (tool === "lean") {
+    native = `lake env lean ${filename}`;
+    docker = `docker run --rm -it -v "$PWD":/work -w /work leanprover/lean4:v4.15.0 lean ${filename}`;
+  }
+  return { filename, code, native, docker };
+}
+
+function openLocalModal() {
+  const details = getLocalFileDetails();
+  $("localFilename").textContent = details.filename;
+  $("nativeCmd").textContent = details.native;
+  $("dockerCmd").textContent = details.docker;
+  $("localModal").hidden = false;
+  $("localModal").setAttribute("aria-hidden", "false");
+}
+function closeLocalModal() {
+  $("localModal").hidden = true;
+  $("localModal").setAttribute("aria-hidden", "true");
+}
+
+$("localBtn").onclick = openLocalModal;
+$("closeLocalModal").onclick = closeLocalModal;
+$("dismissLocalModal").onclick = closeLocalModal;
+
+$("downloadScriptBtn").onclick = () => {
+  const details = getLocalFileDetails();
+  const blob = new Blob([details.code], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = details.filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+};
+
+function copyCodeText(targetId, btnId) {
+  const text = $(targetId).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = $(btnId);
+    const old = btn.textContent;
+    btn.textContent = "Copied!";
+    setTimeout(() => { btn.textContent = old; }, 1500);
+  });
+}
+$("copyNativeCmd").onclick = () => copyCodeText("nativeCmd", "copyNativeCmd");
+$("copyDockerCmd").onclick = () => copyCodeText("dockerCmd", "copyDockerCmd");
+
+
+/* ---- Feature 2: Scour arXiv & GitHub Public Repos Modal ---- */
+let scourTerms = [];
+let scourFormatMode = "words"; // "words" or "quotes"
+
+const CODE_STOPWORDS = new Set([
+  // GAP keywords & common operations
+  "loadpackage", "package", "print", "printto", "size", "type", "length", "list",
+  "filtered", "apply", "return", "function", "local", "end", "then", "elif",
+  "else", "fi", "od", "do", "while", "repeat", "until", "break", "continue",
+  "true", "false", "fail", "display", "string", "view", "quit", "save", "read",
+  "write", "gapinfo", "installmethod", "declareoperation", "declarecategory",
+  "declareglobalfunction", "atomic", "readonly", "readwrite", "info", "warning",
+  "error", "output", "input", "eval", "call", "bindglobal", "value", "object",
+  "elements", "generator", "generators", "parent", "name", "file", "stream",
+
+  // Lean 4 keywords & tactics
+  "import", "variable", "variables", "open", "namespace", "section", "def",
+  "theorem", "lemma", "example", "axiom", "noncomputable", "instance", "class",
+  "inductive", "where", "have", "show", "from", "exact", "apply", "intro",
+  "cases", "induction", "simp", "rw", "rfl", "omega", "ring", "linarith",
+  "assumption", "constructor", "ext", "fun", "let", "in", "by", "sorry",
+  "prop", "sort", "syntax", "macro", "notation", "elab", "decl",
+
+  // Prover9 / Mace4 keywords
+  "assign", "formulas", "assumptions", "goals", "end_of_list", "all", "exists",
+  "set", "clear", "lex", "weights", "order", "op",
+
+  // General filler tokens
+  "with", "into", "over", "under", "between", "each", "every", "such", "that",
+  "this", "these", "those", "from", "main", "test", "demo", "temp", "item"
+]);
+
+function splitCompoundName(name) {
+  if (!name || typeof name !== "string") return "";
+  let s = name;
+  // Strip common GAP/Lean boolean prefixes like "Is", "Has" when followed by uppercase letter
+  if (/^(Is|Has)[A-Z]/.test(s) && s.length > 5) {
+    s = s.slice(2);
+  }
+  // Split PascalCase / camelCase into words with spaces (e.g. AlternatingGroup -> Alternating Group)
+  s = s
+    .replace(/([a-z\d])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, "$1 $2")
+    .replace(/[_\-]+/g, " ")
+    .trim();
+  return s;
+}
+
+function extractKeywordsList(code, currentTool) {
+  const recognizedPhrases = new Set();
+  const rawCode = code || "";
+
+  // Domain concept patterns (checked against entire code)
+  const CONCEPT_PATTERNS = [
+    // Groups & Representations
+    { regex: /\b(alternating\s*group|alternatinggroup)\b/i, phrase: "Alternating Group" },
+    { regex: /\b(symmetric\s*group|symmetricgroup)\b/i, phrase: "Symmetric Group" },
+    { regex: /\b(dihedral\s*group|dihedralgroup)\b/i, phrase: "Dihedral Group" },
+    { regex: /\b(quaternion\s*group|quaterniongroup)\b/i, phrase: "Quaternion Group" },
+    { regex: /\b(klein\s*four|kleinfour)\b/i, phrase: "Klein Four Group" },
+    { regex: /\b(structure\s*description|structuredescription)\b/i, phrase: "Structure Description" },
+    { regex: /\b(conjugacy\s*classes?|conjugacyclasses?)\b/i, phrase: "Conjugacy Classes" },
+    { regex: /\b(character\s*table|charactertable)\b/i, phrase: "Character Table" },
+    { regex: /\b(derived\s*subgroup|derivedsubgroup|commutator\s*subgroup)\b/i, phrase: "Derived Subgroup" },
+    { regex: /\b(sylow\s*subgroup|sylowsubgroup)\b/i, phrase: "Sylow Subgroup" },
+    { regex: /\b(automorphism\s*group|automorphismgroup)\b/i, phrase: "Automorphism Group" },
+    { regex: /\b(abelian\s*group|free\s*abelian)\b/i, phrase: "Abelian Group" },
+    { regex: /\b(free\s*group|freegroup)\b/i, phrase: "Free Group" },
+    { regex: /\b(simple\s*group|issimplegroup)\b/i, phrase: "Simple Group" },
+    { regex: /\b(solvable\s*group|issolvable|solvable)\b/i, phrase: "Solvable Group" },
+    { regex: /\b(nilpotent\s*group|isnilpotent|nilpotent)\b/i, phrase: "Nilpotent Group" },
+    { regex: /\b(permutation\s*group|permutationgroup)\b/i, phrase: "Permutation Group" },
+    { regex: /\b(matrix\s*group|matrixgroup)\b/i, phrase: "Matrix Group" },
+    { regex: /\b(cayley\s*table|cayleytable)\b/i, phrase: "Cayley Table" },
+    { regex: /\b(centralizer|normalizer|center)\b/i, phrase: "Centralizer" },
+
+    // Semigroups & Monoids
+    { regex: /\b(symmetric\s*inverse\s*monoid|symmetricinversemonoid)\b/i, phrase: "Symmetric Inverse Monoid" },
+    { regex: /\b(inverse\s*semigroup|inversesemigroup|inverse\s*monoid)\b/i, phrase: "Inverse Semigroup" },
+    { regex: /\b(transformation\s*semigroup|transformationsemigroup)\b/i, phrase: "Transformation Semigroup" },
+    { regex: /\b(green['’]?s?\s*classes|green['’]?s?\s*relations|greendclass|greenhclass|greenrclass|greenlclass|greenjclass)\b/i, phrase: "Green's Relations" },
+    { regex: /\b(rees\s*matrix|reesmatrix)\b/i, phrase: "Rees Matrix" },
+    { regex: /\b(idempotent|idempotents)\b/i, phrase: "Idempotents" },
+    { regex: /\b(regular\s*semigroup|regularsemigroup)\b/i, phrase: "Regular Semigroup" },
+    { regex: /\b(semigroup\s*ideal|semigroupideal)\b/i, phrase: "Semigroup Ideal" },
+
+    // Rings & Fields
+    { regex: /\b(polynomial\s*ring|polynomialring)\b/i, phrase: "Polynomial Ring" },
+    { regex: /\b(galois\s*field|galoisfield)\b/i, phrase: "Galois Field" },
+    { regex: /\b(prime\s*field|primefield)\b/i, phrase: "Prime Field" },
+    { regex: /\b(commutative\s*ring|division\s*ring)\b/i, phrase: "Commutative Ring" },
+
+    // Logic & Prover9
+    { regex: /\b(equational\s*logic|equational\s*theory)\b/i, phrase: "Equational Logic" },
+    { regex: /\b(first[\s-]order\s*logic)\b/i, phrase: "First-Order Logic" },
+    { regex: /\b(model\s*finding|finite\s*model)\b/i, phrase: "Model Finding" },
+    { regex: /\b(resolution\s*theorem\s*proving|prover9|mace4)\b/i, phrase: "Automated Theorem Proving" },
+    { regex: /\b(lattice\s*theory|distributive\s*lattice)\b/i, phrase: "Lattice Theory" }
+  ];
+
+  for (const { regex, phrase } of CONCEPT_PATTERNS) {
+    if (regex.test(rawCode)) {
+      recognizedPhrases.add(phrase);
+    }
+  }
+
+  // Scan lines to extract and split compound PascalCase / camelCase / snake_case identifiers
+  const lines = rawCode.split("\n");
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("%") || trimmed.startsWith("--") || trimmed.startsWith("#")) continue;
+
+    const tokens = trimmed.match(/\b([A-Za-z][a-zA-Z0-9_]{2,})\b/g) || [];
+    for (const token of tokens) {
+      const lower = token.toLowerCase();
+      if (CODE_STOPWORDS.has(lower)) continue;
+
+      // Split the identifier into individual words
+      const split = splitCompoundName(token);
+      const splitWords = split.split(/\s+/).filter(w => w.length > 1 && !CODE_STOPWORDS.has(w.toLowerCase()));
+      if (splitWords.length === 0) continue;
+
+      const cleanPhrase = splitWords.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+
+      // Check if this phrase is already represented in recognizedPhrases
+      const lowerClean = cleanPhrase.toLowerCase();
+      let alreadyCovered = false;
+      for (const m of recognizedPhrases) {
+        if (m.toLowerCase() === lowerClean || m.toLowerCase().includes(lowerClean)) {
+          alreadyCovered = true;
+          break;
+        }
+      }
+      if (!alreadyCovered && cleanPhrase.length >= 3) {
+        recognizedPhrases.add(cleanPhrase);
+      }
+    }
+  }
+
+  // Prune any phrases that are strict substrings/sub-words of longer phrases
+  // e.g. If we have "Structure Description", drop standalone "Structure"
+  // e.g. If we have "Alternating Group", drop standalone "Group"
+  // e.g. If we have "Conjugacy Classes", drop standalone "Conjugacy"
+  const allPhrases = Array.from(recognizedPhrases);
+  const pruned = allPhrases.filter(p1 => {
+    return !allPhrases.some(p2 => p2 !== p1 && p2.toLowerCase().includes(p1.toLowerCase()));
+  });
+
+  if (pruned.length === 0) {
+    if (currentTool === "gap") return ["Alternating Group", "Structure Description", "Conjugacy Classes"];
+    if (currentTool === "lean") return ["Group Theory", "Mathlib", "Algebra"];
+    return ["Equational Logic", "First-Order Logic", "Model Finding"];
+  }
+
+  return pruned.slice(0, 6);
+}
+
+function buildQueryString(terms, mode) {
+  if (!terms || terms.length === 0) return "";
+  if (mode === "quotes") {
+    return terms.map(t => t.includes(" ") ? `"${t}"` : t).join(" ");
+  }
+  return terms.join(" ");
+}
+
+function renderScourChips() {
+  const container = $("scourChips");
+  if (!container) return;
+  container.innerHTML = "";
+  if (scourTerms.length === 0) {
+    container.innerHTML = '<span style="color:var(--muted); font-size:.8rem;">No terms active. Click "+ Add term" or "⚡ Re-extract" from code.</span>';
+    return;
+  }
+  scourTerms.forEach((term, index) => {
+    const chip = document.createElement("span");
+    chip.className = "scour-chip";
+    chip.textContent = term + " ";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.setAttribute("aria-label", "Remove " + term);
+    btn.textContent = "✕";
+    btn.onclick = () => {
+      scourTerms.splice(index, 1);
+      $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
+      renderScourChips();
+      updateScourLinks();
+    };
+    chip.appendChild(btn);
+    container.appendChild(chip);
+  });
+}
+
+function updateScourLinks() {
+  const rawQ = $("scourQuery").value.trim() || (scourTerms.length > 0 ? buildQueryString(scourTerms, scourFormatMode) : "Alternating Group Structure Description");
+  const q = encodeURIComponent(rawQ);
+  $("linkArxiv").href = `https://arxiv.org/search/math?query=${q}&searchtype=all&source=header`;
+  $("linkGithub").href = `https://github.com/search?q=${q}+language%3AGAP+OR+path%3A*.in+OR+path%3A*.lean&type=code`;
+  $("linkZbMath").href = `https://zbmath.org/?q=${q}`;
+  $("linkScholar").href = `https://scholar.google.com/scholar?q=${q}`;
+}
+
+function openScourModal() {
+  scourTerms = extractKeywordsList($("code").value, tool);
+  scourFormatMode = "words";
+  $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
+  renderScourChips();
+  updateScourLinks();
+  $("scourModal").hidden = false;
+  $("scourModal").setAttribute("aria-hidden", "false");
+}
+function closeScourModal() {
+  $("scourModal").hidden = true;
+  $("scourModal").setAttribute("aria-hidden", "true");
+}
+
+$("scourBtn").onclick = openScourModal;
+$("closeScourModal").onclick = closeScourModal;
+$("dismissScourModal").onclick = closeScourModal;
+
+$("btnRefreshKeywords").onclick = () => {
+  scourTerms = extractKeywordsList($("code").value, tool);
+  $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
+  renderScourChips();
+  updateScourLinks();
+};
+
+$("btnFormatWords").onclick = () => {
+  scourFormatMode = "words";
+  $("scourQuery").value = buildQueryString(scourTerms, "words");
+  updateScourLinks();
+};
+
+$("btnFormatQuotes").onclick = () => {
+  scourFormatMode = "quotes";
+  $("scourQuery").value = buildQueryString(scourTerms, "quotes");
+  updateScourLinks();
+};
+
+$("btnAddTermPrompt").onclick = () => {
+  const newTerm = prompt("Enter a mathematical keyword or concept (e.g. 'Sylow Subgroup'):");
+  if (newTerm && newTerm.trim()) {
+    const clean = splitCompoundName(newTerm.trim());
+    if (!scourTerms.includes(clean)) {
+      scourTerms.push(clean);
+      $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
+      renderScourChips();
+      updateScourLinks();
+    }
+  }
+};
+
+$("scourQuery").addEventListener("input", updateScourLinks);
+
+// Live arXiv & Scientific Preprints Query via resilient server-side proxy & open-access fallback
+$("fetchArxivBtn").onclick = async () => {
+  const container = $("arxivResults");
+  const rawQ = $("scourQuery").value.trim() || buildQueryString(scourTerms, scourFormatMode) || "group theory";
+  container.innerHTML = '<span style="color:var(--accent);">Querying arXiv & research preprints…</span>';
+  
+  function renderPaperList(items, sourceLabel) {
+    if (!items || items.length === 0) {
+      container.innerHTML = `
+        <div style="padding:10px; background:var(--panel-2); border:1px solid var(--line); border-radius:6px;">
+          <div style="color:var(--text); font-size:.85rem; margin-bottom:8px;">No exact preprint matches found for: <strong>${escapeHtml(rawQ)}</strong></div>
+          <div style="font-size:.8rem; color:var(--muted); margin-bottom:8px;">Try broader keywords or search the comprehensive academic indices directly:</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <a href="https://arxiv.org/search/math?query=${encodeURIComponent(rawQ)}&searchtype=all" target="_blank" rel="noopener" class="preset-btn" style="text-decoration:none; display:inline-flex; align-items:center;">arXiv Math ↗</a>
+            <a href="https://zbmath.org/?q=${encodeURIComponent(rawQ)}" target="_blank" rel="noopener" class="preset-btn" style="text-decoration:none; display:inline-flex; align-items:center;">zbMATH Open ↗</a>
+            <a href="https://scholar.google.com/scholar?q=${encodeURIComponent(rawQ)}" target="_blank" rel="noopener" class="preset-btn" style="text-decoration:none; display:inline-flex; align-items:center;">Google Scholar ↗</a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <span style="font-size:.78rem; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:0.04em;">${escapeHtml(sourceLabel)}</span>
+      <a href="https://arxiv.org/search/math?query=${encodeURIComponent(rawQ)}&searchtype=all" target="_blank" rel="noopener" style="font-size:.78rem; color:var(--muted); text-decoration:none;">Search all arXiv ↗</a>
+    </div>`;
+
+    html += '<div style="display:grid; gap:10px;">';
+    items.forEach(item => {
+      const title = escapeHtml(item.title || "Untitled Paper");
+      const url = item.id || item.link || `https://arxiv.org/search/math?query=${encodeURIComponent(item.title || rawQ)}`;
+      const date = escapeHtml(item.published || item.year || "");
+      const authors = escapeHtml(item.authors || "Unknown author");
+      const summary = item.summary ? escapeHtml(item.summary) : "";
+
+      html += `
+        <div style="border-bottom:1px solid var(--line); padding-bottom:8px;">
+          <a href="${url}" target="_blank" rel="noopener" style="font-weight:600; font-size:.88rem; color:var(--accent); text-decoration:none; display:block; line-height:1.35; margin-bottom:2px;">${title} ↗</a>
+          <div style="color:var(--muted); font-size:.78rem; margin:2px 0;">${authors}${date ? ' &bull; ' + date : ''}</div>
+          ${summary ? `<div style="color:var(--text); font-size:.8rem; line-height:1.4; opacity:0.9;">${summary}</div>` : ''}
+        </div>
+      `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  // Tier 1: Local server proxy /api/arxiv (bypasses CORS completely and queries arXiv Atom API)
+  try {
+    const res = await fetch(`/api/arxiv?q=${encodeURIComponent(rawQ)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.results) && data.results.length > 0) {
+        renderPaperList(data.results, "arXiv Preprints (Live)");
+        return;
+      }
+    }
+  } catch (err) {
+    // Proxy unavailable (e.g. running on purely static host)
+  }
+
+  // Tier 2: Open scientific index fallback (CORS-enabled open API indexing arXiv & math preprints)
+  try {
+    const res = await fetch(`https://api.openalex.org/works?search=${encodeURIComponent(rawQ)}&per_page=5`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        const items = data.results.map(w => ({
+          title: w.display_name || w.title || "Untitled Paper",
+          id: w.doi || w.primary_location?.landing_page_url || (w.id ? `https://openalex.org/${w.id}` : ""),
+          published: w.publication_year ? String(w.publication_year) : "",
+          authors: (w.authorships || []).map(a => a.author?.display_name).filter(Boolean).slice(0, 3).join(", "),
+          summary: w.primary_topic?.display_name ? `Subject: ${w.primary_topic.display_name}` : ""
+        }));
+        renderPaperList(items, "Academic Preprints & Research (OpenAlex Index)");
+        return;
+      }
+    }
+  } catch (err) {
+    // Open science API unreachable
+  }
+
+  // Tier 3: Direct 1-click exploration card
+  renderPaperList([], "");
+};
+
+// Colophon Modal handlers
+function openColophonModal() {
+  $("colophonModal").hidden = false;
+  $("colophonModal").setAttribute("aria-hidden", "false");
+}
+function closeColophonModal() {
+  $("colophonModal").hidden = true;
+  $("colophonModal").setAttribute("aria-hidden", "true");
+}
+$("openColophonBtn").onclick = openColophonModal;
+$("footerColophonBtn").onclick = openColophonModal;
+$("closeColophonModal").onclick = closeColophonModal;
+$("dismissColophonModal").onclick = closeColophonModal;
+
+// Global Esc key listener to close modals
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    closeLocalModal();
+    closeScourModal();
+    closeColophonModal();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    run();
+  }
+});
+
 $("year").textContent = new Date().getFullYear();
 $("run").onclick = run;
-document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); } });
 </script>
 </body>
 </html>
