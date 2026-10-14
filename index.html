@@ -1935,7 +1935,7 @@ $("fetchArxivBtn").onclick = async () => {
 const LOGO_OPTIONS = {
   monogenic: {
     key: "monogenic",
-    letter: "S1",
+    letter: "A",
     title: "The Monogenic Rho (⟨a⟩)",
     subtitle: "Index m, Period r & Periodic Kernel in Semigroups",
     desc: "The classic monogenic semigroup structure: a directed pre-periodic chain of index m spiraling smoothly into a closed cyclic group kernel of period r with a unique idempotent e.",
@@ -1943,23 +1943,15 @@ const LOGO_OPTIONS = {
   },
   eggbox: {
     key: "eggbox",
-    letter: "S2",
+    letter: "B",
     title: "Green's Egg-Box (𝒟-Class)",
     subtitle: "Semigroup Theory & Green's Relations (ℛ, ℒ, ℋ, 𝒟)",
     desc: "The universal visual hallmark of semigroup theory: a regular 𝒟-class egg-box partitioned into ℛ-rows, ℒ-columns, and ℋ-cells, with idempotents (e²=e) highlighting maximal subgroups.",
     svg: `<svg viewBox="0 0 48 48" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Green's Egg-Box Semigroup Emblem"><rect x="3.5" y="3.5" width="41" height="41" rx="8" stroke="var(--accent)" stroke-width="2" fill="var(--panel-2)" opacity="0.45"/><line x1="17" y1="3.5" x2="17" y2="44.5" stroke="var(--line)" stroke-width="1.5"/><line x1="31" y1="3.5" x2="31" y2="44.5" stroke="var(--line)" stroke-width="1.5"/><line x1="3.5" y1="17" x2="44.5" y2="17" stroke="var(--line)" stroke-width="1.5"/><line x1="3.5" y1="31" x2="44.5" y2="31" stroke="var(--line)" stroke-width="1.5"/><circle cx="10" cy="10" r="4.5" fill="var(--ok)" fill-opacity="0.25"/><circle cx="10" cy="10" r="2.6" fill="var(--ok)"/><path d="M10 6.5 L10 13.5 M6.5 10 L13.5 10" stroke="var(--ok)" stroke-width="1" opacity="0.8"/><circle cx="24" cy="24" r="5" fill="var(--accent)" fill-opacity="0.3"/><circle cx="24" cy="24" r="2.8" fill="var(--accent)"/><path d="M24 19.5 L24 28.5 M19.5 24 L28.5 24" stroke="var(--accent)" stroke-width="1.2"/><circle cx="38" cy="38" r="4.5" fill="var(--ok)" fill-opacity="0.25"/><circle cx="38" cy="38" r="2.6" fill="var(--ok)"/><path d="M38 34.5 L38 41.5 M34.5 38 L41.5 38" stroke="var(--ok)" stroke-width="1" opacity="0.8"/><circle cx="24" cy="10" r="2.2" fill="var(--muted)" opacity="0.7"/><circle cx="38" cy="10" r="2.2" fill="var(--muted)" opacity="0.7"/><circle cx="10" cy="24" r="2.2" fill="var(--muted)" opacity="0.7"/><circle cx="38" cy="24" r="2.2" fill="var(--muted)" opacity="0.7"/><circle cx="10" cy="38" r="2.2" fill="var(--muted)" opacity="0.7"/><circle cx="24" cy="38" r="2.2" fill="var(--muted)" opacity="0.7"/></svg>`
   },
-  cayley: {
-    key: "cayley",
-    letter: "A",
-    title: "The Cayley Orbit",
-    subtitle: "Group Symmetries & Permutation Cycles (GAP)",
-    desc: "A hexagram permutation graph showing cyclic generator orbits & a central identity node.",
-    svg: `<svg viewBox="0 0 48 48" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="The Cayley Orbit Emblem"><circle cx="24" cy="24" r="21" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="3 3"/><polygon points="24,6 39,32 9,32" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round" fill="none"/><polygon points="24,42 9,16 39,16" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round" fill="none" opacity="0.6"/><circle cx="24" cy="6" r="3.2" fill="var(--accent)"/><circle cx="39" cy="16" r="2.6" fill="var(--muted)"/><circle cx="39" cy="32" r="3.2" fill="var(--accent)"/><circle cx="24" cy="42" r="2.6" fill="var(--muted)"/><circle cx="9" cy="32" r="3.2" fill="var(--accent)"/><circle cx="9" cy="16" r="2.6" fill="var(--muted)"/><circle cx="24" cy="24" r="2.8" fill="var(--ok)"/></svg>`
-  },
   lattice: {
     key: "lattice",
-    letter: "B",
+    letter: "C",
     title: "The Lattice Crystal",
     subtitle: "Posets & Finite Countermodels (Mace4)",
     desc: "A finite modular Hasse diagram lattice with top element ⊤, bottom ⊥, and meet-join paths.",
@@ -1967,7 +1959,7 @@ const LOGO_OPTIONS = {
   },
   turnstile: {
     key: "turnstile",
-    letter: "C",
+    letter: "D",
     title: "Turnstile & Lambda (λ ⊢)",
     subtitle: "Type Theory & Deduction (Lean 4 / Prover9)",
     desc: "Uniting the calculus of constructions λ with the automated theorem consequence turnstile ⊢.",
@@ -1975,7 +1967,7 @@ const LOGO_OPTIONS = {
   },
   quartet: {
     key: "quartet",
-    letter: "D",
+    letter: "E",
     title: "The Dihedral Quartet",
     subtitle: "The 4 Engines United (GAP, Prover9, Mace4, Lean 4)",
     desc: "Four interlocking orbital ellipses representing the computational engines intersecting in harmony.",
@@ -1983,10 +1975,10 @@ const LOGO_OPTIONS = {
   }
 };
 
-const LOGO_KEYS = ["monogenic", "eggbox", "cayley", "lattice", "turnstile", "quartet"];
+const LOGO_KEYS = ["monogenic", "eggbox", "lattice", "turnstile", "quartet"];
 let storedLogo = localStorage.getItem("gap_playground_logo");
-// Prefer the selected Monogenic Rho emblem
-if (!storedLogo || storedLogo === "eggbox" || storedLogo === "cayley") {
+// Ensure active default is Monogenic Rho and automatically purge any legacy Cayley selection
+if (!storedLogo || storedLogo === "cayley" || !LOGO_OPTIONS[storedLogo]) {
   storedLogo = "monogenic";
   try { localStorage.setItem("gap_playground_logo", "monogenic"); } catch {}
 }
