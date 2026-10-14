@@ -85,7 +85,7 @@ If you are collaborating with the repository owner:
 2. In your fork, ensure Actions are enabled (**Settings → Actions → General**).
 3. Generate a fine-grained token selecting your fork (`your-username/repo-name`).
 4. Enter your fork name and token in **Connection settings**.
-5. Every free GitHub account receives **2,000 free Actions runner minutes per month**!
+5. **Public vs. Private Repositories:** If your repository is **public**, standard GitHub-hosted Linux runners are **completely free and unlimited** (0 minute consumption)! The 2,000-minute monthly allotment only counts down when you run actions inside a private repository.
 
 ---
 
