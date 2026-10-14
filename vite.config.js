@@ -15,7 +15,9 @@ function arxivProxyPlugin() {
 
       // Build search tokens for arXiv API
       const cleanTokens = rawQ.replace(/["'(),;:]/g, ' ').split(/\s+/).filter(Boolean);
-      const searchParam = cleanTokens.slice(0, 3).map(t => 'all:' + encodeURIComponent(t)).join('+AND+');
+      const effectiveTokens = cleanTokens.slice(0, 2);
+      const tokenQuery = effectiveTokens.map(t => 'all:' + encodeURIComponent(t)).join('+AND+');
+      const searchParam = tokenQuery ? `cat:math.*+AND+${tokenQuery}` : 'cat:math.*';
       const arxivUrl = `https://export.arxiv.org/api/query?search_query=${searchParam}&start=0&max_results=6&sortBy=relevance&sortOrder=descending`;
 
       const response = await fetch(arxivUrl, {

@@ -123,12 +123,13 @@
   .mobile-tabs {
     display: none;
     grid-template-columns: 1fr 1fr;
-    gap: 4px;
+    gap: 6px;
     background: var(--panel-2);
     padding: 4px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    margin-bottom: 12px;
+    margin: 2px 0 6px;
+    grid-column: 1 / -1;
   }
   .mobile-tab-btn {
     border: none;
@@ -224,7 +225,7 @@
   details { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
   summary { padding: 12px 14px; cursor: pointer; font-weight: 600; user-select: none; }
   .settings { display: grid; gap: 12px; padding: 0 14px 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-  .settings div { display: grid; gap: 4px; }
+  .settings > div:not(.wide) { display: grid; gap: 4px; }
   .settings .wide { grid-column: 1 / -1; }
   .hint { font-size: .8125rem; color: var(--muted); margin: 0; line-height: 1.5; }
 
@@ -387,16 +388,6 @@
   </div>
 </header>
 
-<!-- Mobile switcher for phone screens -->
-<div class="mobile-tabs" role="tablist" aria-label="Editor and output panels">
-  <button type="button" class="mobile-tab-btn active" id="tabBtnEditor" role="tab" aria-selected="true" aria-controls="editorPanel">
-    📝 Code Editor
-  </button>
-  <button type="button" class="mobile-tab-btn" id="tabBtnOutput" role="tab" aria-selected="false" aria-controls="outputPanel">
-    📊 Output &amp; Results
-  </button>
-</div>
-
 <main>
   <!-- Documentation & Guide -->
   <details id="help">
@@ -453,35 +444,55 @@
       </p>
 
       <div class="wide">
-        <details class="guide" style="border: 1px solid var(--line); border-radius: 8px; background: var(--bg); margin: 6px 0 10px;">
-          <summary style="padding: 10px 14px; font-size: .885rem; color: var(--accent); font-weight: 650; cursor: pointer;">
+        <details class="guide" style="border: 1px solid var(--line); border-radius: 10px; background: var(--bg); margin: 8px 0 12px; overflow: hidden;">
+          <summary style="padding: 12px 16px; font-size: .885rem; color: var(--accent); font-weight: 650; cursor: pointer; background: var(--panel-2); border-bottom: 1px solid var(--line);">
             📘 Step-by-Step for Mathematicians: How to get your own token in 1 minute
           </summary>
-          <div style="padding: 8px 14px 14px; font-size: .875rem; line-height: 1.6; color: var(--text);">
-            <p style="margin: 0 0 10px;">
+          <div style="padding: 16px; font-size: .875rem; line-height: 1.6; color: var(--text);">
+            <p style="margin: 0 0 12px; font-size: .875rem; color: var(--text);">
               <strong>Why a token?</strong> Computations run on GitHub's cloud runners. GitHub uses tokens to verify authorization so you can execute code safely.
             </p>
-            <div style="display: grid; gap: 8px; margin-bottom: 12px; padding: 10px; background: var(--panel-2); border-radius: 6px; border-left: 3px solid var(--accent);">
-              <div>
-                <strong>Option A &mdash; Running on a Shared / Department Repository:</strong><br>
-                <span>If you were invited as a collaborator on a shared runner repository, accept the invitation email. Then generate a fine-grained token selecting that repository and enter its <code>owner/name</code> above.</span>
+
+            <!-- Option A and Option B Cards Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-bottom: 10px;">
+              <div style="background: var(--panel-2); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; padding: 12px 14px;">
+                <div style="font-weight: 700; color: var(--text); margin-bottom: 4px; font-size: .85rem;">
+                  Option A &mdash; Shared / Department Repo
+                </div>
+                <div style="color: var(--muted); font-size: .835rem; line-height: 1.5;">
+                  If invited as a collaborator on a shared runner repository, accept the email invitation, create a token selecting that repository, and enter its <code>owner/name</code> above.
+                </div>
               </div>
-              <div>
-                <strong>Option B &mdash; Running on Your Own GitHub Account:</strong><br>
-                <span>Fork the runner repository to your own account. Then generate a token selecting your fork, and enter <code>your-username/repo-name</code> above.</span>
-                <div style="margin-top:6px; font-size:.825rem; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:6px 10px;">
-                  ✨ <strong>Public vs. Private Repositories:</strong> If your repository is <strong>public</strong>, standard GitHub-hosted runners are <strong>completely free and unlimited</strong>! The 2,000-minute monthly allotment only counts down if you run actions inside a private repository.
+
+              <div style="background: var(--panel-2); border: 1px solid var(--line); border-left: 3px solid var(--ok); border-radius: 8px; padding: 12px 14px;">
+                <div style="font-weight: 700; color: var(--text); margin-bottom: 4px; font-size: .85rem;">
+                  Option B &mdash; Your Own GitHub Account
+                </div>
+                <div style="color: var(--muted); font-size: .835rem; line-height: 1.5;">
+                  Fork the runner repository to your personal account, create a token selecting your fork, and enter <code>your-username/repo-name</code> above.
                 </div>
               </div>
             </div>
 
-            <strong>Generating your token in 5 easy clicks:</strong>
-            <ol style="margin: 6px 0 10px; padding-left: 20px;">
+            <!-- Public vs Private Repositories Highlight Banner -->
+            <div style="display: flex; align-items: flex-start; gap: 10px; background: var(--panel-2); border: 1px solid var(--ok); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: .835rem; line-height: 1.55;">
+              <span style="font-size: 1.15rem; line-height: 1; flex-shrink: 0; margin-top: 1px;">✨</span>
+              <div>
+                <strong style="color: var(--text);">Public vs. Private Repositories:</strong>
+                <span style="color: var(--text);"> If your repository is <strong>public</strong>, standard GitHub-hosted Linux runners are <strong>completely free and unlimited</strong> (0 minute consumption)! The 2,000-minute monthly allotment only counts down if you run actions inside a private repository.</span>
+              </div>
+            </div>
+
+            <!-- 5 Easy Clicks Title -->
+            <div style="font-weight: 700; font-size: .875rem; margin-bottom: 8px; color: var(--text);">
+              Generating your token in 5 easy clicks:
+            </div>
+            <ol style="margin: 0 0 14px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: .85rem;">
               <li>Sign in to GitHub and open the <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener"><strong>Fine-grained tokens page</strong></a>.</li>
               <li>Click <strong>Generate new token</strong>. Set a token name (e.g. <em>Math Playground</em>) and an expiration date.</li>
               <li>Under <strong>Repository access</strong>, select <strong>Only select repositories</strong> and pick your target repository.</li>
               <li>Under <strong>Permissions &rarr; Repository permissions</strong>, set:
-                <ul style="margin: 4px 0 6px;">
+                <ul style="margin: 6px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 3px;">
                   <li><strong>Contents</strong>: <code>Access: Read and write</code> (sends computation requests)</li>
                   <li><strong>Actions</strong>: <code>Access: Read-only</code> (downloads run results)</li>
                   <li><strong>Checks</strong>: <code>Access: Read-only</code> (backup output channel)</li>
@@ -490,15 +501,30 @@
               <li>Click <strong>Generate token</strong> at the bottom. Copy the token (starts with <code>github_pat_...</code>).</li>
               <li>Paste the repository name above and your token, then click <strong>Save settings</strong>.</li>
             </ol>
-            <p class="hint" style="margin-top: 8px; font-size: .8125rem;">
-              🔒 <strong>Complete Privacy Guarantee:</strong> Your token is stored <em>only</em> in your own browser's local storage (<code>localStorage</code>) and sent directly to GitHub's HTTPS API. It is never transmitted to any third party, database, or server.
-            </p>
+
+            <!-- Complete Privacy Guarantee Banner -->
+            <div style="display: flex; align-items: flex-start; gap: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: .8125rem; color: var(--muted); line-height: 1.5;">
+              <span style="font-size: 1rem; line-height: 1; flex-shrink: 0;">🔒</span>
+              <div>
+                <strong style="color: var(--text);">Complete Privacy Guarantee:</strong> Your token is stored <em>only</em> in your own browser's local storage (<code>localStorage</code>) and sent directly to GitHub's HTTPS API. It is never transmitted to any third party, database, or server.
+              </div>
+            </div>
           </div>
         </details>
       </div>
       <div class="wide"><button type="submit" id="save" class="primary">Save settings</button></div>
     </form>
   </details>
+
+  <!-- Panel Switcher: Code Editor and Output & Result (closer to code area) -->
+  <div class="mobile-tabs" role="tablist" aria-label="Editor and output panels">
+    <button type="button" class="mobile-tab-btn active" id="tabBtnEditor" role="tab" aria-selected="true" aria-controls="editorPanel">
+      📝 Code Editor
+    </button>
+    <button type="button" class="mobile-tab-btn" id="tabBtnOutput" role="tab" aria-selected="false" aria-controls="outputPanel">
+      📊 Output &amp; Results
+    </button>
+  </div>
 
   <!-- Editor Section -->
   <section class="panel" id="editorPanel" aria-labelledby="edTitle">
@@ -600,70 +626,124 @@
   </div>
 </div>
 
-<!-- Modal 2: Scour arXiv & GitHub Public Repos -->
+<!-- Modal 2: Scour arXiv, zbMATH & Public Repos -->
 <div class="modal-backdrop" id="scourModal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="scourModalTitle">
-  <div class="modal" style="max-width:720px;">
+  <div class="modal" style="max-width:740px;">
     <div class="modal-header">
-      <h3 id="scourModalTitle">🔍 Scour arXiv &amp; GitHub Public Repos</h3>
+      <h3 id="scourModalTitle">🔍 Mathematical Literature &amp; Public Code Portals</h3>
       <button type="button" class="modal-close" id="closeScourModal" aria-label="Close dialog">✕</button>
     </div>
-    <div class="modal-body">
-      <p style="margin:0; font-size:.9rem; color:var(--text);">
-        Search mathematical literature and open-source theorem repositories to see if someone else has investigated this problem or proved a related result.
-      </p>
+    <div class="modal-body" style="display:flex; flex-direction:column; gap:14px;">
+      <!-- Search Tip Callout -->
+      <div style="background:var(--panel-2); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:8px; padding:10px 14px; font-size:.835rem; line-height:1.55; color:var(--text);">
+        <strong style="color:var(--accent);">💡 Academic Indexing Tip:</strong> Literature databases like <strong>arXiv</strong> and <strong>zbMATH Open</strong> perform boolean intersections. Searching for <strong>1&ndash;2 focused mathematical concepts</strong> (e.g., <em>&ldquo;Transformation Semigroups&rdquo;</em> or <em>&ldquo;Green's Relations&rdquo;</em>) yields rich results with MathSciNet/MSC reviews, whereas pasting entire code lines or long sentences returns zero matches.
+      </div>
 
+      <!-- Active Search Term Box -->
       <div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
-          <label for="scourQuery" style="font-weight:600; color:var(--text); margin:0;">Keywords &amp; Mathematical Terms:</label>
+          <label for="scourQuery" style="font-weight:650; color:var(--text); margin:0; font-size:.875rem;">
+            Active Mathematical Search Term:
+          </label>
           <div style="display:flex; gap:6px; align-items:center;">
-            <button type="button" id="btnFormatWords" style="min-height:28px; padding:2px 8px; font-size:.78rem;" title="Separate all words with spaces">Words</button>
-            <button type="button" id="btnFormatQuotes" style="min-height:28px; padding:2px 8px; font-size:.78rem;" title="Wrap multi-word terms in exact quotes">"Phrases"</button>
-            <button type="button" id="btnRefreshKeywords" style="min-height:28px; padding:2px 8px; font-size:.78rem;" title="Re-extract keywords from code">⚡ Re-extract</button>
+            <button type="button" id="btnRefreshKeywords" style="min-height:28px; padding:2px 10px; font-size:.78rem;" title="Re-detect clean concepts from editor code">⚡ Re-detect from Code</button>
+            <button type="button" id="btnClearQuery" style="min-height:28px; padding:2px 8px; font-size:.78rem;" title="Clear search box">✕ Clear</button>
           </div>
         </div>
         <div style="display:flex; gap:8px;">
-          <input type="text" id="scourQuery" placeholder="e.g. Alternating Group Structure Description Conjugacy Classes" style="flex:1;">
-        </div>
-        <div style="margin-top:8px;">
-          <div style="font-size:.78rem; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-            <span>Recognized mathematical concepts (click ✕ to remove):</span>
-            <button type="button" id="btnAddTermPrompt" style="min-height:22px; padding:1px 6px; font-size:.75rem; background:transparent; border:1px dashed var(--line); color:var(--accent); cursor:pointer;">+ Add term</button>
-          </div>
-          <div id="scourChips" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+          <input type="text" id="scourQuery" placeholder="e.g. Transformation Semigroups" style="flex:1; font-size:.92rem; font-weight:600; padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text);">
         </div>
       </div>
 
+      <!-- Detected Concepts from Editor -->
       <div>
-        <label style="font-weight:600; display:block; margin-bottom:6px; color:var(--text);">Direct 1-Click Search Links:</label>
-        <div style="display:flex; flex-wrap:wrap; gap:8px;">
-          <a id="linkArxiv" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-            📄 Search arXiv (math.GR / math.LO) ↗
-          </a>
-          <a id="linkGithub" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-            🐙 GitHub Code Search (Public Repos) ↗
-          </a>
-          <a id="linkZbMath" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-            📚 zbMATH Open ↗
-          </a>
-          <a id="linkScholar" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-            🎓 Google Scholar ↗
-          </a>
+        <div style="font-size:.78rem; font-weight:650; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em; display:flex; justify-content:space-between; align-items:center;">
+          <span>Detected in Your Editor Code (Click to search):</span>
+          <button type="button" id="btnAddTermPrompt" style="min-height:22px; padding:1px 8px; font-size:.75rem; background:transparent; border:1px dashed var(--line); color:var(--accent); cursor:pointer; border-radius:4px;">+ Add custom term</button>
+        </div>
+        <div id="scourChips" style="display:flex; flex-wrap:wrap; gap:6px; min-height:28px;"></div>
+      </div>
+
+      <!-- Curated Subject Presets for Active Tool -->
+      <div>
+        <div style="font-size:.78rem; font-weight:650; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em;">
+          <span id="topicPresetsLabel">Curated Mathematical Subject Presets:</span>
+        </div>
+        <div id="topicPresetsGrid" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+      </div>
+
+      <!-- Dedicated Literature & Code Portals Grid -->
+      <div>
+        <label style="font-weight:650; display:block; margin-bottom:8px; color:var(--text); font-size:.875rem;">1-Click Literature &amp; Code Portals:</label>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(215px, 1fr)); gap:10px;">
+          <!-- arXiv Card -->
+          <div style="background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:8px;">
+            <div>
+              <div style="font-weight:650; font-size:.875rem; color:var(--text); display:flex; align-items:center; gap:6px;">
+                <span>📄 arXiv Mathematics</span>
+              </div>
+              <div style="font-size:.78rem; color:var(--muted); margin-top:2px;">Global open preprints (Cornell Univ.)</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <a id="linkArxiv" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; font-size:.78rem; padding:4px 8px; flex:1; text-align:center;">All Math ↗</a>
+              <a id="linkArxivCat" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; font-size:.78rem; padding:4px 8px; flex:1; text-align:center;">math.GR ↗</a>
+            </div>
+          </div>
+
+          <!-- zbMATH Open Card -->
+          <div style="background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:8px;">
+            <div>
+              <div style="font-weight:650; font-size:.875rem; color:var(--text); display:flex; align-items:center; gap:6px;">
+                <span>📚 zbMATH Open</span>
+              </div>
+              <div style="font-size:.78rem; color:var(--muted); margin-top:2px;">Authoritative reviews &amp; MSC codes</div>
+            </div>
+            <a id="linkZbMath" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; font-size:.78rem; padding:5px 8px; text-align:center; display:block;">Search zbMATH Open ↗</a>
+          </div>
+
+          <!-- GitHub Public Code Search Card -->
+          <div style="background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:8px;">
+            <div>
+              <div style="font-weight:650; font-size:.875rem; color:var(--text); display:flex; align-items:center; gap:6px;">
+                <span>🐙 GitHub Public Repos</span>
+              </div>
+              <div style="font-size:.78rem; color:var(--muted); margin-top:2px;" id="githubLangHint">Open-source mathematics code</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <a id="linkGithub" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; font-size:.78rem; padding:4px 8px; flex:1; text-align:center;">Code Search ↗</a>
+              <a id="linkGithubRepos" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; font-size:.78rem; padding:4px 8px; flex:1; text-align:center;">Repositories ↗</a>
+            </div>
+          </div>
+
+          <!-- Research Community & Scholar Card -->
+          <div style="background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:8px;">
+            <div>
+              <div style="font-weight:650; font-size:.875rem; color:var(--text); display:flex; align-items:center; gap:6px;">
+                <span>💡 Community &amp; Scholar</span>
+              </div>
+              <div style="font-size:.78rem; color:var(--muted); margin-top:2px;">Q&amp;A discussions and citations</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <a id="linkMathOverflow" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; font-size:.78rem; padding:4px 8px; flex:1; text-align:center;">MathOverflow ↗</a>
+              <a id="linkScholar" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; font-size:.78rem; padding:4px 8px; flex:1; text-align:center;">Scholar ↗</a>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Live arXiv preprints preview -->
-      <div style="border-top:1px solid var(--line); padding-top:10px;">
+      <div style="border-top:1px solid var(--line); padding-top:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
           <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-            <strong style="font-size:.9rem;">Live arXiv Mathematics Feed:</strong>
-            <span id="arxivStatusHint" style="font-size:.78rem; color:var(--muted); font-style:italic;"></span>
+            <strong style="font-size:.9rem; color:var(--text);">Live arXiv Mathematics Feed:</strong>
+            <span id="arxivStatusHint" style="font-size:.78rem; color:var(--muted);"></span>
           </div>
-          <button type="button" id="fetchArxivBtn" style="min-height:32px; padding:2px 10px; font-size:.8rem; transition:opacity .2s ease;">
+          <button type="button" id="fetchArxivBtn" class="primary" style="min-height:30px; padding:2px 12px; font-size:.8rem;">
             🔄 Fetch Matching Papers
           </button>
         </div>
-        <div id="arxivResults" style="min-height:100px; max-height:260px; overflow-y:auto; background:var(--out-bg); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:.85rem; line-height:1.45;">
-          <span style="color:var(--muted);">Click &ldquo;Fetch Matching Papers&rdquo; to query live mathematical preprints.</span>
+        <div id="arxivResults" style="min-height:100px; max-height:240px; overflow-y:auto; background:var(--out-bg); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:.85rem; line-height:1.45;">
+          <span style="color:var(--muted);">Click &ldquo;Fetch Matching Papers&rdquo; to query live arXiv preprints for your active term.</span>
         </div>
       </div>
     </div>
@@ -749,7 +829,7 @@
             Active: Option A
           </span>
         </div>
-        <div id="logoChooserGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px;">
+        <div id="logoChooserGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(118px, 1fr)); gap:10px;">
           <!-- Dynamically populated with options -->
         </div>
       </div>
@@ -1483,244 +1563,232 @@ $("copyNativeCmd").onclick = () => copyCodeText("nativeCmd", "copyNativeCmd");
 $("copyDockerCmd").onclick = () => copyCodeText("dockerCmd", "copyDockerCmd");
 
 
-/* ---- Feature 2: Scour arXiv & GitHub Public Repos Modal ---- */
-let scourTerms = [];
-let scourFormatMode = "words"; // "words" or "quotes"
+/* ---- Feature 2: Scour arXiv, zbMATH & GitHub Public Repos Modal ---- */
+let scourDetectedConcepts = [];
+let activeScourCategory = "math.GR";
 
-const CODE_STOPWORDS = new Set([
-  // GAP keywords & common operations
-  "loadpackage", "package", "print", "printto", "size", "type", "length", "list",
-  "filtered", "apply", "return", "function", "local", "end", "then", "elif",
-  "else", "fi", "od", "do", "while", "repeat", "until", "break", "continue",
-  "true", "false", "fail", "display", "string", "view", "quit", "save", "read",
-  "write", "gapinfo", "installmethod", "declareoperation", "declarecategory",
-  "declareglobalfunction", "atomic", "readonly", "readwrite", "info", "warning",
-  "error", "output", "input", "eval", "call", "bindglobal", "value", "object",
-  "elements", "generator", "generators", "parent", "name", "file", "stream",
+const MATH_CONCEPT_PATTERNS = [
+  // Semigroup & Monoid Theory
+  { regex: /\b(full\s*transformation\s*monoid|transformation\s*monoid|transformation\s*semigroup)\b/i, term: "Transformation Semigroups", category: "math.GR" },
+  { regex: /\b(green['’]?s?\s*(relations|classes|dclass|hclass|rclass|lclass|jclass)|dclasses|hclasses|rclasses|lclasses|jclasses)\b/i, term: "Green's Relations", category: "math.GR" },
+  { regex: /\b(inverse\s*semigroup|inversesemigroup|symmetric\s*inverse\s*monoid)\b/i, term: "Inverse Semigroups", category: "math.GR" },
+  { regex: /\b(idempotent|idempotents)\b/i, term: "Idempotent Semigroups", category: "math.GR" },
+  { regex: /\b(rees\s*matrix|reesmatrix)\b/i, term: "Rees Matrix Semigroups", category: "math.GR" },
+  { regex: /\b(regular\s*semigroup|regularsemigroup)\b/i, term: "Regular Semigroups", category: "math.GR" },
+  { regex: /\b(monogenic\s*semigroup|monogenic|free\s*semigroup|free\s*monoid)\b/i, term: "Monogenic Semigroups", category: "math.GR" },
+  { regex: /\b(krohn[\s-]rhodes)\b/i, term: "Krohn-Rhodes Theory", category: "math.GR" },
+  { regex: /\b(semigroup\s*ideal|ideal\s*extension)\b/i, term: "Semigroup Ideals", category: "math.GR" },
+  { regex: /\b(band|bands|semilattice|semilattices)\b/i, term: "Bands and Semilattices", category: "math.GR" },
+  { regex: /\b(semigroup|semigroups)\b/i, term: "Semigroup Theory", category: "math.GR" },
 
-  // Lean 4 keywords & tactics
-  "import", "variable", "variables", "open", "namespace", "section", "def",
-  "theorem", "lemma", "example", "axiom", "noncomputable", "instance", "class",
-  "inductive", "where", "have", "show", "from", "exact", "apply", "intro",
-  "cases", "induction", "simp", "rw", "rfl", "omega", "ring", "linarith",
-  "assumption", "constructor", "ext", "fun", "let", "in", "by", "sorry",
-  "prop", "sort", "syntax", "macro", "notation", "elab", "decl",
+  // Group Theory
+  { regex: /\b(alternating\s*group|alternatinggroup)\b/i, term: "Alternating Groups", category: "math.GR" },
+  { regex: /\b(symmetric\s*group|symmetricgroup)\b/i, term: "Symmetric Groups", category: "math.GR" },
+  { regex: /\b(conjugacy\s*classes?|conjugacyclasses?)\b/i, term: "Conjugacy Classes", category: "math.GR" },
+  { regex: /\b(character\s*table|charactertable|character\s*theory)\b/i, term: "Character Table", category: "math.GR" },
+  { regex: /\b(sylow\s*subgroup|sylowsubgroup)\b/i, term: "Sylow Subgroups", category: "math.GR" },
+  { regex: /\b(derived\s*subgroup|commutator\s*subgroup)\b/i, term: "Derived Subgroup", category: "math.GR" },
+  { regex: /\b(solvable\s*group|issolvable)\b/i, term: "Solvable Groups", category: "math.GR" },
+  { regex: /\b(nilpotent\s*group|isnilpotent)\b/i, term: "Nilpotent Groups", category: "math.GR" },
+  { regex: /\b(dihedral\s*group|dihedralgroup)\b/i, term: "Dihedral Groups", category: "math.GR" },
+  { regex: /\b(quaternion\s*group|quaterniongroup)\b/i, term: "Quaternion Group", category: "math.GR" },
+  { regex: /\b(automorphism\s*group|automorphismgroup)\b/i, term: "Automorphism Groups", category: "math.GR" },
+  { regex: /\b(simple\s*group|issimplegroup)\b/i, term: "Finite Simple Groups", category: "math.GR" },
+  { regex: /\b(permutation\s*group|permutationgroup)\b/i, term: "Permutation Groups", category: "math.GR" },
+  { regex: /\b(matrix\s*group|general\s*linear)\b/i, term: "Matrix Groups", category: "math.GR" },
+  { regex: /\b(cayley\s*table|cayley\s*graph)\b/i, term: "Cayley Graphs", category: "math.GR" },
+  { regex: /\b(centralizer|normalizer|center)\b/i, term: "Centralizer and Center", category: "math.GR" },
 
-  // Prover9 / Mace4 keywords
-  "assign", "formulas", "assumptions", "goals", "end_of_list", "all", "exists",
-  "set", "clear", "lex", "weights", "order", "op",
+  // Logic & Automated Proving
+  { regex: /\b(robbins\s*algebra|robbins\s*conjecture|robbins)\b/i, term: "Robbins Algebra", category: "math.LO" },
+  { regex: /\b(equational\s*logic|equational\s*theory)\b/i, term: "Equational Logic", category: "math.LO" },
+  { regex: /\b(first[\s-]order\s*logic)\b/i, term: "First-Order Logic", category: "math.LO" },
+  { regex: /\b(finite\s*model|model\s*finding|counterexample|mace4)\b/i, term: "Finite Model Finding", category: "math.LO" },
+  { regex: /\b(resolution|prover9|automated\s*theorem\s*proving)\b/i, term: "Automated Theorem Proving", category: "math.LO" },
+  { regex: /\b(distributive\s*lattice|modular\s*lattice|lattice\s*theory)\b/i, term: "Lattice Theory", category: "math.LO" },
+  { regex: /\b(boolean\s*algebra|boolean\s*ring)\b/i, term: "Boolean Algebras", category: "math.LO" },
 
-  // General filler tokens
-  "with", "into", "over", "under", "between", "each", "every", "such", "that",
-  "this", "these", "those", "from", "main", "test", "demo", "temp", "item"
-]);
+  // Lean 4 & Formalized Math
+  { regex: /\b(mathlib|lean\s*4)\b/i, term: "Lean 4 Mathlib", category: "cs.LO" },
+  { regex: /\b(commsemigroup|commutative\s*semigroup)\b/i, term: "Commutative Semigroups", category: "math.GR" },
+  { regex: /\b(group\s*axioms?|group\s*theory)\b/i, term: "Formalized Group Theory", category: "math.GR" }
+];
 
-function splitCompoundName(name) {
-  if (!name || typeof name !== "string") return "";
-  let s = name;
-  // Strip common GAP/Lean boolean prefixes like "Is", "Has" when followed by uppercase letter
-  if (/^(Is|Has)[A-Z]/.test(s) && s.length > 5) {
-    s = s.slice(2);
-  }
-  // Split PascalCase / camelCase into words with spaces (e.g. AlternatingGroup -> Alternating Group)
-  s = s
-    .replace(/([a-z\d])([A-Z])/g, "$1 $2")
-    .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, "$1 $2")
-    .replace(/[_\-]+/g, " ")
-    .trim();
-  return s;
-}
+const PRESETS_BY_TOOL = {
+  gap: [
+    { label: "Transformation Semigroups", term: "Transformation Semigroups", cat: "math.GR" },
+    { label: "Green's Relations", term: "Green's Relations", cat: "math.GR" },
+    { label: "Inverse Semigroups", term: "Inverse Semigroups", cat: "math.GR" },
+    { label: "Idempotents", term: "Idempotent Semigroups", cat: "math.GR" },
+    { label: "Alternating Groups", term: "Alternating Groups", cat: "math.GR" },
+    { label: "Conjugacy Classes", term: "Conjugacy Classes", cat: "math.GR" },
+    { label: "Sylow Subgroups", term: "Sylow Subgroups", cat: "math.GR" },
+    { label: "Character Table", term: "Character Table", cat: "math.GR" }
+  ],
+  prover9: [
+    { label: "Robbins Algebra", term: "Robbins Algebra", cat: "math.LO" },
+    { label: "Equational Logic", term: "Equational Logic", cat: "math.LO" },
+    { label: "Lattice Theory", term: "Lattice Theory", cat: "math.LO" },
+    { label: "Automated Proving", term: "Automated Theorem Proving", cat: "math.LO" }
+  ],
+  mace4: [
+    { label: "Finite Models", term: "Finite Model Finding", cat: "math.LO" },
+    { label: "Counterexamples", term: "Finite Models and Counterexamples", cat: "math.LO" },
+    { label: "Semigroup Bands", term: "Bands and Semilattices", cat: "math.GR" },
+    { label: "Equational Theories", term: "Equational Logic", cat: "math.LO" }
+  ],
+  lean: [
+    { label: "Mathlib Semigroups", term: "Commutative Semigroups", cat: "math.GR" },
+    { label: "Formalized Algebra", term: "Lean 4 Mathlib", cat: "cs.LO" },
+    { label: "Group Axioms", term: "Formalized Group Theory", cat: "math.GR" },
+    { label: "Type Theory", term: "Dependent Type Theory", cat: "cs.LO" }
+  ]
+};
 
-function extractKeywordsList(code, currentTool) {
-  const recognizedPhrases = new Set();
+function detectMathematicalConcepts(code, currentTool) {
+  const recognized = [];
   const rawCode = code || "";
 
-  // Domain concept patterns (checked against entire code)
-  const CONCEPT_PATTERNS = [
-    // Groups & Representations
-    { regex: /\b(alternating\s*group|alternatinggroup)\b/i, phrase: "Alternating Group" },
-    { regex: /\b(symmetric\s*group|symmetricgroup)\b/i, phrase: "Symmetric Group" },
-    { regex: /\b(dihedral\s*group|dihedralgroup)\b/i, phrase: "Dihedral Group" },
-    { regex: /\b(quaternion\s*group|quaterniongroup)\b/i, phrase: "Quaternion Group" },
-    { regex: /\b(klein\s*four|kleinfour)\b/i, phrase: "Klein Four Group" },
-    { regex: /\b(structure\s*description|structuredescription)\b/i, phrase: "Structure Description" },
-    { regex: /\b(conjugacy\s*classes?|conjugacyclasses?)\b/i, phrase: "Conjugacy Classes" },
-    { regex: /\b(character\s*table|charactertable)\b/i, phrase: "Character Table" },
-    { regex: /\b(derived\s*subgroup|derivedsubgroup|commutator\s*subgroup)\b/i, phrase: "Derived Subgroup" },
-    { regex: /\b(sylow\s*subgroup|sylowsubgroup)\b/i, phrase: "Sylow Subgroup" },
-    { regex: /\b(automorphism\s*group|automorphismgroup)\b/i, phrase: "Automorphism Group" },
-    { regex: /\b(abelian\s*group|free\s*abelian)\b/i, phrase: "Abelian Group" },
-    { regex: /\b(free\s*group|freegroup)\b/i, phrase: "Free Group" },
-    { regex: /\b(simple\s*group|issimplegroup)\b/i, phrase: "Simple Group" },
-    { regex: /\b(solvable\s*group|issolvable|solvable)\b/i, phrase: "Solvable Group" },
-    { regex: /\b(nilpotent\s*group|isnilpotent|nilpotent)\b/i, phrase: "Nilpotent Group" },
-    { regex: /\b(permutation\s*group|permutationgroup)\b/i, phrase: "Permutation Group" },
-    { regex: /\b(matrix\s*group|matrixgroup)\b/i, phrase: "Matrix Group" },
-    { regex: /\b(cayley\s*table|cayleytable)\b/i, phrase: "Cayley Table" },
-    { regex: /\b(centralizer|normalizer|center)\b/i, phrase: "Centralizer" },
-
-    // Semigroups & Monoids
-    { regex: /\b(symmetric\s*inverse\s*monoid|symmetricinversemonoid)\b/i, phrase: "Symmetric Inverse Monoid" },
-    { regex: /\b(inverse\s*semigroup|inversesemigroup|inverse\s*monoid)\b/i, phrase: "Inverse Semigroup" },
-    { regex: /\b(transformation\s*semigroup|transformationsemigroup)\b/i, phrase: "Transformation Semigroup" },
-    { regex: /\b(green['’]?s?\s*classes|green['’]?s?\s*relations|greendclass|greenhclass|greenrclass|greenlclass|greenjclass)\b/i, phrase: "Green's Relations" },
-    { regex: /\b(rees\s*matrix|reesmatrix)\b/i, phrase: "Rees Matrix" },
-    { regex: /\b(idempotent|idempotents)\b/i, phrase: "Idempotents" },
-    { regex: /\b(regular\s*semigroup|regularsemigroup)\b/i, phrase: "Regular Semigroup" },
-    { regex: /\b(semigroup\s*ideal|semigroupideal)\b/i, phrase: "Semigroup Ideal" },
-
-    // Rings & Fields
-    { regex: /\b(polynomial\s*ring|polynomialring)\b/i, phrase: "Polynomial Ring" },
-    { regex: /\b(galois\s*field|galoisfield)\b/i, phrase: "Galois Field" },
-    { regex: /\b(prime\s*field|primefield)\b/i, phrase: "Prime Field" },
-    { regex: /\b(commutative\s*ring|division\s*ring)\b/i, phrase: "Commutative Ring" },
-
-    // Logic & Prover9
-    { regex: /\b(equational\s*logic|equational\s*theory)\b/i, phrase: "Equational Logic" },
-    { regex: /\b(first[\s-]order\s*logic)\b/i, phrase: "First-Order Logic" },
-    { regex: /\b(model\s*finding|finite\s*model)\b/i, phrase: "Model Finding" },
-    { regex: /\b(resolution\s*theorem\s*proving|prover9|mace4)\b/i, phrase: "Automated Theorem Proving" },
-    { regex: /\b(lattice\s*theory|distributive\s*lattice)\b/i, phrase: "Lattice Theory" }
-  ];
-
-  for (const { regex, phrase } of CONCEPT_PATTERNS) {
+  for (const { regex, term, category } of MATH_CONCEPT_PATTERNS) {
     if (regex.test(rawCode)) {
-      recognizedPhrases.add(phrase);
-    }
-  }
-
-  // Scan lines to extract and split compound PascalCase / camelCase / snake_case identifiers
-  const lines = rawCode.split("\n");
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("%") || trimmed.startsWith("--") || trimmed.startsWith("#")) continue;
-
-    const tokens = trimmed.match(/\b([A-Za-z][a-zA-Z0-9_]{2,})\b/g) || [];
-    for (const token of tokens) {
-      const lower = token.toLowerCase();
-      if (CODE_STOPWORDS.has(lower)) continue;
-
-      // Split the identifier into individual words
-      const split = splitCompoundName(token);
-      const splitWords = split.split(/\s+/).filter(w => w.length > 1 && !CODE_STOPWORDS.has(w.toLowerCase()));
-      if (splitWords.length === 0) continue;
-
-      const cleanPhrase = splitWords.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-
-      // Check if this phrase is already represented in recognizedPhrases
-      const lowerClean = cleanPhrase.toLowerCase();
-      let alreadyCovered = false;
-      for (const m of recognizedPhrases) {
-        if (m.toLowerCase() === lowerClean || m.toLowerCase().includes(lowerClean)) {
-          alreadyCovered = true;
-          break;
-        }
-      }
-      if (!alreadyCovered && cleanPhrase.length >= 3) {
-        recognizedPhrases.add(cleanPhrase);
+      if (!recognized.some(r => r.term === term)) {
+        recognized.push({ term, category });
       }
     }
   }
 
-  // Prune any phrases that are strict substrings/sub-words of longer phrases
-  // e.g. If we have "Structure Description", drop standalone "Structure"
-  // e.g. If we have "Alternating Group", drop standalone "Group"
-  // e.g. If we have "Conjugacy Classes", drop standalone "Conjugacy"
-  const allPhrases = Array.from(recognizedPhrases);
-  const pruned = allPhrases.filter(p1 => {
-    return !allPhrases.some(p2 => p2 !== p1 && p2.toLowerCase().includes(p1.toLowerCase()));
-  });
-
-  if (pruned.length === 0) {
-    if (currentTool === "gap") return ["Alternating Group", "Structure Description", "Conjugacy Classes"];
-    if (currentTool === "lean") return ["Group Theory", "Mathlib", "Algebra"];
-    return ["Equational Logic", "First-Order Logic", "Model Finding"];
+  if (recognized.length === 0) {
+    const presets = PRESETS_BY_TOOL[currentTool] || PRESETS_BY_TOOL.gap;
+    return [{ term: presets[0].term, category: presets[0].cat }];
   }
 
-  return pruned.slice(0, 6);
+  return recognized;
 }
 
-function buildQueryString(terms, mode) {
-  if (!terms || terms.length === 0) return "";
-  if (mode === "quotes") {
-    return terms.map(t => t.includes(" ") ? `"${t}"` : t).join(" ");
-  }
-  return terms.join(" ");
+function setScourTerm(term, category) {
+  $("scourQuery").value = term;
+  if (category) activeScourCategory = category;
+  renderScourChips();
+  renderTopicPresets();
+  updateScourState();
 }
 
 function renderScourChips() {
   const container = $("scourChips");
   if (!container) return;
   container.innerHTML = "";
-  if (scourTerms.length === 0) {
-    container.innerHTML = '<span style="color:var(--muted); font-size:.8rem;">No terms active. Click "+ Add term" or "⚡ Re-extract" from code.</span>';
+  const currentVal = $("scourQuery").value.trim().toLowerCase();
+
+  if (scourDetectedConcepts.length === 0) {
+    container.innerHTML = '<span style="color:var(--muted); font-size:.8rem;">No explicit mathematical concepts detected. Pick from presets below or add a term.</span>';
     return;
   }
-  scourTerms.forEach((term, index) => {
-    const chip = document.createElement("span");
-    chip.className = "scour-chip";
-    chip.textContent = term + " ";
+
+  scourDetectedConcepts.forEach((c) => {
+    const isSelected = currentVal === c.term.toLowerCase();
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.setAttribute("aria-label", "Remove " + term);
-    btn.textContent = "✕";
-    btn.onclick = () => {
-      scourTerms.splice(index, 1);
-      $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
-      renderScourChips();
-      updateScourLinks();
-    };
-    chip.appendChild(btn);
-    container.appendChild(chip);
+    btn.className = "scour-chip";
+    btn.style.cursor = "pointer";
+    btn.style.border = isSelected ? "1px solid var(--accent)" : "1px solid var(--line)";
+    btn.style.background = isSelected ? "rgba(34, 197, 94, 0.15)" : "var(--panel-2)";
+    btn.style.color = isSelected ? "var(--accent)" : "var(--text)";
+    btn.style.fontWeight = isSelected ? "650" : "500";
+    btn.textContent = c.term;
+    btn.title = `Search for "${c.term}"`;
+    btn.onclick = () => setScourTerm(c.term, c.category);
+    container.appendChild(btn);
+  });
+}
+
+function renderTopicPresets() {
+  const grid = $("topicPresetsGrid");
+  const label = $("topicPresetsLabel");
+  if (!grid) return;
+  grid.innerHTML = "";
+  const presets = PRESETS_BY_TOOL[tool] || PRESETS_BY_TOOL.gap;
+  if (label) {
+    label.textContent = `Curated Topics for ${tool.toUpperCase()}:`;
+  }
+  const currentVal = $("scourQuery").value.trim().toLowerCase();
+
+  presets.forEach(p => {
+    const isSelected = currentVal === p.term.toLowerCase();
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "scour-chip";
+    btn.style.cursor = "pointer";
+    btn.style.fontSize = ".78rem";
+    btn.style.border = isSelected ? "1px solid var(--accent)" : "1px solid var(--line)";
+    btn.style.background = isSelected ? "rgba(34, 197, 94, 0.15)" : "var(--panel-2)";
+    btn.style.color = isSelected ? "var(--accent)" : "var(--text)";
+    btn.style.fontWeight = isSelected ? "650" : "500";
+    btn.textContent = p.label;
+    btn.title = `Search for "${p.term}"`;
+    btn.onclick = () => setScourTerm(p.term, p.cat);
+    grid.appendChild(btn);
   });
 }
 
 function updateScourState() {
   const queryInput = $("scourQuery");
-  const rawQ = queryInput.value.trim() || (scourTerms.length > 0 ? buildQueryString(scourTerms, scourFormatMode) : "");
-  const searchQ = rawQ || "Alternating Group Structure Description";
+  const rawQ = queryInput.value.trim();
+  const searchQ = rawQ || (scourDetectedConcepts[0]?.term || "Transformation Semigroups");
   const q = encodeURIComponent(searchQ);
-  $("linkArxiv").href = `https://arxiv.org/search/math?query=${q}&searchtype=all&source=header`;
-  $("linkGithub").href = `https://github.com/search?q=${q}+language%3AGAP+OR+path%3A*.in+OR+path%3A*.lean&type=code`;
+
+  // arXiv Mathematics links
+  $("linkArxiv").href = `https://arxiv.org/search/math?query=${q}&searchtype=all&order=-announced_date_first`;
+  $("linkArxivCat").href = `https://arxiv.org/search/math?query=${q}&searchtype=all&classification-mathematics=${activeScourCategory}`;
+  $("linkArxivCat").textContent = `${activeScourCategory} ↗`;
+
+  // zbMATH Open link
   $("linkZbMath").href = `https://zbmath.org/?q=${q}`;
+
+  // GitHub Code Search links
+  const langHint = $("githubLangHint");
+  if (tool === "gap") {
+    $("linkGithub").href = `https://github.com/search?q=${q}+language%3AGAP&type=code`;
+    if (langHint) langHint.textContent = "GAP language code (.g)";
+  } else if (tool === "lean") {
+    $("linkGithub").href = `https://github.com/search?q=${q}+language%3ALean&type=code`;
+    if (langHint) langHint.textContent = "Lean 4 theorem code (.lean)";
+  } else {
+    $("linkGithub").href = `https://github.com/search?q=${q}+prover9+OR+mace4&type=code`;
+    if (langHint) langHint.textContent = "Prover9 / Mace4 scripts (.in)";
+  }
+  $("linkGithubRepos").href = `https://github.com/search?q=${q}+topic%3Amathematics&type=repositories`;
+
+  // Community & Scholar links
+  $("linkMathOverflow").href = `https://mathoverflow.net/search?q=${q}`;
   $("linkScholar").href = `https://scholar.google.com/scholar?q=${q}`;
 
   const btn = $("fetchArxivBtn");
   const hint = $("arxivStatusHint");
-  const hasKeywords = scourTerms.length > 0 || queryInput.value.trim().length > 0;
-  if (!hasKeywords) {
+  if (!rawQ) {
     btn.disabled = true;
     btn.style.opacity = "0.55";
     btn.style.cursor = "not-allowed";
-    btn.title = "Please extract or add at least one keyword first";
-    if (hint) {
-      hint.textContent = "(Add or extract keywords to enable)";
-      hint.style.color = "var(--muted)";
-    }
+    if (hint) hint.textContent = "(Enter a search term or click a topic chip)";
   } else {
     btn.disabled = false;
     btn.style.opacity = "1";
     btn.style.cursor = "pointer";
-    btn.title = "Fetch live arXiv preprints";
-    if (hint) {
-      hint.textContent = "";
-    }
+    if (hint) hint.textContent = `Target: ${activeScourCategory}`;
   }
 }
 
-function updateScourLinks() {
-  updateScourState();
-}
-
 function openScourModal() {
-  scourTerms = extractKeywordsList($("code").value, tool);
-  scourFormatMode = "words";
-  $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
+  scourDetectedConcepts = detectMathematicalConcepts($("code").value, tool);
+  const primary = scourDetectedConcepts[0];
+  $("scourQuery").value = primary.term;
+  activeScourCategory = primary.category || "math.GR";
   renderScourChips();
+  renderTopicPresets();
   updateScourState();
   $("scourModal").hidden = false;
   $("scourModal").setAttribute("aria-hidden", "false");
 }
+
 function closeScourModal() {
   $("scourModal").hidden = true;
   $("scourModal").setAttribute("aria-hidden", "true");
@@ -1731,51 +1799,59 @@ $("closeScourModal").onclick = closeScourModal;
 $("dismissScourModal").onclick = closeScourModal;
 
 $("btnRefreshKeywords").onclick = () => {
-  scourTerms = extractKeywordsList($("code").value, tool);
-  $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
+  scourDetectedConcepts = detectMathematicalConcepts($("code").value, tool);
+  const primary = scourDetectedConcepts[0];
+  $("scourQuery").value = primary.term;
+  activeScourCategory = primary.category || "math.GR";
   renderScourChips();
+  renderTopicPresets();
   updateScourState();
 };
 
-$("btnFormatWords").onclick = () => {
-  scourFormatMode = "words";
-  $("scourQuery").value = buildQueryString(scourTerms, "words");
+$("btnClearQuery").onclick = () => {
+  $("scourQuery").value = "";
+  renderScourChips();
+  renderTopicPresets();
   updateScourState();
-};
-
-$("btnFormatQuotes").onclick = () => {
-  scourFormatMode = "quotes";
-  $("scourQuery").value = buildQueryString(scourTerms, "quotes");
-  updateScourState();
+  $("scourQuery").focus();
 };
 
 $("btnAddTermPrompt").onclick = () => {
-  const newTerm = prompt("Enter a mathematical keyword or concept (e.g. 'Sylow Subgroup'):");
+  const newTerm = prompt("Enter a mathematical concept or keyword (e.g. 'Symmetric Inverse Monoid'):");
   if (newTerm && newTerm.trim()) {
-    const clean = splitCompoundName(newTerm.trim());
-    if (!scourTerms.includes(clean)) {
-      scourTerms.push(clean);
-      $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
-      renderScourChips();
-      updateScourState();
+    const clean = newTerm.trim();
+    if (!scourDetectedConcepts.some(c => c.term.toLowerCase() === clean.toLowerCase())) {
+      scourDetectedConcepts.unshift({ term: clean, category: activeScourCategory });
     }
+    setScourTerm(clean, activeScourCategory);
   }
 };
 
-$("scourQuery").addEventListener("input", updateScourState);
+$("scourQuery").addEventListener("input", () => {
+  renderScourChips();
+  renderTopicPresets();
+  updateScourState();
+});
+
+$("scourQuery").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    $("fetchArxivBtn").click();
+  }
+});
 
 // Live arXiv & Scientific Preprints Query with 8s AbortController timeout & HTTPS fallbacks
 $("fetchArxivBtn").onclick = async () => {
   const btn = $("fetchArxivBtn");
   const container = $("arxivResults");
   const queryInput = $("scourQuery");
-  const rawQ = queryInput.value.trim() || buildQueryString(scourTerms, scourFormatMode);
+  const rawQ = queryInput.value.trim();
 
-  if (!rawQ && scourTerms.length === 0) {
+  if (!rawQ) {
     updateScourState();
     container.innerHTML = `
       <div style="padding:10px; background:var(--panel-2); border:1px solid var(--line); border-radius:6px; color:var(--bad);">
-        ⚠️ Please extract or add at least one keyword first.
+        ⚠️ Please enter or select a mathematical search term first.
       </div>
     `;
     return;
@@ -1785,7 +1861,7 @@ $("fetchArxivBtn").onclick = async () => {
   btn.disabled = true;
   btn.style.opacity = "0.7";
   btn.innerHTML = `<span style="display:inline-block; width:10px; height:10px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:4px;"></span> Fetching…`;
-  container.innerHTML = `<div style="display:flex; align-items:center; gap:8px; color:var(--accent); padding:4px 0;"><span style="display:inline-block; width:12px; height:12px; border:2px solid var(--accent); border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite;"></span> Querying official arXiv &amp; mathematical databases (timeout in 8s)…</div>`;
+  container.innerHTML = `<div style="display:flex; align-items:center; gap:8px; color:var(--accent); padding:4px 0;"><span style="display:inline-block; width:12px; height:12px; border:2px solid var(--accent); border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite;"></span> Querying official arXiv &amp; mathematical databases for &ldquo;${escapeHtml(rawQ)}&rdquo;…</div>`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
@@ -1834,7 +1910,7 @@ $("fetchArxivBtn").onclick = async () => {
   }
 
   try {
-    // Tier 1: Local server proxy /api/arxiv (bypasses browser CORS completely when dev/prod node server runs)
+    // Tier 1: Local server proxy /api/arxiv
     try {
       const res = await fetch(`/api/arxiv?q=${encodeURIComponent(rawQ)}`, { signal: controller.signal });
       if (res.ok) {
@@ -1847,10 +1923,9 @@ $("fetchArxivBtn").onclick = async () => {
       }
     } catch (proxyErr) {
       if (controller.signal.aborted) throw proxyErr;
-      // If running on purely static GitHub Pages or serverless host, proceed seamlessly to Tier 2
     }
 
-    // Tier 2: OpenAlex Global Research API (HTTPS, official CORS-enabled open scientific metadata indexing arXiv)
+    // Tier 2: OpenAlex Global Research API
     try {
       const openAlexUrl = `https://api.openalex.org/works?search=${encodeURIComponent(rawQ)}&filter=type:preprint|article&per_page=5`;
       const res = await fetch(openAlexUrl, {
@@ -1879,7 +1954,9 @@ $("fetchArxivBtn").onclick = async () => {
     // Tier 3: HTTPS CORS proxy querying official arXiv Atom feed
     try {
       const cleanTokens = rawQ.replace(/["'(),;:]/g, ' ').split(/\s+/).filter(Boolean);
-      const searchParam = cleanTokens.slice(0, 3).map(t => 'all:' + encodeURIComponent(t)).join('+AND+');
+      const effectiveTokens = cleanTokens.slice(0, 2);
+      const tokenQuery = effectiveTokens.map(t => 'all:' + encodeURIComponent(t)).join('+AND+');
+      const searchParam = tokenQuery ? `cat:math.*+AND+${tokenQuery}` : 'cat:math.*';
       const directArxivUrl = `https://export.arxiv.org/api/query?search_query=${searchParam}&start=0&max_results=5&sortBy=relevance`;
       const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directArxivUrl)}`;
       const res = await fetch(proxyUrl, { signal: controller.signal });
@@ -2016,17 +2093,17 @@ function renderLogoGallery() {
     const opt = LOGO_OPTIONS[k];
     const isActive = (k === currentLogoKey);
     return `
-      <button type="button" class="preset-btn logo-choice-card" onclick="setSiteLogo('${k}')" title="${opt.desc}" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:12px 10px; border-radius:8px; border:2px solid ${isActive ? 'var(--accent)' : 'var(--line)'}; background:${isActive ? 'var(--panel-2)' : 'var(--bg)'}; cursor:pointer; min-height:auto; transition:border-color .15s, transform .15s;">
-        <div style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; margin-bottom:6px;">
+      <button type="button" class="preset-btn logo-choice-card" onclick="setSiteLogo('${k}')" title="${opt.desc}" style="display:flex; flex-direction:column; align-items:center; text-align:center; justify-content:space-between; height:100%; padding:12px 10px; border-radius:8px; border:2px solid ${isActive ? 'var(--accent)' : 'var(--line)'}; background:${isActive ? 'var(--panel-2)' : 'var(--bg)'}; cursor:pointer; min-height:auto; transition:border-color .15s, transform .15s;">
+        <div style="width:44px; height:44px; display:flex; align-items:center; justify-content:center; margin-bottom:8px;">
           ${opt.svg}
         </div>
-        <div style="font-weight:700; font-size:.82rem; color:${isActive ? 'var(--accent)' : 'var(--text)'}; margin-bottom:2px;">
+        <div style="font-weight:700; font-size:.82rem; color:${isActive ? 'var(--accent)' : 'var(--text)'}; margin-bottom:4px; line-height:1.25;">
           Option ${opt.letter}: ${opt.title}
         </div>
-        <div style="font-size:.72rem; color:var(--muted); line-height:1.3; margin-bottom:8px;">
+        <div style="font-size:.72rem; color:var(--muted); line-height:1.35; margin-bottom:10px;">
           ${opt.subtitle}
         </div>
-        <span style="font-size:.72rem; font-weight:600; padding:2px 8px; border-radius:12px; background:${isActive ? 'var(--accent)' : 'transparent'}; color:${isActive ? 'var(--accent-ink)' : 'var(--muted)'}; border:1px solid ${isActive ? 'var(--accent)' : 'var(--line)'};">
+        <span style="margin-top:auto; font-size:.72rem; font-weight:600; padding:3px 10px; border-radius:12px; background:${isActive ? 'var(--accent)' : 'transparent'}; color:${isActive ? 'var(--accent-ink)' : 'var(--muted)'}; border:1px solid ${isActive ? 'var(--accent)' : 'var(--line)'};">
           ${isActive ? '✓ Selected' : 'Choose'}
         </span>
       </button>
