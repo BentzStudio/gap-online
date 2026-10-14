@@ -35,12 +35,18 @@ A free, serverless, privacy-preserving computational laboratory for [GAP](https:
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | The complete single-page application: editor, output panel, settings, modals, and themes |
-| `server.js` | Zero-dependency production Node.js server that serves `dist/` and proxies `/api/arxiv` to avoid browser CORS restrictions |
-| `vite.config.js` | Vite development and preview server configuration with `/api/arxiv` middleware proxy |
-| `package.json` | Project scripts (`dev`, `build`, `preview`, `start`) and metadata |
-| `.github/workflows/run_gap.yml` | GitHub Actions workflow executing GAP, Prover9, Mace4, and Lean 4 in sandboxed runners |
-| `README.md` | Complete architectural documentation, setup guides, and mathematical user guide |
+| `index.html` | Page markup only (editor, output panel, settings, modals) |
+| `src/styles.css` | All styling and the Dark / OLED Black / Light themes |
+| `src/main.js` | App wiring: tools, settings, run history, GitHub Actions dispatch, output rendering |
+| `src/examples.js` | Example programs and the `TOOLS` table (GAP, Prover9, Mace4, Lean 4) |
+| `src/latex.js` | GAP-output to LaTeX conversion |
+| `src/scour.js`, `src/concepts.js` | Concept detection and the arXiv / zbMATH / GitHub research modal |
+| `src/logos.js`, `src/logos-data.js` | Emblem picker |
+| `src/util.js` | Shared helpers (storage, escaping, clipboard, modals, arXiv feed parsing) |
+| `server.js` | Zero-dependency production Node.js server that serves `dist/` and proxies `/api/arxiv` |
+| `vite.config.js` | Vite configuration with the `/api/arxiv` dev/preview proxy |
+| `worker.js`, `wrangler.toml`, `arxiv.js` | Cloudflare Worker / Pages Function variants of the arXiv proxy |
+| `.github/workflows/run_gap.yml` | GitHub Actions workflow executing GAP, Prover9, Mace4, and Lean 4 |
 
 ---
 

@@ -265,25 +265,25 @@ jobs:
 
       - name: Run Lean 4 (sandboxed)
         if: env.TOOL == 'lean'
+        env:
+          # Silences elan's "using toolchain ... from override" notice.
+          ELAN_NO_OVERRIDE_NOTICE: "1"
         run: |
           set +e
           export PATH="$HOME/.elan/bin:$PATH"
           if ! command -v elan >/dev/null 2>&1; then
             curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain leanprover/lean4:v4.15.0
           fi
-          # Ensure default toolchain is explicitly configured in elan settings
-          elan default leanprover/lean4:v4.15.0 2>/dev/null || elan default stable 2>/dev/null || true
+          # The toolchain is pinned by lean-project/lean-toolchain, so no
+          # directory override is needed (overrides are what print the note).
+          elan default leanprover/lean4:v4.15.0 >/dev/null 2>&1 || elan default stable >/dev/null 2>&1 || true
           cd lean-project
           echo "leanprover/lean4:v4.15.0" > lean-toolchain
-          elan override set leanprover/lean4:v4.15.0 2>/dev/null || elan override set stable 2>/dev/null || true
-          timeout 120 lake env lean work/UserCode.lean 2>&1 | sed -u 's/\x1b\[[0-9;]*m//g' > ../output.txt
+          elan override unset >/dev/null 2>&1 || true
+          timeout 120 lake env lean work/UserCode.lean 2>&1 \
+            | sed -u 's/\x1b\[[0-9;]*m//g' \
+            | grep -av -e "^note: using toolchain" -e "^note: to remove: elan override" > ../output.txt
           code=${PIPESTATUS[0]}
-          if grep -q "no default toolchain configured" ../output.txt 2>/dev/null; then
-            echo "Configuring elan default stable..."
-            elan default stable
-            timeout 120 lake env lean work/UserCode.lean 2>&1 | sed -u 's/\x1b\[[0-9;]*m//g' > ../output.txt
-            code=${PIPESTATUS[0]}
-          fi
           cd ..
           if [ ! -s output.txt ] && [ "$code" -eq 0 ]; then
             echo "All goals accomplished. No errors found." > output.txt

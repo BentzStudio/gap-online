@@ -1,0 +1,414 @@
+import { $, store, sleep, toBase64, copyText, openModal, closeModal } from "./util.js";
+import { TOOLS } from "./examples.js";
+import { latexify } from "./latex.js";
+import { initScour } from "./scour.js";
+import { initLogos, renderGallery } from "./logos.js";
+
+/* ---- Theme support (Dark / OLED Black / Light) ---- */
+function applyTheme(theme) {
+  if (theme === "light") {
+    document.documentElement.setAttribute("data-theme", "light");
+  } else if (theme === "oled") {
+    document.documentElement.setAttribute("data-theme", "oled");
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+  store.set("gap.theme", theme);
+  $("themeSelect").value = theme;
+}
+let currentTheme = store.get("gap.theme");
+if (!currentTheme) {
+  currentTheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+applyTheme(currentTheme);
+$("themeSelect").onchange = e => applyTheme(e.target.value);
+
+/* ---- Mobile Tab Switching ---- */
+const editorPanel = $("editorPanel");
+const outputPanel = $("outputPanel");
+const tabBtnEditor = $("tabBtnEditor");
+const tabBtnOutput = $("tabBtnOutput");
+
+function showPanel(target) {
+  const isEditor = target === "editor";
+  editorPanel.classList.toggle("mobile-hidden", !isEditor);
+  outputPanel.classList.toggle("mobile-hidden", isEditor);
+  for (const [btn, on] of [[tabBtnEditor, isEditor], [tabBtnOutput, !isEditor]]) {
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-selected", String(on));
+  }
+}
+tabBtnEditor.onclick = () => showPanel("editor");
+tabBtnOutput.onclick = () => showPanel("output");
+
+
+/* ---- Privacy & Repo Configuration ---- */
+// Stored in localStorage only. No hardcoded personal repository link exposed on website!
+let cfg = {
+  repo: store.get("gap.repo") || "",
+  token: store.get("gap.token") || "",
+  mask: store.get("gap.mask") === "true"
+};
+let lastOutput = null, lastTool = "gap", busy = false;
+
+// Auto-detect only if hosted under custom github.io page and repo is not set
+if (!cfg.repo && /\.github\.io$/.test(location.hostname)) {
+  const repoName = location.pathname.split("/")[1];
+  if (repoName) cfg.repo = location.hostname.replace(".github.io", "") + "/" + repoName;
+}
+
+$("repo").value = cfg.repo;
+$("token").value = cfg.token;
+$("maskMode").checked = cfg.mask;
+
+function applyMaskMode() {
+  const isMasked = $("maskMode").checked;
+  store.set("gap.mask", isMasked ? "true" : "false");
+  $("repo").type = isMasked ? "password" : "text";
+  $("toggleMaskBtn").textContent = isMasked ? "🙈" : "👁️";
+  $("toggleMaskBtn").title = isMasked ? "Currently masked (Click to reveal)" : "Click to mask";
+}
+applyMaskMode();
+
+$("maskMode").onchange = applyMaskMode;
+$("toggleMaskBtn").onclick = () => {
+  $("repo").type = $("repo").type === "password" ? "text" : "password";
+  $("toggleMaskBtn").textContent = $("repo").type === "password" ? "🙈" : "👁️";
+};
+
+if (!cfg.token || !cfg.repo) {
+  $("settings").open = true;
+}
+
+$("settingsForm").onsubmit = e => {
+  e.preventDefault();
+  cfg = {
+    repo: $("repo").value.trim(),
+    token: $("token").value.trim(),
+    mask: $("maskMode").checked
+  };
+  store.set("gap.repo", cfg.repo);
+  store.set("gap.token", cfg.token);
+  store.set("gap.mask", cfg.mask ? "true" : "false");
+  setStatus("Settings saved locally.", "ok");
+  $("settings").open = false;
+};
+
+// Tool state & permalink
+function loadFromHash() {
+  const hash = location.hash.slice(1);
+  if (!hash) return false;
+  try {
+    const params = new URLSearchParams(hash);
+    const t = params.get("tool");
+    const c = params.get("code");
+    if (t && TOOLS[t]) {
+      tool = t;
+      store.set("gap.tool", tool);
+      if (c !== null) {
+        store.set(TOOLS[tool].codeKey, c);
+        return true;
+      }
+    }
+  } catch (e) {}
+  return false;
+}
+
+let tool = TOOLS[store.get("gap.tool")] ? store.get("gap.tool") : "gap";
+loadFromHash();
+
+function applyTool() {
+  const t = TOOLS[tool], names = Object.keys(t.examples), sel = $("examples");
+  $("tool").value = tool;
+  $("edTitle").textContent = t.title;
+  $("code").setAttribute("aria-label", t.title + " editor");
+  sel.length = 0;
+  for (const name of names) sel.add(new Option(name, name));
+  $("code").value = store.get(t.codeKey) || t.examples[names[0]];
+}
+applyTool();
+$("tool").onchange = () => { tool = $("tool").value; store.set("gap.tool", tool); applyTool(); };
+$("examples").onchange = () => {
+  $("code").value = TOOLS[tool].examples[$("examples").value];
+  store.set(TOOLS[tool].codeKey, $("code").value);
+};
+$("code").addEventListener("input", () => store.set(TOOLS[tool].codeKey, $("code").value));
+
+// Share Link button
+$("shareBtn").onclick = () => {
+  const params = new URLSearchParams({ tool, code: $("code").value });
+  const shareUrl = location.origin + location.pathname + "#" + params.toString();
+  copyText(shareUrl, $("shareBtn")).catch(() => prompt("Copy share link:", shareUrl));
+};
+
+// Copy Output button
+$("copyOutBtn").onclick = () => { if (lastOutput) copyText(lastOutput, $("copyOutBtn")); };
+
+/* ---- Run History (Last 10 runs) ---- */
+function getHistory() {
+  try { return JSON.parse(store.get("gap.history") || "[]"); } catch { return []; }
+}
+function saveHistoryItem(item) {
+  const h = getHistory();
+  h.unshift(item);
+  while (h.length > 10) h.pop();
+  store.set("gap.history", JSON.stringify(h));
+  updateHistoryDropdown();
+}
+function updateHistoryDropdown() {
+  const h = getHistory();
+  const sel = $("historySel");
+  sel.length = 0;
+  sel.add(new Option(`History (${h.length})`, ""));
+  h.forEach((item, idx) => {
+    const time = new Date(item.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const label = `#${idx + 1} [${TOOLS[item.tool] ? TOOLS[item.tool].label : item.tool}] ${item.desc} (${time})`;
+    sel.add(new Option(label, String(idx)));
+  });
+}
+updateHistoryDropdown();
+$("historySel").onchange = () => {
+  const val = $("historySel").value;
+  if (val === "") return;
+  const h = getHistory();
+  const item = h[parseInt(val, 10)];
+  if (item) {
+    if (item.tool && TOOLS[item.tool]) {
+      tool = item.tool;
+      store.set("gap.tool", tool);
+      applyTool();
+    }
+    $("code").value = item.code;
+    store.set(TOOLS[tool].codeKey, item.code);
+    lastOutput = item.out;
+    lastTool = item.tool;
+    render();
+    setStatus(`Loaded run #${parseInt(val, 10) + 1} from ${new Date(item.ts).toLocaleTimeString()}.`, "ok");
+    showPanel("output");
+  }
+};
+
+function setStatus(msg, kind = "") {
+  const s = $("status");
+  s.textContent = msg;
+  s.className = kind;
+}
+
+function gh(path, opts = {}) {
+  return fetch("https://api.github.com/repos/" + cfg.repo + path, {
+    ...opts,
+    headers: {
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      Authorization: "Bearer " + cfg.token,
+      ...(opts.headers || {})
+    }
+  });
+}
+async function ghJson(path) {
+  const r = await gh(path);
+  if (!r.ok) throw new Error("GitHub API " + r.status + " on " + path.split("?")[0]);
+  return r.json();
+}
+
+
+function render() {
+  const gapOutput = lastTool === "gap";
+  const out = $("out"), latex = gapOutput && document.querySelector('input[name=fmt]:checked').value === "latex";
+  $("fmtset").disabled = !gapOutput;
+  $("fmtset").title = gapOutput ? "" : "LaTeX typesetting is only available for GAP output";
+  if (lastOutput === null) return;
+  out.className = latex ? "latex" : "";
+  out.textContent = lastOutput.trim() ? (latex ? latexify(lastOutput) : lastOutput) : "(no output)";
+  if (latex && window.renderMathInElement) {
+    renderMathInElement(out, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true }, { left: "\\[", right: "\\]", display: true },
+        { left: "\\(", right: "\\)", display: false }, { left: "$", right: "$", display: false }
+      ],
+      throwOnError: false, ignoredTags: ["script", "noscript", "style", "textarea"]
+    });
+  }
+}
+document.querySelectorAll("input[name=fmt]").forEach(el => el.addEventListener("change", render));
+
+async function findRun(title, since, onPoll) {
+  const deadline = Date.now() + 90000;
+  while (Date.now() < deadline) {
+    if (onPoll) onPoll();
+    const d = await ghJson("/actions/runs?event=repository_dispatch&per_page=30");
+    const hit = d.workflow_runs.find(r => r.display_title === title && new Date(r.created_at) >= since);
+    if (hit) return hit;
+    await sleep(2500);
+  }
+  throw new Error("The workflow didn't start within 90 s. Check that .github/workflows/run_gap.yml is on the default branch and Actions is enabled.");
+}
+
+async function readArtifact(runId) {
+  const list = await ghJson("/actions/runs/" + runId + "/artifacts");
+  const art = list.artifacts.find(a => a.name === "gap-output");
+  if (!art) throw new Error("no artifact");
+  const r = await gh("/actions/artifacts/" + art.id + "/zip");
+  if (!r.ok) throw new Error("artifact download " + r.status);
+  const zip = await JSZip.loadAsync(await r.blob());
+  return zip.file("output.txt").async("string");
+}
+
+async function readAnnotation(runId) {
+  const jobs = await ghJson("/actions/runs/" + runId + "/jobs");
+  for (const job of jobs.jobs) {
+    const ann = await ghJson("/check-runs/" + job.id + "/annotations");
+    const hit = ann.find(a => a.title === "GAP output");
+    if (hit) return hit.message;
+  }
+  throw new Error("no annotation");
+}
+
+async function run() {
+  if (busy) return;
+  if (!cfg.repo || !cfg.token) {
+    $("settings").open = true;
+    setStatus("Add your repository and personal access token first.", "err");
+    return;
+  }
+  const code = $("code").value;
+  if (!code.trim()) { setStatus("The editor is empty. Write something first.", "err"); return; }
+  const runTool = tool;
+  const code_b64 = toBase64(code);
+  if (code_b64.length > 60000) { setStatus("Code is too long (limit about 45 KB).", "err"); return; }
+
+  busy = true; $("run").disabled = true;
+  showPanel("output"); // Automatically switch view on mobile devices
+
+  const runId = "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const since = new Date(Date.now() - 60000), t0 = Date.now();
+  const getElapsed = () => Math.round((Date.now() - t0) / 1000);
+
+  try {
+    setStatus("[1/4] Triggering workflow on GitHub Actions…", "running");
+    const res = await gh("/dispatches", {
+      method: "POST",
+      body: JSON.stringify({
+        event_type: "run_gap",
+        client_payload: { run_id: runId, code_b64, tool: runTool }
+      })
+    });
+    if (res.status === 401) throw new Error("Token rejected (401). Check that the token hasn't expired.");
+    if (res.status === 403 || res.status === 404) {
+      throw new Error("Access denied (" + res.status + "). Check that your token has 'Contents: read & write' for " + ($("maskMode").checked ? "the target repository" : cfg.repo) + ".");
+    }
+    if (res.status !== 204) throw new Error("Dispatch failed (" + res.status + ").");
+
+    setStatus(`[2/4] Waiting for GitHub runner to spin up (${getElapsed()}s)…`, "running");
+    const found = await findRun("GAP " + runId, since, () => {
+      setStatus(`[2/4] Waiting for GitHub runner to spin up (${getElapsed()}s)…`, "running");
+    });
+    let run = found;
+    while (run.status !== "completed") {
+      if (Date.now() - t0 > 2400000) throw new Error("Timed out after 40 minutes. Check the Actions tab of your repository.");
+      const elapsed = getElapsed();
+      if (run.status === "in_progress") {
+        setStatus(`[3/4] Executing ${TOOLS[runTool].label} on cloud runner (${elapsed}s)…`, "running");
+      } else {
+        setStatus(`[2/4] Waiting in runner queue (${elapsed}s)…`, "running");
+      }
+      await sleep(3000);
+      run = await ghJson("/actions/runs/" + found.id);
+    }
+    const elapsedAtDone = getElapsed();
+    setStatus(`[4/4] Fetching & rendering output (${elapsedAtDone}s)…`, "running");
+    let text;
+    try { text = await readArtifact(run.id); }
+    catch (e1) {
+      try { text = await readAnnotation(run.id); }
+      catch (e2) { throw new Error("Run " + run.conclusion + ", but its output couldn't be read. Open the run: " + run.html_url); }
+    }
+    lastOutput = text; lastTool = runTool; render();
+    const duration = getElapsed();
+    setStatus("Finished in " + duration + " s.", "ok");
+
+    saveHistoryItem({
+      tool: runTool,
+      code: code,
+      desc: code.trim().split("\n")[0].replace(/^[%#\/\-\s]+/, "").slice(0, 30) || TOOLS[runTool].label,
+      out: text,
+      ts: Date.now(),
+      dur: duration
+    });
+  } catch (e) {
+    setStatus(e.message, "err");
+  } finally {
+    busy = false; $("run").disabled = false;
+  }
+}
+
+/* ---- Feature 1: Continue Calculations Locally Modal ---- */
+function getLocalFileDetails() {
+  const code = $("code").value;
+  const t = TOOLS[tool];
+  let filename = "computation." + t.ext;
+  if (tool === "lean") filename = "Theorem.lean";
+  else if (tool === "prover9" || tool === "mace4") filename = "problem.in";
+
+  let native = "";
+  let docker = "";
+  if (tool === "gap") {
+    native = `gap -q ${filename}`;
+    docker = `docker run --rm -it -v "$PWD":/work -w /work ghcr.io/gap-system/gap:4.15.1-full gap -q ${filename}`;
+  } else if (tool === "prover9") {
+    native = `prover9 -f ${filename} > proof.out`;
+    docker = `docker run --rm -it -v "$PWD":/work -w /work ghcr.io/gap-system/gap:4.15.1-full prover9 -f ${filename}`;
+  } else if (tool === "mace4") {
+    native = `mace4 -c -f ${filename} > model.out`;
+    docker = `docker run --rm -it -v "$PWD":/work -w /work ghcr.io/gap-system/gap:4.15.1-full mace4 -c -f ${filename}`;
+  } else if (tool === "lean") {
+    native = `lake env lean ${filename}`;
+    docker = `docker run --rm -it -v "$PWD":/work -w /work leanprover/lean4:v4.15.0 lean ${filename}`;
+  }
+  return { filename, code, native, docker };
+}
+
+function openLocalModal() {
+  const details = getLocalFileDetails();
+  $("localFilename").textContent = details.filename;
+  $("nativeCmd").textContent = details.native;
+  $("dockerCmd").textContent = details.docker;
+  openModal("localModal");
+}
+const closeLocalModal = () => closeModal("localModal");
+
+$("localBtn").onclick = openLocalModal;
+$("closeLocalModal").onclick = closeLocalModal;
+$("dismissLocalModal").onclick = closeLocalModal;
+
+$("downloadScriptBtn").onclick = () => {
+  const details = getLocalFileDetails();
+  const blob = new Blob([details.code], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = details.filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+};
+
+function copyCodeText(targetId, btnId) { copyText($(targetId).textContent, $(btnId)); }
+$("copyNativeCmd").onclick = () => copyCodeText("nativeCmd", "copyNativeCmd");
+$("copyDockerCmd").onclick = () => copyCodeText("dockerCmd", "copyDockerCmd");
+
+
+
+/* ---- Colophon, scour modal, emblem ---- */
+initScour({ getTool: () => tool, getCode: () => $("code").value });
+initLogos();
+$("openColophonBtn").onclick = $("footerColophonBtn").onclick = () => { openModal("colophonModal"); renderGallery(); };
+$("closeColophonModal").onclick = $("dismissColophonModal").onclick = () => closeModal("colophonModal");
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") ["localModal", "scourModal", "colophonModal"].forEach(closeModal);
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); }
+});
+
+$("year").textContent = new Date().getFullYear();
+$("run").onclick = run;
