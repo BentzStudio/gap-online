@@ -1,0 +1,8 @@
+{
+  "name": "GAP Playground",
+  "description": "Run GAP, Prover9, Mace4, and Lean 4 + Mathlib computations with LaTeX math rendering, local export, and arXiv/GitHub research scouring.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

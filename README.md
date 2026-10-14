@@ -121,10 +121,10 @@ The application features a built-in **Colophon & Architectural Notes** dialog (a
 - **Engines:** GAP 4.15.1, LADR Prover9 & Mace4, and Lean 4 / Mathlib 4.
 - **Typesetting:** Real-time KaTeX LaTeX math rendering with auto-rendering of cycles, matrices, and expressions.
 - **Privacy Guarantee:** Zero trackers, zero cookies, and client-only token storage.
-- **Author's Note Slot:** An elegant, distinct quote block in `index.html` where the maintainer can add their personal dedication or message to students and researchers.
+- **Author's Dedication:** A personal note dedicated to WB ("Built with love for my husband, using my coding knowledge alongside Claude and Gemini. A portable space for him to experience the joy of deep algebraic exploration, finite countermodel searches, and interactive theorem proving — right in the palm of his hand").
 
 ---
 
 ## Credits & License
 
-Designed and maintained by PY. Dedicated to WB, with love. Built on [GAP](https://www.gap-system.org/), [KaTeX](https://katex.org/), [JSZip](https://stuk.github.io/jszip/), [LADR-2026](https://prover9.org/), and [Lean 4 / Mathlib](https://lean-lang.org/).
+Designed and maintained by PY. Dedicated to WB. Built on [GAP](https://www.gap-system.org/), [KaTeX](https://katex.org/), [JSZip](https://stuk.github.io/jszip/), [LADR-2026](https://prover9.org/), and [Lean 4 / Mathlib](https://lean-lang.org/).

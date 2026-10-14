@@ -336,6 +336,7 @@
     .mobile-tabs { display: grid; }
     .panel.mobile-hidden { display: none; }
   }
+  @keyframes spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -622,14 +623,17 @@
 
       <!-- Live arXiv preprints preview -->
       <div style="border-top:1px solid var(--line); padding-top:10px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <strong style="font-size:.9rem;">Live arXiv Mathematics Feed:</strong>
-          <button type="button" id="fetchArxivBtn" style="min-height:32px; padding:2px 10px; font-size:.8rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <strong style="font-size:.9rem;">Live arXiv Mathematics Feed:</strong>
+            <span id="arxivStatusHint" style="font-size:.78rem; color:var(--muted); font-style:italic;"></span>
+          </div>
+          <button type="button" id="fetchArxivBtn" style="min-height:32px; padding:2px 10px; font-size:.8rem; transition:opacity .2s ease;">
             🔄 Fetch Matching Papers
           </button>
         </div>
         <div id="arxivResults" style="min-height:100px; max-height:260px; overflow-y:auto; background:var(--out-bg); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:.85rem; line-height:1.45;">
-          <span style="color:var(--muted);">Click "Fetch Matching Papers" to query the official arXiv public API in real-time.</span>
+          <span style="color:var(--muted);">Click &ldquo;Fetch Matching Papers&rdquo; to query live mathematical preprints.</span>
         </div>
       </div>
     </div>
@@ -649,17 +653,16 @@
     <div class="modal-body" style="font-size:.9rem; line-height:1.6; color:var(--text);">
       
       <!-- Personal Note Section from Maintainer / Author -->
-      <div id="colophonAuthorNote" style="background:var(--panel-2); border-left:4px solid var(--accent); border-radius:8px; padding:14px 16px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:4px;">
-          <strong style="color:var(--accent); font-size:.95rem;">💌 A Note from the Author &amp; Maintainer</strong>
-          <span style="font-size:.75rem; color:var(--muted); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">Dedicated to WB, Collaborators &amp; Students</span>
+      <div id="colophonAuthorNote" style="background:var(--panel-2); border-left:4px solid var(--accent); border-radius:8px; padding:16px 18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px;">
+          <strong style="color:var(--accent); font-size:1rem;">💌 A Note from the Author &amp; Maintainer</strong>
+          <span style="font-size:.82rem; font-weight:600; color:var(--accent); font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">Dedicated to WB</span>
         </div>
-        <blockquote id="colophonNoteText" style="margin:0; font-style:italic; color:var(--text); line-height:1.6; border:none; padding:0;">
-          "Built to bring the joy of deep algebraic exploration, finite countermodel searches, and interactive theorem proving directly into hands-on mathematical practice&mdash;with zero installation hurdles, absolute student privacy, and complete transparency."
+        <blockquote id="colophonNoteText" style="margin:0; font-style:italic; color:var(--text); line-height:1.65; border:none; padding:0; font-size:.92rem;">
+          &ldquo;Built with love for my husband, using my coding knowledge alongside Claude and Gemini. A portable space for him to experience the joy of deep algebraic exploration, finite countermodel searches, and interactive theorem proving &mdash; right in the palm of his hand.&rdquo;
         </blockquote>
-        <div style="font-size:.78rem; color:var(--muted); margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
-          <span>&mdash; PY &amp; Collaborators</span>
-          <span style="font-size:.72rem; opacity:.85;">(Author personal note slot)</span>
+        <div style="font-size:.84rem; font-weight:600; color:var(--text); margin-top:12px; display:flex; justify-content:flex-end; align-items:center;">
+          <span>&mdash; PY</span>
         </div>
       </div>
 
@@ -702,7 +705,7 @@
       </div>
 
       <div style="background:var(--panel-2); border-radius:8px; padding:10px 14px; font-size:.8rem; color:var(--muted); line-height:1.5;">
-        <strong>Colophon &amp; Dedication:</strong> Designed and maintained by PY. Made for WB, with love. Built on the shoulders of the worldwide open-source mathematical software community.
+        <strong>Colophon &amp; Dedication:</strong> Designed and maintained by PY. Dedicated to WB. Built on the shoulders of the worldwide open-source mathematical software community.
       </div>
     </div>
     <div class="modal-footer">
@@ -724,7 +727,7 @@
   </p>
   <p>In GAP, a statement ending in <code>;</code> shows its value; end it with <code>;;</code> to hide it.
   In LaTeX mode, <code>Tex(obj)</code> prints an object as a display equation.</p>
-  <p>&copy; <span id="year">2026</span> &middot; Designed and maintained for mathematical researchers &amp; students &middot; <button type="button" id="footerColophonBtn" style="background:none; border:none; color:var(--accent); text-decoration:underline; cursor:pointer; font-size:inherit; padding:0;">📜 View Colophon &amp; Notes</button></p>
+  <p>&copy; <span id="year">2026</span> &middot; Designed and maintained by PY &middot; <button type="button" id="footerColophonBtn" style="background:none; border:none; color:var(--accent); text-decoration:underline; cursor:pointer; font-size:inherit; padding:0;">📜 View Colophon &amp; Notes</button></p>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -1622,13 +1625,41 @@ function renderScourChips() {
   });
 }
 
-function updateScourLinks() {
-  const rawQ = $("scourQuery").value.trim() || (scourTerms.length > 0 ? buildQueryString(scourTerms, scourFormatMode) : "Alternating Group Structure Description");
-  const q = encodeURIComponent(rawQ);
+function updateScourState() {
+  const queryInput = $("scourQuery");
+  const rawQ = queryInput.value.trim() || (scourTerms.length > 0 ? buildQueryString(scourTerms, scourFormatMode) : "");
+  const searchQ = rawQ || "Alternating Group Structure Description";
+  const q = encodeURIComponent(searchQ);
   $("linkArxiv").href = `https://arxiv.org/search/math?query=${q}&searchtype=all&source=header`;
   $("linkGithub").href = `https://github.com/search?q=${q}+language%3AGAP+OR+path%3A*.in+OR+path%3A*.lean&type=code`;
   $("linkZbMath").href = `https://zbmath.org/?q=${q}`;
   $("linkScholar").href = `https://scholar.google.com/scholar?q=${q}`;
+
+  const btn = $("fetchArxivBtn");
+  const hint = $("arxivStatusHint");
+  const hasKeywords = scourTerms.length > 0 || queryInput.value.trim().length > 0;
+  if (!hasKeywords) {
+    btn.disabled = true;
+    btn.style.opacity = "0.55";
+    btn.style.cursor = "not-allowed";
+    btn.title = "Please extract or add at least one keyword first";
+    if (hint) {
+      hint.textContent = "(Add or extract keywords to enable)";
+      hint.style.color = "var(--muted)";
+    }
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    btn.style.cursor = "pointer";
+    btn.title = "Fetch live arXiv preprints";
+    if (hint) {
+      hint.textContent = "";
+    }
+  }
+}
+
+function updateScourLinks() {
+  updateScourState();
 }
 
 function openScourModal() {
@@ -1636,7 +1667,7 @@ function openScourModal() {
   scourFormatMode = "words";
   $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
   renderScourChips();
-  updateScourLinks();
+  updateScourState();
   $("scourModal").hidden = false;
   $("scourModal").setAttribute("aria-hidden", "false");
 }
@@ -1653,19 +1684,19 @@ $("btnRefreshKeywords").onclick = () => {
   scourTerms = extractKeywordsList($("code").value, tool);
   $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
   renderScourChips();
-  updateScourLinks();
+  updateScourState();
 };
 
 $("btnFormatWords").onclick = () => {
   scourFormatMode = "words";
   $("scourQuery").value = buildQueryString(scourTerms, "words");
-  updateScourLinks();
+  updateScourState();
 };
 
 $("btnFormatQuotes").onclick = () => {
   scourFormatMode = "quotes";
   $("scourQuery").value = buildQueryString(scourTerms, "quotes");
-  updateScourLinks();
+  updateScourState();
 };
 
 $("btnAddTermPrompt").onclick = () => {
@@ -1676,25 +1707,47 @@ $("btnAddTermPrompt").onclick = () => {
       scourTerms.push(clean);
       $("scourQuery").value = buildQueryString(scourTerms, scourFormatMode);
       renderScourChips();
-      updateScourLinks();
+      updateScourState();
     }
   }
 };
 
-$("scourQuery").addEventListener("input", updateScourLinks);
+$("scourQuery").addEventListener("input", updateScourState);
 
-// Live arXiv & Scientific Preprints Query via resilient server-side proxy & open-access fallback
+// Live arXiv & Scientific Preprints Query with 8s AbortController timeout & HTTPS fallbacks
 $("fetchArxivBtn").onclick = async () => {
+  const btn = $("fetchArxivBtn");
   const container = $("arxivResults");
-  const rawQ = $("scourQuery").value.trim() || buildQueryString(scourTerms, scourFormatMode) || "group theory";
-  container.innerHTML = '<span style="color:var(--accent);">Querying arXiv & research preprints…</span>';
-  
+  const queryInput = $("scourQuery");
+  const rawQ = queryInput.value.trim() || buildQueryString(scourTerms, scourFormatMode);
+
+  if (!rawQ && scourTerms.length === 0) {
+    updateScourState();
+    container.innerHTML = `
+      <div style="padding:10px; background:var(--panel-2); border:1px solid var(--line); border-radius:6px; color:var(--bad);">
+        ⚠️ Please extract or add at least one keyword first.
+      </div>
+    `;
+    return;
+  }
+
+  // Visual feedback: disable button & show spinner
+  btn.disabled = true;
+  btn.style.opacity = "0.7";
+  btn.innerHTML = `<span style="display:inline-block; width:10px; height:10px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:4px;"></span> Fetching…`;
+  container.innerHTML = `<div style="display:flex; align-items:center; gap:8px; color:var(--accent); padding:4px 0;"><span style="display:inline-block; width:12px; height:12px; border:2px solid var(--accent); border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite;"></span> Querying official arXiv &amp; mathematical databases (timeout in 8s)…</div>`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort(new Error("Request timed out"));
+  }, 8000);
+
   function renderPaperList(items, sourceLabel) {
     if (!items || items.length === 0) {
       container.innerHTML = `
         <div style="padding:10px; background:var(--panel-2); border:1px solid var(--line); border-radius:6px;">
-          <div style="color:var(--text); font-size:.85rem; margin-bottom:8px;">No exact preprint matches found for: <strong>${escapeHtml(rawQ)}</strong></div>
-          <div style="font-size:.8rem; color:var(--muted); margin-bottom:8px;">Try broader keywords or search the comprehensive academic indices directly:</div>
+          <div style="color:var(--text); font-size:.85rem; margin-bottom:8px;">No exact preprint matches returned for: <strong>${escapeHtml(rawQ)}</strong></div>
+          <div style="font-size:.8rem; color:var(--muted); margin-bottom:8px;">Explore broader keywords or search the comprehensive academic indices directly:</div>
           <div style="display:flex; flex-wrap:wrap; gap:8px;">
             <a href="https://arxiv.org/search/math?query=${encodeURIComponent(rawQ)}&searchtype=all" target="_blank" rel="noopener" class="preset-btn" style="text-decoration:none; display:inline-flex; align-items:center;">arXiv Math ↗</a>
             <a href="https://zbmath.org/?q=${encodeURIComponent(rawQ)}" target="_blank" rel="noopener" class="preset-btn" style="text-decoration:none; display:inline-flex; align-items:center;">zbMATH Open ↗</a>
@@ -1730,43 +1783,102 @@ $("fetchArxivBtn").onclick = async () => {
     container.innerHTML = html;
   }
 
-  // Tier 1: Local server proxy /api/arxiv (bypasses CORS completely and queries arXiv Atom API)
   try {
-    const res = await fetch(`/api/arxiv?q=${encodeURIComponent(rawQ)}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.ok && Array.isArray(data.results) && data.results.length > 0) {
-        renderPaperList(data.results, "arXiv Preprints (Live)");
-        return;
+    // Tier 1: Local server proxy /api/arxiv (bypasses browser CORS completely when dev/prod node server runs)
+    try {
+      const res = await fetch(`/api/arxiv?q=${encodeURIComponent(rawQ)}`, { signal: controller.signal });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.ok && Array.isArray(data.results) && data.results.length > 0) {
+          clearTimeout(timeoutId);
+          renderPaperList(data.results, "arXiv Preprints (Live)");
+          return;
+        }
       }
+    } catch (proxyErr) {
+      if (controller.signal.aborted) throw proxyErr;
+      // If running on purely static GitHub Pages or serverless host, proceed seamlessly to Tier 2
     }
-  } catch (err) {
-    // Proxy unavailable (e.g. running on purely static host)
-  }
 
-  // Tier 2: Open scientific index fallback (CORS-enabled open API indexing arXiv & math preprints)
-  try {
-    const res = await fetch(`https://api.openalex.org/works?search=${encodeURIComponent(rawQ)}&per_page=5`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.results && data.results.length > 0) {
-        const items = data.results.map(w => ({
-          title: w.display_name || w.title || "Untitled Paper",
-          id: w.doi || w.primary_location?.landing_page_url || (w.id ? `https://openalex.org/${w.id}` : ""),
-          published: w.publication_year ? String(w.publication_year) : "",
-          authors: (w.authorships || []).map(a => a.author?.display_name).filter(Boolean).slice(0, 3).join(", "),
-          summary: w.primary_topic?.display_name ? `Subject: ${w.primary_topic.display_name}` : ""
-        }));
-        renderPaperList(items, "Academic Preprints & Research (OpenAlex Index)");
-        return;
+    // Tier 2: OpenAlex Global Research API (HTTPS, official CORS-enabled open scientific metadata indexing arXiv)
+    try {
+      const openAlexUrl = `https://api.openalex.org/works?search=${encodeURIComponent(rawQ)}&filter=type:preprint|article&per_page=5`;
+      const res = await fetch(openAlexUrl, {
+        headers: { 'Accept': 'application/json' },
+        signal: controller.signal
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.results) && data.results.length > 0) {
+          clearTimeout(timeoutId);
+          const items = data.results.map(w => ({
+            title: w.display_name || w.title || "Untitled Paper",
+            id: w.doi || w.primary_location?.landing_page_url || (w.id ? `https://openalex.org/${w.id}` : ""),
+            published: w.publication_year ? String(w.publication_year) : "",
+            authors: (w.authorships || []).map(a => a.author?.display_name).filter(Boolean).slice(0, 3).join(", "),
+            summary: w.primary_topic?.display_name ? `Topic: ${w.primary_topic.display_name}` : ""
+          }));
+          renderPaperList(items, "Academic Preprints & Research (OpenAlex Index)");
+          return;
+        }
       }
+    } catch (openAlexErr) {
+      if (controller.signal.aborted) throw openAlexErr;
     }
-  } catch (err) {
-    // Open science API unreachable
-  }
 
-  // Tier 3: Direct 1-click exploration card
-  renderPaperList([], "");
+    // Tier 3: HTTPS CORS proxy querying official arXiv Atom feed
+    try {
+      const cleanTokens = rawQ.replace(/["'(),;:]/g, ' ').split(/\s+/).filter(Boolean);
+      const searchParam = cleanTokens.slice(0, 3).map(t => 'all:' + encodeURIComponent(t)).join('+AND+');
+      const directArxivUrl = `https://export.arxiv.org/api/query?search_query=${searchParam}&start=0&max_results=5&sortBy=relevance`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directArxivUrl)}`;
+      const res = await fetch(proxyUrl, { signal: controller.signal });
+      if (res.ok) {
+        const xml = await res.text();
+        const entryMatches = xml.match(/<entry>[\s\S]*?<\/entry>/g) || [];
+        if (entryMatches.length > 0) {
+          clearTimeout(timeoutId);
+          const results = [];
+          for (const entry of entryMatches) {
+            const title = (entry.match(/<title>([\s\S]*?)<\/title>/)?.[1] || 'Untitled').replace(/\s+/g, ' ').trim();
+            const id = (entry.match(/<id>([\s\S]*?)<\/id>/)?.[1] || '').trim();
+            const published = (entry.match(/<published>([\s\S]*?)<\/published>/)?.[1] || '').trim().slice(0, 10);
+            const authors = Array.from(entry.matchAll(/<author>\s*<name>([\s\S]*?)<\/name>/g)).map(m => m[1].trim()).slice(0, 4).join(', ');
+            const summary = (entry.match(/<summary>([\s\S]*?)<\/summary>/)?.[1] || '').replace(/\s+/g, ' ').trim().slice(0, 220) + '…';
+            results.push({ title, id, published, authors, summary });
+          }
+          renderPaperList(results, "arXiv Preprints (Direct Feed)");
+          return;
+        }
+      }
+    } catch (tier3Err) {
+      if (controller.signal.aborted) throw tier3Err;
+    }
+
+    // Tier 4: Direct search fallback card
+    clearTimeout(timeoutId);
+    renderPaperList([], "");
+  } catch (err) {
+    clearTimeout(timeoutId);
+    const wasTimeout = controller.signal.aborted || err.name === 'AbortError' || String(err).toLowerCase().includes('time');
+    container.innerHTML = `
+      <div style="padding:10px; background:var(--panel-2); border:1px solid var(--line); border-radius:6px;">
+        <div style="color:var(--text); font-weight:600; margin-bottom:4px; font-size:.85rem;">
+          ${wasTimeout ? '⏱️ Request timed out (feed took longer than 8 seconds to respond).' : '⚠️ Direct live feed could not be reached (network/CORS restriction).'}
+        </div>
+        <div style="font-size:.8rem; color:var(--muted); margin-bottom:8px;">You can open the exact search query immediately in a new tab:</div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <a href="https://arxiv.org/search/math?query=${encodeURIComponent(rawQ)}&searchtype=all" target="_blank" rel="noopener" class="preset-btn" style="text-decoration:none; display:inline-flex; align-items:center;">Open arXiv Search in new tab ↗</a>
+          <a href="https://zbmath.org/?q=${encodeURIComponent(rawQ)}" target="_blank" rel="noopener" class="preset-btn" style="text-decoration:none; display:inline-flex; align-items:center;">Open zbMATH in new tab ↗</a>
+          <a href="https://scholar.google.com/scholar?q=${encodeURIComponent(rawQ)}" target="_blank" rel="noopener" class="preset-btn" style="text-decoration:none; display:inline-flex; align-items:center;">Open Google Scholar ↗</a>
+        </div>
+      </div>
+    `;
+  } finally {
+    clearTimeout(timeoutId);
+    btn.innerHTML = `🔄 Fetch Matching Papers`;
+    updateScourState();
+  }
 };
 
 // Colophon Modal handlers
