@@ -9,12 +9,10 @@ import { buildTex, downloadText } from "./texexport.js";
 import { AXIOM_SETS, withAxioms } from "./axioms.js";
 import { notebook } from "./notebook.js";
 
-/* ---- Theme support (Dark / OLED Black / Light) ---- */
+/* ---- Theme support (Dark / OLED Black / Retro Terminal / Cyber Amber / Light) ---- */
 function applyTheme(theme) {
-  if (theme === "light") {
-    document.documentElement.setAttribute("data-theme", "light");
-  } else if (theme === "oled") {
-    document.documentElement.setAttribute("data-theme", "oled");
+  if (["light", "oled", "terminal", "amber"].includes(theme)) {
+    document.documentElement.setAttribute("data-theme", theme);
   } else {
     document.documentElement.removeAttribute("data-theme");
   }

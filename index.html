@@ -22,12 +22,14 @@
   </div>
   <div class="header-actions">
     <button type="button" id="openColophonBtn" title="View Colophon, Dedication & Architecture">📜 Colophon</button>
-    <!-- Theme Switcher: Dark / OLED Black / Light (Carbon & Battery Saver) -->
+    <!-- Theme Switcher: Light / Dark / OLED Black / Retro Terminal / Cyber Amber -->
     <label for="themeSelect" class="sr-only">Display Theme</label>
     <select id="themeSelect" aria-label="Display theme and power mode" title="Select theme / energy-saving mode">
+      <option value="light">☀️ Light</option>
       <option value="dark">🌙 Dark (Slate)</option>
       <option value="oled">🖤 OLED Black (Eco / Zero-Power)</option>
-      <option value="light">☀️ Light</option>
+      <option value="terminal">📟 Retro Terminal (Phosphor Green)</option>
+      <option value="amber">⚡ Cyber Amber (Sci-Fi / VT220)</option>
     </select>
   </div>
 </header>
@@ -464,6 +466,7 @@
           <ul style="margin:0; padding-left:18px; font-size:.85rem;">
             <li><strong>Scale-to-Zero Compute:</strong> Zero idle energy consumption; cloud compute runs strictly on-demand.</li>
             <li><strong>OLED Black Mode:</strong> True black background (<code>#000000</code>) designed to minimize power draw on OLED / mobile displays.</li>
+            <li><strong>Retro Terminal &amp; Cyber Amber:</strong> High-contrast monochrome themes (&gt;&nbsp;16:1 WCAG AAA) engineered on pitch-black backings for zero OLED pixel power draw.</li>
             <li><strong>Binary Caching:</strong> Pre-compiled LADR, Semigroups, and Mathlib caches avoid duplicate cloud CPU cycles.</li>
           </ul>
         </div>
