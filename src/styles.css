@@ -11,28 +11,12 @@
   --text: #f0f2f8; --muted: #959bb4; --accent: #7995ff; --accent-ink: #000000;
   --ok: #56d364; --bad: #f85149;
   --out-bg: #000000;
-  --glow: none;
-}
-:root[data-theme="terminal"] {
-  --bg: #020603; --panel: #07120a; --panel-2: #0d1e12; --line: #184224;
-  --text: #39ff14; --muted: #22a842; --accent: #00ff66; --accent-ink: #000000;
-  --ok: #39ff14; --bad: #ff3b30;
-  --out-bg: #010402;
-  --glow: 0 0 7px rgba(57, 255, 20, 0.45);
-}
-:root[data-theme="amber"] {
-  --bg: #060400; --panel: #120b01; --panel-2: #1c1303; --line: #422d08;
-  --text: #ffb000; --muted: #c28200; --accent: #ffc433; --accent-ink: #000000;
-  --ok: #ffb000; --bad: #ff3b30;
-  --out-bg: #030200;
-  --glow: 0 0 7px rgba(255, 176, 0, 0.45);
 }
 :root[data-theme="light"] {
   --bg: #f6f8fa; --panel: #ffffff; --panel-2: #f0f3f6; --line: #d0d7de;
   --text: #1f2328; --muted: #59636e; --accent: #0969da; --accent-ink: #ffffff;
   --ok: #1a7f37; --bad: #cf222e;
   --out-bg: #ffffff;
-  --glow: none;
 }
 * { box-sizing: border-box; }
 html, body {
@@ -186,8 +170,6 @@ main { flex: 1; display: grid; gap: 16px; }
   tab-size: 2;
   color: inherit;
   -webkit-overflow-scrolling: touch;
-  white-space: pre;
-  overflow-x: auto;
 }
 #code:focus-visible { outline-offset: -3px; }
 
@@ -201,41 +183,17 @@ main { flex: 1; display: grid; gap: 16px; }
 .seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: -3px; }
 
 #status {
-  padding: 8px 14px;
+  padding: 10px 14px;
   font-size: .875rem;
   color: var(--muted);
   border-bottom: 1px solid var(--line);
   min-height: 42px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 #status.ok { color: var(--ok); }
 #status.err { color: var(--bad); }
 #status.running { color: var(--accent); font-weight: 600; }
-#statusText { flex: 1; min-width: 180px; }
-.report-btn {
-  margin-left: auto;
-  border: 1px solid var(--bad);
-  color: var(--bad);
-  background: transparent;
-  font-size: .78rem;
-  font-weight: 600;
-  padding: 3px 10px;
-  min-height: 30px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: background .15s, color .15s, border-color .15s;
-}
-.report-btn:hover {
-  background: var(--bad);
-  color: #fff;
-}
 
 #out {
   flex: 1;
@@ -461,222 +419,17 @@ button.active { border-color: var(--accent); color: var(--accent); }
 .nb-num { font: .75rem var(--mono); color: var(--muted); text-align: center; }
 .nb-cell textarea { flex: 1; min-height: 52px; resize: vertical; font: .9rem/1.5 var(--mono); background: var(--out-bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
 
-/* ==========================================================================
-   Retro-SciFi Terminal & Cyber Amber Aesthetics (UI Juice)
-   - Zero JavaScript runtime overhead (Pure CSS variables & pseudo-elements)
-   - High Contrast & WCAG AAA Compliance (> 15:1 contrast ratio)
-   - Full Screen-Reader (SR) Friendliness: Decorative cues are CSS-only
-   - Reduced Motion & Accessibility compliant
-   ========================================================================== */
-
-:root[data-theme="terminal"] body,
-:root[data-theme="amber"] body {
-  position: relative;
-}
-
-/* Subtle CRT Scanline Raster (Pointer-events none, 0% CPU consumption) */
-:root[data-theme="terminal"] body::before,
-:root[data-theme="amber"] body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.22),
-    rgba(0, 0, 0, 0.22) 1px,
-    transparent 1px,
-    transparent 2px
-  );
-  opacity: 0.45;
-}
-
-/* Monospace Headings & Mainframe Aesthetic */
-:root[data-theme="terminal"] h1,
-:root[data-theme="amber"] h1,
-:root[data-theme="terminal"] h2,
-:root[data-theme="amber"] h2,
-:root[data-theme="terminal"] .bar h2,
-:root[data-theme="amber"] .bar h2 {
-  font-family: var(--mono);
-  letter-spacing: -0.01em;
-  text-shadow: var(--glow);
-}
-
-/* Monospace Form Controls in Terminal Mode */
-:root[data-theme="terminal"] select,
-:root[data-theme="amber"] select,
-:root[data-theme="terminal"] input[type=text],
-:root[data-theme="amber"] input[type=text],
-:root[data-theme="terminal"] input[type=password],
-:root[data-theme="amber"] input[type=password],
-:root[data-theme="terminal"] button,
-:root[data-theme="amber"] button {
-  font-family: var(--mono);
-}
-
-/* Terminal Command Prompt Status Indicator */
-:root[data-theme="terminal"] #status::before {
-  content: "SYS_TERM [GAP 4.15] ❯ ";
-  font-family: var(--mono);
-  font-weight: 700;
-  color: var(--accent);
-  opacity: 0.85;
-}
-
-:root[data-theme="amber"] #status::before {
-  content: "SYS_DECK [VT220] ❯ ";
-  font-family: var(--mono);
-  font-weight: 700;
-  color: var(--accent);
-  opacity: 0.85;
-}
-
-/* Primary Button Glow and Inverted Hover Effect */
-:root[data-theme="terminal"] button.primary,
-:root[data-theme="amber"] button.primary {
-  box-shadow: var(--glow);
-}
-
-:root[data-theme="terminal"] button:hover:not(:disabled) {
-  border-color: var(--accent);
-  box-shadow: 0 0 8px rgba(57, 255, 20, 0.35);
-}
-
-:root[data-theme="amber"] button:hover:not(:disabled) {
-  border-color: var(--accent);
-  box-shadow: 0 0 8px rgba(255, 176, 0, 0.35);
-}
-
-/* Phosphor Glow on Running Execution */
-:root[data-theme="terminal"] #status.running {
-  text-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
-  animation: pulse-phosphor 2s infinite ease-in-out;
-}
-
-:root[data-theme="amber"] #status.running {
-  text-shadow: 0 0 8px rgba(255, 176, 0, 0.6);
-  animation: pulse-phosphor 2s infinite ease-in-out;
-}
-
-@keyframes pulse-phosphor {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.75; }
-}
-
-/* KaTeX Mathematical Expressions in Phosphor / Amber Mode */
-:root[data-theme="terminal"] #out.latex,
-:root[data-theme="terminal"] .katex,
-:root[data-theme="amber"] #out.latex,
-:root[data-theme="amber"] .katex {
-  color: var(--text);
-  text-shadow: 0 0 1px currentColor;
-}
-
-/* Accessible High-Contrast Focus Rings */
-:root[data-theme="terminal"] :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  box-shadow: 0 0 6px var(--accent);
-}
-
-:root[data-theme="amber"] :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  box-shadow: 0 0 6px var(--accent);
-}
-
-/* Accessibility: Strict Reduced Motion & High Contrast Compliance */
-@media (prefers-reduced-motion: reduce) {
-  :root[data-theme="terminal"] body::before,
-  :root[data-theme="amber"] body::before {
-    display: none !important;
-  }
-  :root[data-theme="terminal"] *,
-  :root[data-theme="amber"] * {
-    text-shadow: none !important;
-    box-shadow: none !important;
-    animation: none !important;
-  }
-}
-
-@media (forced-colors: active) {
-  :root[data-theme="terminal"] body::before,
-  :root[data-theme="amber"] body::before {
-    display: none !important;
-  }
-}
-
-/* ---- Non-Destructive Editor Gutter Extensions ---- */
-.editor-wrapper {
-  display: flex;
-  flex: 1;
-  background: transparent;
-  min-height: 380px;
-  position: relative;
-}
-
-/* Force the existing textarea to drop standard side-borders and share sizing */
-.editor-wrapper #code {
-  flex: 1;
-  min-height: 100%;
-  border-left: 1px solid var(--line);
-  resize: none; /* Prevents text area from dragging independently from gutter */
-}
-
-.editor-gutter {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  padding: 14px 8px 14px 12px;
-  background: var(--panel-2);
-  font: .9375rem/1.55 var(--mono);
-  color: var(--muted);
-  user-select: none;
-  overflow: hidden;
-  text-align: right;
-  min-width: 44px;
-}
-
-.gutter-num {
-  display: block;
-  height: 1.55em; /* Explicitly bound to match textarea line-height */
-  font-variant-numeric: tabular-nums;
-}
-
-/* Theme overrides to keep aesthetics consistent */
-:root[data-theme="light"] .editor-gutter {
-  background: var(--panel-2);
-}
-:root[data-theme="oled"] .editor-gutter {
-  background: var(--bg);
-}
-
-/* 📟 Extra UI Juice for Retro Terminal Theme */
-:root[data-theme="terminal"] .editor-gutter {
-  background: var(--bg);
-  border-right: 1px dashed var(--line);
-}
-:root[data-theme="terminal"] .gutter-num {
-  text-shadow: var(--glow); /* Adds the faint green phosphor glow to the numbers */
-}
-
-/* ⚡ Extra UI Juice for Cyber Amber Theme */
-:root[data-theme="amber"] .editor-gutter {
-  background: var(--bg);
-  border-right: 1px dashed var(--line);
-}
-:root[data-theme="amber"] .gutter-num {
-  text-shadow: var(--glow); /* Adds the vintage CRT amber glow to the numbers */
-}
-
-/* Mobile responsive constraints: minimize gutter real estate on small viewport screens */
+/* ---- Editor gutter (line numbers) ---- */
+.editor-wrap { display: flex; flex: 1; min-width: 0; min-height: 0; }
+.editor-wrap > #code { flex: 1; min-width: 0; width: auto; }
+.gutter { flex: none; overflow: hidden; background: var(--panel-2); border-right: 1px solid var(--line); color: var(--muted); user-select: none; -webkit-user-select: none; cursor: pointer; --gutter-pad: 14px; }
+.gutter-inner { font: .8125rem var(--mono); text-align: right; padding-right: 7px; padding-left: 4px; will-change: transform; }
+.gutter-inner > div { box-sizing: border-box; font-size: .8125rem; }
+.gutter-inner > div:hover { color: var(--accent); }
+.editor-wrap.no-gutter .gutter { display: none; }
+.gutter-mirror { position: absolute; left: -9999px; top: 0; visibility: hidden; pointer-events: none; }
 @media (max-width: 600px) {
-  .editor-gutter {
-    padding-left: 4px;
-    padding-right: 4px;
-    min-width: 32px;
-    font-size: .85rem;
-  }
+  .gutter { --gutter-pad: 8px; }
+  .gutter-inner { font-size: .72rem; padding-right: 4px; padding-left: 2px; }
+  .gutter-inner > div { font-size: .72rem; }
 }

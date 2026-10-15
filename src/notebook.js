@@ -71,7 +71,7 @@ export const notebook = {
   setOn(v, seedCode) {
     on = v;
     $("notebook").hidden = !v;
-    $("code").hidden = v;
+    ($("code").closest(".editor-wrap") || $("code")).hidden = v;
     $("notebookBtn").classList.toggle("active", v);
     $("notebookBtn").setAttribute("aria-pressed", String(v));
     if (v) {
