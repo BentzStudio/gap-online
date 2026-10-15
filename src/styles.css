@@ -199,17 +199,41 @@ main { flex: 1; display: grid; gap: 16px; }
 .seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: -3px; }
 
 #status {
-  padding: 10px 14px;
+  padding: 8px 14px;
   font-size: .875rem;
   color: var(--muted);
   border-bottom: 1px solid var(--line);
   min-height: 42px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 #status.ok { color: var(--ok); }
 #status.err { color: var(--bad); }
 #status.running { color: var(--accent); font-weight: 600; }
+#statusText { flex: 1; min-width: 180px; }
+.report-btn {
+  margin-left: auto;
+  border: 1px solid var(--bad);
+  color: var(--bad);
+  background: transparent;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  min-height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.report-btn:hover {
+  background: var(--bad);
+  color: #fff;
+}
 
 #out {
   flex: 1;

@@ -201,10 +201,33 @@ $("historySel").onchange = () => {
   }
 };
 
+let lastErrorDetails = null;
+
 function setStatus(msg, kind = "") {
   const s = $("status");
-  s.textContent = msg;
+  const textEl = $("statusText");
+  const reportBtn = $("reportErrorBtn");
+
+  if (textEl) {
+    textEl.textContent = msg;
+  } else {
+    s.textContent = msg;
+  }
   s.className = kind;
+
+  if (reportBtn) {
+    if (kind === "err") {
+      lastErrorDetails = {
+        message: msg,
+        tool,
+        time: new Date().toLocaleString(),
+        repo: cfg.repo ? (store.get("gap.mask") === "true" ? "[masked-presentation-mode]" : cfg.repo) : "unconfigured"
+      };
+      reportBtn.style.display = "inline-flex";
+    } else {
+      reportBtn.style.display = "none";
+    }
+  }
 }
 
 function gh(path, opts = {}) {
@@ -471,8 +494,33 @@ initLogos();
 $("openColophonBtn").onclick = $("footerColophonBtn").onclick = () => { openModal("colophonModal"); renderGallery(); };
 $("closeColophonModal").onclick = $("dismissColophonModal").onclick = () => closeModal("colophonModal");
 
+function openReportModal() {
+  if (!lastErrorDetails) return;
+  const { message, tool: errTool, time, repo } = lastErrorDetails;
+  const toolName = TOOLS[errTool]?.label || errTool.toUpperCase();
+
+  $("reportModalDetails").textContent = `Engine: ${toolName}\nTime: ${time}\nRepository: ${repo}\nError: ${message}`;
+
+  const subject = encodeURIComponent(`[GAP Playground Issue] ${toolName} Run Error`);
+  const body = encodeURIComponent(
+    `Hi PY,\n\nI encountered the following issue while running computations on the GAP Playground:\n\n- Engine: ${toolName}\n- Time: ${time}\n- Error message: ${message}\n- Repository: ${repo}\n\n[Optional: describe what you were calculating or paste your code snippet below]:\n\n`
+  );
+  $("emailReportBtn").href = `mailto:py.fraubentz@gmail.com?subject=${subject}&body=${body}`;
+
+  const issueTitle = encodeURIComponent(`[Run Error] ${toolName}: ${message.slice(0, 50)}`);
+  const issueBody = encodeURIComponent(
+    `### Run Error Report\n\n- **Engine**: \`${toolName}\`\n- **Time**: \`${time}\`\n- **Error**: \`${message}\`\n- **Repository**: \`${repo}\`\n\n### Steps to Reproduce\n1. Select \`${toolName}\`\n2. Run calculation\n3. Encountered runner error\n`
+  );
+  $("githubIssueBtn").href = `https://github.com/BentzStudio/gap-online/issues/new?title=${issueTitle}&body=${issueBody}`;
+
+  openModal("reportModal");
+}
+
+$("reportErrorBtn").onclick = openReportModal;
+$("closeReportModal").onclick = $("dismissReportModal").onclick = () => closeModal("reportModal");
+
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") ["localModal", "scourModal", "colophonModal"].forEach(closeModal);
+  if (e.key === "Escape") ["localModal", "scourModal", "colophonModal", "reportModal"].forEach(closeModal);
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); }
 });
 
