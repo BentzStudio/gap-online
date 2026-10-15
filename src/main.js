@@ -505,7 +505,7 @@ function openReportModal() {
   const body = encodeURIComponent(
     `Hi PY,\n\nI encountered the following issue while running computations on the GAP Playground:\n\n- Engine: ${toolName}\n- Time: ${time}\n- Error message: ${message}\n- Repository: ${repo}\n\n[Optional: describe what you were calculating or paste your code snippet below]:\n\n`
   );
-  $("emailReportBtn").href = `mailto:py.fraubentz@gmail.com?subject=${subject}&body=${body}`;
+  $("emailReportBtn").href = `mailto:pybentz@duck.com?subject=${subject}&body=${body}`;
 
   const issueTitle = encodeURIComponent(`[Run Error] ${toolName}: ${message.slice(0, 50)}`);
   const issueBody = encodeURIComponent(
