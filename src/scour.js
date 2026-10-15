@@ -1,8 +1,10 @@
-import { $, escapeHtml, safeUrl, closeModal, openModal, parseArxivAtom, arxivQueryUrl } from "./util.js";
+import { $, escapeHtml, safeUrl, closeModal, openModal, parseArxivAtom, arxivQueryUrl, copyText } from "./util.js";
+import { toBibtex } from "./bibtex.js";
 import { detectMathematicalConcepts, PRESETS_BY_TOOL } from "./concepts.js";
 
 let detected = [];
 let category = "math.GR";
+let shownItems = [];
 
 const searchLinks = q => `
   <div class="link-row">
@@ -52,6 +54,7 @@ export function initScour({ getTool, getCode }) {
     $("linkArxivCat").href = `https://arxiv.org/search/math?query=${q}&searchtype=all&classification-mathematics=${category}`;
     $("linkArxivCat").textContent = `${category} ↗`;
     $("linkZbMath").href = `https://zbmath.org/?q=${q}`;
+    $("linkZbMathMsc").href = `https://zbmath.org/?q=cc%3A20M*+${q}`;
 
     const gh = { gap: ["language%3AGAP", "GAP language code (.g)"], lean: ["language%3ALean", "Lean 4 theorem code (.lean)"] }[tool]
       || ["prover9+OR+mace4", "Prover9 / Mace4 scripts (.in)"];
@@ -90,16 +93,19 @@ export function initScour({ getTool, getCode }) {
         <div class="sub">Explore broader keywords or search the academic indices directly:</div>${searchLinks(q)}</div>`;
       return;
     }
+    shownItems = items;
     const rows = items.map(it => {
       const url = safeUrl(it.id || it.link, `https://arxiv.org/search/math?query=${encodeURIComponent(it.title || rawQ)}`);
       const meta = escapeHtml(it.authors || "Unknown author") + (it.published ? " &bull; " + escapeHtml(it.published) : "");
       return `<div class="paper">
         <a class="paper-title" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(it.title || "Untitled Paper")} ↗</a>
         <div class="paper-meta">${meta}</div>
-        ${it.summary ? `<div class="paper-summary">${escapeHtml(it.summary)}</div>` : ""}</div>`;
+        ${it.summary ? `<div class="paper-summary">${escapeHtml(it.summary)}</div>` : ""}
+        <button type="button" class="mini-btn" data-bib="${shownItems.indexOf(it)}">BibTeX</button></div>`;
     }).join("");
     box.innerHTML = `<div class="paper-head"><span class="paper-source">${escapeHtml(sourceLabel)}</span>
-      <a href="https://arxiv.org/search/math?query=${q}&searchtype=all" target="_blank" rel="noopener">Search all arXiv ↗</a></div>
+      <span><button type="button" class="mini-btn" id="copyAllBib">Copy all BibTeX</button>
+      <a href="https://arxiv.org/search/math?query=${q}&searchtype=all" target="_blank" rel="noopener">Search all arXiv ↗</a></span></div>
       <div class="paper-list">${rows}</div>`;
   }
 
@@ -183,4 +189,9 @@ export function initScour({ getTool, getCode }) {
     if (e.key === "Enter") { e.preventDefault(); fetchPapers(); }
   });
   $("fetchArxivBtn").onclick = fetchPapers;
+  $("arxivResults").addEventListener("click", e => {
+    const one = e.target.closest("[data-bib]");
+    if (one) return copyText(toBibtex(shownItems[+one.dataset.bib]), one);
+    if (e.target.id === "copyAllBib") copyText(shownItems.map(toBibtex).join("\n\n"), e.target);
+  });
 }

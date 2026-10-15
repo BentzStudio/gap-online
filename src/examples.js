@@ -1,4 +1,64 @@
 export const GAP_EXAMPLES = {
+  "Transformation monoid: invariants": [
+    'LoadPackage("semigroups");;',
+    'S := Monoid(Transformation([2,3,1,4]), Transformation([2,1,3,4]), Transformation([1,2,3,3]));;',
+    'Print("Size: ", Size(S), "\\n");',
+    'Print("Idempotents: ", NrIdempotents(S), "\\n");',
+    'Print("R-, L-, H-, D-classes: ", [NrRClasses(S), NrLClasses(S), NrHClasses(S), NrDClasses(S)], "\\n");',
+    'Print("Regular: ", IsRegularSemigroup(S), "\\n");',
+    'Print("Inverse: ", IsInverseSemigroup(S), "\\n");'
+  ].join("\n"),
+  "Rees matrix semigroup": [
+    'LoadPackage("semigroups");;',
+    'G := SymmetricGroup(3);;',
+    '# Sandwich matrix with 3 rows and 2 columns, entries in S_3',
+    'R := ReesMatrixSemigroup(G, [[(), ()], [(), (1,2)], [(), (1,2,3)]]);;',
+    'Print("Size: ", Size(R), "\\n");',
+    'Print("Completely simple: ", IsCompletelySimpleSemigroup(R), "\\n");',
+    'Print("Regular: ", IsRegularSemigroup(R), "\\n");',
+    'Print("D-classes: ", NrDClasses(R), "\\n");'
+  ].join("\n"),
+  "Presentations (free semigroup quotient)": [
+    '# Monogenic semigroup <a | a^5 = a^3>: index 3, period 2',
+    'F := FreeSemigroup("a");;',
+    'a := F.1;;',
+    'S := F / [[a^5, a^3]];;',
+    'Print("Size: ", Size(S), "\\n");',
+    '# Free semilattice on two generators',
+    'F2 := FreeSemigroup("a", "b");;',
+    'x := F2.1;; y := F2.2;;',
+    'T := F2 / [[x^2, x], [y^2, y], [x*y, y*x]];;',
+    'Print("Size of the semilattice: ", Size(T), "\\n");'
+  ].join("\n"),
+  "Congruences": [
+    'LoadPackage("semigroups");;',
+    'S := FullTransformationMonoid(3);;',
+    'Print("Number of congruences of T_3: ", Length(CongruencesOfSemigroup(S)), "\\n");',
+    'a := Transformation([1,1,1]);;',
+    'b := Transformation([2,2,2]);;',
+    'cong := SemigroupCongruence(S, [[a, b]]);;',
+    'Print("Classes of the principal congruence: ", NrEquivalenceClasses(cong), "\\n");',
+    'Print("Quotient is a semigroup of size: ", Size(Range(HomomorphismQuotientSemigroup(cong))), "\\n");'
+  ].join("\n"),
+  "Small semigroups library": [
+    'if LoadPackage("smallsemi") = fail then',
+    '  Print("The smallsemi package is not available on this runner.\\n");',
+    'else',
+    '  Print("Semigroups of order 4 (up to iso/anti-iso): ", NrSmallSemigroups(4), "\\n");',
+    '  S := SmallSemigroup(4, 10);;',
+    '  Print("Idempotents: ", Length(Idempotents(S)), "\\n");',
+    '  Print("Commutative: ", IsCommutative(S), "\\n");',
+    '  Print("Regular: ", IsRegularSemigroup(S), "\\n");',
+    'fi;'
+  ].join("\n"),
+  "Diagrams: D-class order and Cayley graph": [
+    '# Dot(...) prints Graphviz DOT; the page draws it below the output.',
+    'LoadPackage("semigroups");;',
+    'S := FullTransformationMonoid(3);;',
+    'DotDClassOrder(S);',
+    'M := Monoid(Transformation([2,3,1]), Transformation([2,1,3]));;',
+    'DotCayley(M);'
+  ].join("\n"),
   "Green's D-classes & Egg-boxes": [
     'LoadPackage("semigroups");;',
     'S := FullTransformationMonoid(4);;',

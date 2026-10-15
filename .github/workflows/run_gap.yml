@@ -1,6 +1,6 @@
 name: Run GAP
 # The playground finds its run by this title, so keep the "GAP " prefix
-# (it is used for every tool, including Prover9 and Mace4).
+# (it is used for every tool, including Prover9, Mace4 and the combined refute mode).
 run-name: GAP ${{ github.event.client_payload.run_id }}
 
 on:
@@ -34,7 +34,7 @@ jobs:
           # Older versions of the page send no tool, which means GAP.
           TOOL="${TOOL_IN:-gap}"
           case "$TOOL" in
-            gap|prover9|mace4|lean) ;;
+            gap|prover9|mace4|refute|lean) ;;
             *) echo "Unknown tool"; exit 1 ;;
           esac
           echo "TOOL=$TOOL" >> "$GITHUB_ENV"
@@ -109,6 +109,22 @@ jobs:
             else s := String(x); fi;
             Print("$$", s, "$$\n");
           end;;
+          # Dot(x): print Graphviz DOT (a string, or a Digraph) so the page can draw it.
+          Dot := function(x)
+            local s;
+            if IsString(x) then s := x;
+            elif IsBoundGlobal("IsDigraph") and IsBoundGlobal("DotDigraph") and ValueGlobal("IsDigraph")(x) then
+              s := ValueGlobal("DotDigraph")(x);
+            else Error("Dot: expected a DOT string or a Digraph"); fi;
+            Print("\n", s, "\n");
+          end;;
+          # DotDClassOrder(S): the partial order of D-classes. DotCayley(S): right Cayley graph.
+          DotDClassOrder := function(S)
+            Dot(ValueGlobal("PartialOrderOfDClasses")(S));
+          end;;
+          DotCayley := function(S)
+            Dot(ValueGlobal("RightCayleyDigraph")(S));
+          end;;
           EOF
           printf '\n' >> work/user.g
           chmod -R a+rX work
@@ -140,7 +156,7 @@ jobs:
       # ------------------------------------------------------------------
       - name: Restore compiled Prover9 and Mace4
         id: ladrcache
-        if: env.TOOL == 'prover9' || env.TOOL == 'mace4'
+        if: env.TOOL == 'prover9' || env.TOOL == 'mace4' || env.TOOL == 'refute'
         uses: actions/cache/restore@v4
         with:
           path: ladr-bin
@@ -148,7 +164,7 @@ jobs:
 
       - name: Build Prover9 and Mace4 (first run only)
         id: ladrbuild
-        if: (env.TOOL == 'prover9' || env.TOOL == 'mace4') && steps.ladrcache.outputs.cache-hit != 'true'
+        if: (env.TOOL == 'prover9' || env.TOOL == 'mace4' || env.TOOL == 'refute') && steps.ladrcache.outputs.cache-hit != 'true'
         continue-on-error: true
         run: |
           set -e
@@ -174,7 +190,7 @@ jobs:
           key: ladr-bin-v2-${{ env.LADR_COMMIT }}-${{ runner.os }}-${{ runner.arch }}
 
       - name: Prepare input (Prover9 / Mace4)
-        if: env.TOOL == 'prover9' || env.TOOL == 'mace4'
+        if: env.TOOL == 'prover9' || env.TOOL == 'mace4' || env.TOOL == 'refute'
         run: |
           mkdir work
           echo "$CODE_B64" | base64 -d > work/input.in
@@ -203,6 +219,43 @@ jobs:
             | sed -u 's/\x1b\[[0-9;]*m//g; s/\x07//g' > output.txt
           code=${PIPESTATUS[0]}
           if [ "$code" -eq 124 ]; then echo "" >> output.txt; echo "[Stopped: time limit of 120 s reached]" >> output.txt; fi
+          head -c 1000000 output.txt > output.tmp && mv output.tmp output.txt
+          exit 0
+
+      # Prove / refute: Prover9 first; if it finds no proof, Mace4 looks for a
+      # counterexample on the same input. Flags that belong to only one of the
+      # two programs are stripped from the other program's copy of the input.
+      - name: Run Prover9 then Mace4 (sandboxed)
+        if: env.TOOL == 'refute'
+        run: |
+          set +e
+          run_one() {  # $1 = program, $2 = input file, $3 = seconds
+            sudo unshare --net -- \
+              setpriv --reuid="$(id -u)" --regid="$(id -g)" --clear-groups -- \
+              timeout -k 5 $(( $3 + 20 )) \
+              prlimit --as=3221225472 -- \
+              "$PWD/ladr-bin/$1" -t "$3" -f "$2" 2>&1 \
+              | sed -u 's/\x1b\[[0-9;]*m//g; s/\x07//g'
+          }
+          if [ ! -x ladr-bin/prover9 ] || [ ! -x ladr-bin/mace4 ]; then
+            echo "[Prover9/Mace4 are not available because building them failed. Open this run's log on GitHub for details.]" > output.txt
+            [ -f ladr-build.log ] && { echo "" >> output.txt; tail -n 60 ladr-build.log >> output.txt; }
+            exit 0
+          fi
+          MACE_FLAGS='domain_size|start_size|end_size|iterate|iterate_up_to|iterate_down_from|max_models|print_models|print_models_tabular|portable|selection_order|selection_measure|skolems_last|negprop|neg_assign|neg_assign_near|neg_elim|neg_elim_near|lnh|trace|increment|max_megs|max_seconds_per'
+          PROVER_FLAGS='auto|auto_limits|auto_denials|auto_inference|auto_setup|auto_process|max_weight|max_proofs|max_megs|max_seconds|max_given|max_kept|sos_limit|stats|weight_function|fof_reduction|expand_relational_defs|restrict_denials|prolog_style_variables'
+          grep -Ev "^[[:space:]]*(set|clear|assign)\([[:space:]]*($MACE_FLAGS)\b" work/input.in > work/prover9.in
+          grep -Ev "^[[:space:]]*(set|clear|assign)\([[:space:]]*($PROVER_FLAGS)\b" work/input.in > work/mace4.in
+          {
+            echo "===== PROVER9 ====="
+            run_one prover9 work/prover9.in 60
+            echo ""
+          } > output.txt
+          if grep -aq 'THEOREM PROVED' output.txt; then
+            printf '\n===== MACE4 =====\n[skipped: Prover9 found a proof, so no counterexample exists]\n' >> output.txt
+          else
+            { echo "===== MACE4 ====="; run_one mace4 work/mace4.in 60; } >> output.txt
+          fi
           head -c 1000000 output.txt > output.tmp && mv output.tmp output.txt
           exit 0
 

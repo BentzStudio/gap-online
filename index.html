@@ -183,6 +183,7 @@
       </select>
       <label for="examples" class="sr-only">Load an example</label>
       <select id="examples" aria-label="Load an example"></select>
+      <select id="axiomSel" aria-label="Insert a set of axioms" title="Insert semigroup axioms into the editor" hidden></select>
       
       <!-- Action Buttons -->
       <button type="button" id="localBtn" title="Continue calculations in your own installed prover" aria-label="Continue calculations locally">
@@ -194,11 +195,18 @@
       <button type="button" id="shareBtn" title="Copy shareable link with this code" aria-label="Share snippet">
         🔗 Share
       </button>
+      <button type="button" id="notebookBtn" aria-pressed="false" title="Notebook: split GAP code into cells that run as one replayed session" hidden>
+        📓 Notebook
+      </button>
+      <button type="button" id="refuteBtn" title="Run Prover9; if there is no proof, run Mace4 for a counterexample on the same input" hidden>
+        ⚖️ Prove / Refute
+      </button>
       <button type="button" class="primary" id="run" title="Run code (⌘/Ctrl + Enter)">
         ▶ Run
       </button>
     </div>
     <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
+    <div id="notebook" hidden></div>
   </section>
 
   <!-- Output Section -->
@@ -206,6 +214,7 @@
     <div class="bar">
       <h2 id="outTitle">Output</h2>
       <button type="button" id="copyOutBtn" title="Copy output text to clipboard">📋 Copy</button>
+      <button type="button" id="texBtn" title="Download the code and output as a LaTeX document">📄 Export .tex</button>
       <label for="historySel" class="sr-only">Recent runs history</label>
       <select id="historySel" aria-label="Recent runs history" title="View previous run results">
         <option value="">History (0)</option>
@@ -217,6 +226,7 @@
     </div>
     <div id="status" role="status" aria-live="polite" aria-atomic="true">Ready. Press Run or ⌘/Ctrl + Enter.</div>
     <div id="out" tabindex="0" aria-label="Program output"><span class="placeholder">Output appears here.</span></div>
+    <div id="extras" aria-live="polite"></div>
   </section>
 </main>
 
@@ -343,6 +353,7 @@
               <div style="font-size:.78rem; color:var(--muted); margin-top:2px;">Authoritative reviews &amp; MSC codes</div>
             </div>
             <a id="linkZbMath" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; font-size:.78rem; padding:5px 8px; text-align:center; display:block;">Search zbMATH Open ↗</a>
+            <a id="linkZbMathMsc" href="#" target="_blank" rel="noopener" class="theme-btn" style="text-decoration:none; font-size:.78rem; padding:5px 8px; text-align:center; display:block; margin-top:6px;">zbMATH: semigroups, MSC 20M ↗</a>
           </div>
 
           <!-- GitHub Public Code Search Card -->
@@ -504,6 +515,9 @@
   <p>&copy; <span id="year">2026</span> &middot; Designed and maintained by PY &middot; <button type="button" id="footerColophonBtn" class="link-button">📜 View Colophon &amp; Notes</button></p>
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>

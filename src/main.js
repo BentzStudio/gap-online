@@ -1,8 +1,13 @@
-import { $, store, sleep, toBase64, copyText, openModal, closeModal } from "./util.js";
+import { $, store, sleep, toBase64, copyText, openModal, closeModal, escapeHtml } from "./util.js";
 import { TOOLS } from "./examples.js";
 import { latexify } from "./latex.js";
 import { initScour } from "./scour.js";
 import { initLogos, renderGallery } from "./logos.js";
+import { parseMace4Models, analyseModel, modelTableHtml, modelToGap, splitRefuteOutput } from "./mace4.js";
+import { renderDotBlocks } from "./dot.js";
+import { buildTex, downloadText } from "./texexport.js";
+import { AXIOM_SETS, withAxioms } from "./axioms.js";
+import { notebook } from "./notebook.js";
 
 /* ---- Theme support (Dark / OLED Black / Light) ---- */
 function applyTheme(theme) {
@@ -125,6 +130,15 @@ function applyTool() {
   sel.length = 0;
   for (const name of names) sel.add(new Option(name, name));
   $("code").value = store.get(t.codeKey) || t.examples[names[0]];
+  const ladr = tool === "prover9" || tool === "mace4";
+  $("axiomSel").hidden = !ladr;
+  $("refuteBtn").hidden = !ladr;
+  $("notebookBtn").hidden = tool !== "gap";
+  if (tool !== "gap" && notebook.isOn()) { $("code").value = notebook.joined(); notebook.setOn(false); }
+  if (ladr && $("axiomSel").length === 0) {
+    $("axiomSel").add(new Option("＋ Axioms…", ""));
+    for (const name of Object.keys(AXIOM_SETS)) $("axiomSel").add(new Option(name, name));
+  }
 }
 applyTool();
 $("tool").onchange = () => { tool = $("tool").value; store.set("gap.tool", tool); applyTool(); };
@@ -144,14 +158,15 @@ $("shareBtn").onclick = () => {
 // Copy Output button
 $("copyOutBtn").onclick = () => { if (lastOutput) copyText(lastOutput, $("copyOutBtn")); };
 
-/* ---- Run History (Last 10 runs) ---- */
+/* ---- Run History (last 25 runs) ---- */
 function getHistory() {
   try { return JSON.parse(store.get("gap.history") || "[]"); } catch { return []; }
 }
 function saveHistoryItem(item) {
+  item.out = item.out.length > 60000 ? item.out.slice(0, 60000) + "\n[output truncated in history]" : item.out;
   const h = getHistory();
   h.unshift(item);
-  while (h.length > 10) h.pop();
+  while (h.length > 25) h.pop();
   store.set("gap.history", JSON.stringify(h));
   updateHistoryDropdown();
 }
@@ -217,7 +232,7 @@ function render() {
   const out = $("out"), latex = gapOutput && document.querySelector('input[name=fmt]:checked').value === "latex";
   $("fmtset").disabled = !gapOutput;
   $("fmtset").title = gapOutput ? "" : "LaTeX typesetting is only available for GAP output";
-  if (lastOutput === null) return;
+  if (lastOutput === null) { $("extras").replaceChildren(); return; }
   out.className = latex ? "latex" : "";
   out.textContent = lastOutput.trim() ? (latex ? latexify(lastOutput) : lastOutput) : "(no output)";
   if (latex && window.renderMathInElement) {
@@ -229,8 +244,55 @@ function render() {
       throwOnError: false, ignoredTags: ["script", "noscript", "style", "textarea"]
     });
   }
+  renderExtras();
 }
 document.querySelectorAll("input[name=fmt]").forEach(el => el.addEventListener("change", render));
+
+/* ---- Rich views below the raw output: verdicts, Mace4 models, graph diagrams ---- */
+function sendToGap(code) {
+  const key = TOOLS.gap.codeKey;
+  tool = "gap"; store.set("gap.tool", "gap");
+  if (notebook.isOn()) { applyTool(); notebook.addCell(code); }
+  else {
+    const existing = (store.get(key) || "").trim();
+    store.set(key, (existing ? existing + "\n\n" : "") + code);
+    applyTool();
+  }
+  showPanel("editor");
+  setStatus("Model sent to the GAP editor. Press Run to analyse it.", "ok");
+}
+
+function renderExtras() {
+  const ex = $("extras");
+  ex.replaceChildren();
+  if (lastOutput === null) return;
+  const refute = splitRefuteOutput(lastOutput);
+  if (refute) {
+    const v = document.createElement("div");
+    v.className = "verdict " + refute.verdict.kind;
+    v.textContent = refute.verdict.text;
+    ex.appendChild(v);
+  }
+  const modelText = refute ? refute.mace : lastOutput;
+  const models = /interpretation\(/.test(modelText) ? parseMace4Models(modelText) : [];
+  models.slice(0, 5).forEach((m, idx) => {
+    const info = analyseModel(m);
+    if (!info) return;
+    const card = document.createElement("div");
+    card.className = "model-card";
+    const badges = info.props.map(([t, good]) => `<span class="badge ${good ? "good" : "neg"}">${escapeHtml(t)}</span>`).join("");
+    card.innerHTML = `<div class="model-head"><strong>Model ${idx + 1}: order ${info.n}</strong>
+      <span><button type="button" class="mini-btn" data-act="gap">→ Send to GAP</button>
+      <button type="button" class="mini-btn" data-act="copy">Copy GAP code</button></span></div>
+      <div class="badges">${badges}</div><div class="table-scroll">${modelTableHtml(m, info)}</div>`;
+    const code = modelToGap(m, info, idx + 1);
+    card.querySelector('[data-act="gap"]').onclick = () => sendToGap(code);
+    card.querySelector('[data-act="copy"]').onclick = e => copyText(code, e.target);
+    ex.appendChild(card);
+  });
+  if (models.length > 5) ex.insertAdjacentHTML("beforeend", `<div class="dot-status" style="margin:0 14px 10px">Showing the first 5 of ${models.length} models.</div>`);
+  renderDotBlocks(lastOutput, ex);
+}
 
 async function findRun(title, since, onPoll) {
   const deadline = Date.now() + 90000;
@@ -264,17 +326,22 @@ async function readAnnotation(runId) {
   throw new Error("no annotation");
 }
 
-async function run() {
+async function run(opts = {}) {
   if (busy) return;
   if (!cfg.repo || !cfg.token) {
     $("settings").open = true;
     setStatus("Add your repository and personal access token first.", "err");
     return;
   }
-  const code = $("code").value;
+  const useNotebook = notebook.isOn() && tool === "gap";
+  const code = useNotebook ? notebook.joined() : $("code").value;
   if (!code.trim()) { setStatus("The editor is empty. Write something first.", "err"); return; }
-  const runTool = tool;
-  const code_b64 = toBase64(code);
+  const refute = opts.mode === "refute";
+  const runTool = tool;                         // what the output is displayed as
+  const dispatchTool = refute ? "refute" : tool; // what the workflow runs
+  const toolLabel = refute ? "Prover9 + Mace4" : TOOLS[runTool].label;
+  const sent = useNotebook ? notebook.compose(opts.upTo) : code;
+  const code_b64 = toBase64(sent);
   if (code_b64.length > 60000) { setStatus("Code is too long (limit about 45 KB).", "err"); return; }
 
   busy = true; $("run").disabled = true;
@@ -290,7 +357,7 @@ async function run() {
       method: "POST",
       body: JSON.stringify({
         event_type: "run_gap",
-        client_payload: { run_id: runId, code_b64, tool: runTool }
+        client_payload: { run_id: runId, code_b64, tool: dispatchTool }
       })
     });
     if (res.status === 401) throw new Error("Token rejected (401). Check that the token hasn't expired.");
@@ -308,7 +375,7 @@ async function run() {
       if (Date.now() - t0 > 2400000) throw new Error("Timed out after 40 minutes. Check the Actions tab of your repository.");
       const elapsed = getElapsed();
       if (run.status === "in_progress") {
-        setStatus(`[3/4] Executing ${TOOLS[runTool].label} on cloud runner (${elapsed}s)…`, "running");
+        setStatus(`[3/4] Executing ${toolLabel} on cloud runner (${elapsed}s)…`, "running");
       } else {
         setStatus(`[2/4] Waiting in runner queue (${elapsed}s)…`, "running");
       }
@@ -323,6 +390,7 @@ async function run() {
       try { text = await readAnnotation(run.id); }
       catch (e2) { throw new Error("Run " + run.conclusion + ", but its output couldn't be read. Open the run: " + run.html_url); }
     }
+    if (useNotebook) text = notebook.annotate(text);
     lastOutput = text; lastTool = runTool; render();
     const duration = getElapsed();
     setStatus("Finished in " + duration + " s.", "ok");
@@ -330,7 +398,7 @@ async function run() {
     saveHistoryItem({
       tool: runTool,
       code: code,
-      desc: code.trim().split("\n")[0].replace(/^[%#\/\-\s]+/, "").slice(0, 30) || TOOLS[runTool].label,
+      desc: (refute ? "[prove/refute] " : "") + (code.trim().split("\n").find(l => l.trim() && !/^\s*[#%]/.test(l)) || code.trim().split("\n")[0]).replace(/^[%#\/\-\s]+/, "").slice(0, 30) || toolLabel,
       out: text,
       ts: Date.now(),
       dur: duration
@@ -411,4 +479,23 @@ document.addEventListener("keydown", e => {
 });
 
 $("year").textContent = new Date().getFullYear();
-$("run").onclick = run;
+$("run").onclick = () => run();
+$("refuteBtn").onclick = () => run({ mode: "refute" });
+notebook.onRun = upTo => run({ upTo });
+$("notebookBtn").onclick = () => {
+  if (notebook.isOn()) { $("code").value = notebook.joined(); store.set(TOOLS.gap.codeKey, $("code").value); notebook.setOn(false); }
+  else notebook.setOn(true, $("code").value);
+};
+$("axiomSel").onchange = () => {
+  const name = $("axiomSel").value;
+  if (!name) return;
+  $("code").value = withAxioms($("code").value, name);
+  store.set(TOOLS[tool].codeKey, $("code").value);
+  $("axiomSel").value = "";
+};
+$("texBtn").onclick = () => {
+  if (lastOutput === null) { setStatus("Run something first; there is no output to export.", "err"); return; }
+  const latexMode = lastTool === "gap" && document.querySelector("input[name=fmt]:checked").value === "latex";
+  const code = notebook.isOn() && lastTool === "gap" ? notebook.joined() : $("code").value;
+  downloadText("session.tex", buildTex({ toolLabel: TOOLS[lastTool]?.label || "Session", code, output: lastOutput, latexMode }), "application/x-tex");
+};

@@ -31,22 +31,32 @@ A free, serverless, privacy-preserving computational laboratory for [GAP](https:
 
 ---
 
+## For Semigroup Theorists
+
+- **Mace4 model viewer**: finite models appear as colored multiplication tables with detected properties (commutative, monoid, band, regular, inverse, group, zero...). *Send to GAP* rebuilds the model as a semigroup.
+- **Prove / Refute**: one click runs Prover9, then Mace4 on the same input if there is no proof. Axiom sets (semigroup, band, inverse, nilpotent, ...) can be inserted from the editor.
+- **Diagrams**: any Graphviz DOT in the output is drawn as SVG. In GAP, `Dot(x)`, `DotDClassOrder(S)` and `DotCayley(S)` print DOT.
+- **GAP notebook**: split code into cells; each run replays the cells in order within one session.
+- **Export .tex** and **BibTeX** buttons for results and papers.
+
 ## Repository Files
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | Page markup only (editor, output panel, settings, modals) |
-| `src/styles.css` | All styling and the Dark / OLED Black / Light themes |
-| `src/main.js` | App wiring: tools, settings, run history, GitHub Actions dispatch, output rendering |
-| `src/examples.js` | Example programs and the `TOOLS` table (GAP, Prover9, Mace4, Lean 4) |
+| `index.html` | Page markup only |
+| `src/main.js` | App wiring: tools, settings, history, GitHub Actions dispatch, output views |
+| `src/styles.css` | Styling and the Dark / OLED Black / Light themes |
+| `src/examples.js` | Example programs and the `TOOLS` table |
+| `src/axioms.js` | Semigroup axiom sets for Prover9 / Mace4 |
+| `src/mace4.js` | Mace4 model parser, property analysis, multiplication tables, GAP export, prove/refute verdict |
+| `src/dot.js` | Graphviz DOT detection and lazy-loaded Viz.js rendering |
+| `src/notebook.js` | GAP notebook cells (replayed as one session) |
+| `src/texexport.js` | Export code + output as a `.tex` document |
 | `src/latex.js` | GAP-output to LaTeX conversion |
-| `src/scour.js`, `src/concepts.js` | Concept detection and the arXiv / zbMATH / GitHub research modal |
-| `src/logos.js`, `src/logos-data.js` | Emblem picker |
-| `src/util.js` | Shared helpers (storage, escaping, clipboard, modals, arXiv feed parsing) |
-| `server.js` | Zero-dependency production Node.js server that serves `dist/` and proxies `/api/arxiv` |
-| `vite.config.js` | Vite configuration with the `/api/arxiv` dev/preview proxy |
-| `worker.js`, `wrangler.toml`, `arxiv.js` | Cloudflare Worker / Pages Function variants of the arXiv proxy |
-| `.github/workflows/run_gap.yml` | GitHub Actions workflow executing GAP, Prover9, Mace4, and Lean 4 |
+| `src/scour.js`, `src/concepts.js`, `src/bibtex.js` | Research modal, concept detection, BibTeX |
+| `src/logos.js`, `src/logos-data.js`, `src/util.js` | Emblem picker and shared helpers |
+| `server.js`, `vite.config.js`, `worker.js`, `wrangler.toml`, `arxiv.js` | Hosting and the `/api/arxiv` proxy |
+| `.github/workflows/run_gap.yml` | Workflow running GAP, Prover9, Mace4, prove/refute and Lean 4 |
 
 ---
 

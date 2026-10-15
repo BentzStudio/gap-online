@@ -47,16 +47,19 @@ export const MATH_CONCEPT_PATTERNS = [
 
 export const PRESETS_BY_TOOL = {
   gap: [
+    { label: "Semigroup Congruences", term: "Semigroup Congruences", cat: "math.GR" },
+    { label: "Krohn-Rhodes", term: "Krohn-Rhodes Theory", cat: "math.GR" },
+    { label: "Rees Matrix", term: "Rees Matrix Semigroups", cat: "math.GR" },
     { label: "Transformation Semigroups", term: "Transformation Semigroups", cat: "math.GR" },
     { label: "Green's Relations", term: "Green's Relations", cat: "math.GR" },
     { label: "Inverse Semigroups", term: "Inverse Semigroups", cat: "math.GR" },
     { label: "Idempotents", term: "Idempotent Semigroups", cat: "math.GR" },
     { label: "Alternating Groups", term: "Alternating Groups", cat: "math.GR" },
-    { label: "Conjugacy Classes", term: "Conjugacy Classes", cat: "math.GR" },
-    { label: "Sylow Subgroups", term: "Sylow Subgroups", cat: "math.GR" },
     { label: "Character Table", term: "Character Table", cat: "math.GR" }
   ],
   prover9: [
+    { label: "Equational theories of semigroups", term: "Equational Theories of Semigroups", cat: "math.GR" },
+    { label: "Finite basis problem", term: "Finite Basis Problem Semigroups", cat: "math.GR" },
     { label: "Robbins Algebra", term: "Robbins Algebra", cat: "math.LO" },
     { label: "Equational Logic", term: "Equational Logic", cat: "math.LO" },
     { label: "Lattice Theory", term: "Lattice Theory", cat: "math.LO" },
