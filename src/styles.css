@@ -605,3 +605,76 @@ button.active { border-color: var(--accent); color: var(--accent); }
     display: none !important;
   }
 }
+
+/* ---- Non-Destructive Editor Gutter Extensions ---- */
+.editor-wrapper {
+  display: flex;
+  flex: 1;
+  background: transparent;
+  min-height: 380px;
+  position: relative;
+}
+
+/* Force the existing textarea to drop standard side-borders and share sizing */
+.editor-wrapper #code {
+  flex: 1;
+  min-height: 100%;
+  border-left: 1px solid var(--line);
+  resize: none; /* Prevents text area from dragging independently from gutter */
+}
+
+.editor-gutter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 14px 8px 14px 12px;
+  background: var(--panel-2);
+  font: .9375rem/1.55 var(--mono);
+  color: var(--muted);
+  user-select: none;
+  overflow: hidden;
+  text-align: right;
+  min-width: 44px;
+}
+
+.gutter-num {
+  display: block;
+  height: 1.55em; /* Explicitly bound to match textarea line-height */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Theme overrides to keep aesthetics consistent */
+:root[data-theme="light"] .editor-gutter {
+  background: var(--panel-2);
+}
+:root[data-theme="oled"] .editor-gutter {
+  background: var(--bg);
+}
+
+/* 📟 Extra UI Juice for Retro Terminal Theme */
+:root[data-theme="terminal"] .editor-gutter {
+  background: var(--bg);
+  border-right: 1px dashed var(--line);
+}
+:root[data-theme="terminal"] .gutter-num {
+  text-shadow: var(--glow); /* Adds the faint green phosphor glow to the numbers */
+}
+
+/* ⚡ Extra UI Juice for Cyber Amber Theme */
+:root[data-theme="amber"] .editor-gutter {
+  background: var(--bg);
+  border-right: 1px dashed var(--line);
+}
+:root[data-theme="amber"] .gutter-num {
+  text-shadow: var(--glow); /* Adds the vintage CRT amber glow to the numbers */
+}
+
+/* Mobile responsive constraints: minimize gutter real estate on small viewport screens */
+@media (max-width: 600px) {
+  .editor-gutter {
+    padding-left: 4px;
+    padding-right: 4px;
+    min-width: 32px;
+    font-size: .85rem;
+  }
+}

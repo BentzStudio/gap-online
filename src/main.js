@@ -588,3 +588,57 @@ $("texBtn").onclick = () => {
   const code = notebook.isOn() && lastTool === "gap" ? notebook.joined() : $("code").value;
   downloadText("session.tex", buildTex({ toolLabel: TOOLS[lastTool]?.label || "Session", code, output: lastOutput, latexMode }), "application/x-tex");
 };
+
+/* ---- Non-Destructive Editor Gutter Logic ---- */
+(function() {
+  const codeArea = $("code");
+  const codeGutter = $("codeGutter");
+  if (!codeArea || !codeGutter) return;
+
+  let lastLineCount = 0;
+
+  function updateGutterLines() {
+    const lines = codeArea.value.split('\n');
+    const lineCount = lines.length || 1;
+
+    // Only rebuild DOM fragments if the row count actually changed
+    if (lineCount !== lastLineCount) {
+      const fragment = document.createDocumentFragment();
+      for (let i = 1; i <= lineCount; i++) {
+        const numSpan = document.createElement('span');
+        numSpan.className = 'gutter-num';
+        numSpan.textContent = i;
+        fragment.appendChild(numSpan);
+      }
+      codeGutter.replaceChildren(fragment);
+      lastLineCount = lineCount;
+    }
+    
+    // Always align the gutter scroll track to match text alterations
+    syncGutterScroll();
+  }
+
+  function syncGutterScroll() {
+    codeGutter.scrollTop = codeArea.scrollTop;
+  }
+
+  // Bind interface mutation observers
+  codeArea.addEventListener('input', updateGutterLines);
+  codeArea.addEventListener('scroll', syncGutterScroll);
+
+  // Sync calculations across platform window resized boundaries
+  window.addEventListener('resize', syncGutterScroll);
+
+  // Intercept system value changes (Theme loading, history swaps, examples)
+  const codeDescriptor = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+  Object.defineProperty(codeArea, 'value', {
+    ...codeDescriptor,
+    set: function(val) {
+      codeDescriptor.set.call(this, val);
+      updateGutterLines();
+    }
+  });
+
+  // Initial trigger calculation
+  setTimeout(updateGutterLines, 50);
+})();

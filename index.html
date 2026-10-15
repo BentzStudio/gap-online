@@ -205,7 +205,10 @@
         ▶ Run
       </button>
     </div>
-    <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
+    <div class="editor-wrapper">
+      <div id="codeGutter" class="editor-gutter" aria-hidden="true"></div>
+      <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+    </div>
     <div id="notebook" hidden></div>
   </section>
 
