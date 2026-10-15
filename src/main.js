@@ -203,7 +203,17 @@ $("historySel").onchange = () => {
 
 let lastErrorDetails = null;
 
-function setStatus(msg, kind = "") {
+/** Errors worth reporting (runner failures, timeouts, unreadable output); everything else is a user/setup mistake. */
+class ReportableError extends Error {}
+
+/** Remove the repository name and any GitHub links so nothing private reaches a public issue. */
+function scrubMessage(msg) {
+  let out = String(msg);
+  if (cfg.repo) out = out.split(cfg.repo).join("[repository]");
+  return out.replace(/https?:\/\/(?:api\.)?github\.com\/\S+/gi, "[GitHub link removed]");
+}
+
+function setStatus(msg, kind = "", { reportable = false } = {}) {
   const s = $("status");
   const textEl = $("statusText");
   const reportBtn = $("reportErrorBtn");
@@ -216,13 +226,8 @@ function setStatus(msg, kind = "") {
   s.className = kind;
 
   if (reportBtn) {
-    if (kind === "err") {
-      lastErrorDetails = {
-        message: msg,
-        tool,
-        time: new Date().toLocaleString(),
-        repo: cfg.repo ? (store.get("gap.mask") === "true" ? "[masked-presentation-mode]" : cfg.repo) : "unconfigured"
-      };
+    if (kind === "err" && reportable) {
+      lastErrorDetails = { message: scrubMessage(msg), tool, time: new Date().toLocaleString() };
       reportBtn.style.display = "inline-flex";
     } else {
       reportBtn.style.display = "none";
@@ -385,7 +390,7 @@ async function run(opts = {}) {
     if (res.status === 403 || res.status === 404) {
       throw new Error("Access denied (" + res.status + "). Check that your token has 'Contents: read & write' for " + ($("maskMode").checked ? "the target repository" : cfg.repo) + ".");
     }
-    if (res.status !== 204) throw new Error("Dispatch failed (" + res.status + ").");
+    if (res.status !== 204) throw new ReportableError("Dispatch failed (" + res.status + ").");
 
     setStatus(`[2/4] Waiting for GitHub runner to spin up (${getElapsed()}s)…`, "running");
     const found = await findRun("GAP " + runId, since, () => {
@@ -393,7 +398,7 @@ async function run(opts = {}) {
     });
     let run = found;
     while (run.status !== "completed") {
-      if (Date.now() - t0 > 2400000) throw new Error("Timed out after 40 minutes. Check the Actions tab of your repository.");
+      if (Date.now() - t0 > 2400000) throw new ReportableError("Timed out after 40 minutes. Check the Actions tab of your repository.");
       const elapsed = getElapsed();
       if (run.status === "in_progress") {
         setStatus(`[3/4] Executing ${toolLabel} on cloud runner (${elapsed}s)…`, "running");
@@ -409,12 +414,16 @@ async function run(opts = {}) {
     try { text = await readArtifact(run.id); }
     catch (e1) {
       try { text = await readAnnotation(run.id); }
-      catch (e2) { throw new Error("Run " + run.conclusion + ", but its output couldn't be read. Open the run: " + run.html_url); }
+      catch (e2) { throw new ReportableError("Run " + run.conclusion + ", but its output couldn't be read. Open the run: " + run.html_url); }
     }
     if (useNotebook) text = notebook.annotate(text);
     lastOutput = text; lastTool = runTool; render();
     const duration = getElapsed();
-    setStatus("Finished in " + duration + " s.", "ok");
+    if (run.conclusion && run.conclusion !== "success") {
+      setStatus(`The runner finished with "${run.conclusion}", so the output above may be incomplete.`, "err", { reportable: true });
+    } else {
+      setStatus("Finished in " + duration + " s.", "ok");
+    }
 
     saveHistoryItem({
       tool: runTool,
@@ -425,7 +434,7 @@ async function run(opts = {}) {
       dur: duration
     });
   } catch (e) {
-    setStatus(e.message, "err");
+    setStatus(e.message, "err", { reportable: e instanceof ReportableError });
   } finally {
     busy = false; $("run").disabled = false;
   }
@@ -494,27 +503,61 @@ initLogos();
 $("openColophonBtn").onclick = $("footerColophonBtn").onclick = () => { openModal("colophonModal"); renderGallery(); };
 $("closeColophonModal").onclick = $("dismissColophonModal").onclick = () => closeModal("colophonModal");
 
+function shareLink() {
+  const code = notebook.isOn() && tool === "gap" ? notebook.joined() : $("code").value;
+  return location.origin + location.pathname + "#" + new URLSearchParams({ tool, code }).toString();
+}
+
+/** Opt-in checkbox, created here so it needs no extra markup. */
+function ensureShareOption() {
+  let box = $("reportIncludeLink");
+  if (box) return box;
+  const label = document.createElement("label");
+  label.className = "report-opt";
+  label.style.cssText = "display:flex; gap:8px; align-items:flex-start; margin:10px 0; font-size:.85rem;";
+  label.innerHTML = '<input type="checkbox" id="reportIncludeLink"><span>Include a link to my current code. It becomes public in the GitHub issue, so leave it off for anything private.</span>';
+  $("reportModalDetails").insertAdjacentElement("afterend", label);
+  box = $("reportIncludeLink");
+  box.addEventListener("change", updateReportLinks);
+  return box;
+}
+
+function updateReportLinks() {
+  if (!lastErrorDetails) return;
+  const { message, tool: errTool, time } = lastErrorDetails;
+  const toolName = TOOLS[errTool]?.label || errTool.toUpperCase();
+  const include = ensureShareOption().checked;
+
+  let codeNote = "_Paste the code that triggered the error here, if you can share it._";
+  let link = "";
+  if (include) {
+    link = shareLink();
+    if (encodeURIComponent(link).length > 4000) {
+      link = "";
+      codeNote = "_The code was too long for a link. Please paste it here._";
+    }
+  }
+  $("reportModalDetails").textContent =
+    `Engine: ${toolName}\nTime: ${time}\nError: ${message}` + (link ? "\nShare link: (included)" : "");
+
+  const title = encodeURIComponent(`[Run Error] ${toolName}: ${message.slice(0, 50)}`);
+  const body = encodeURIComponent(
+    `### Run Error Report\n\n- **Engine**: \`${toolName}\`\n- **Time**: \`${time}\`\n- **Error**: \`${message}\`\n` +
+    (link ? `- **Share link**: ${link}\n` : "") +
+    `\n### Code\n\n${codeNote}\n\n### What were you trying to do?\n\n`
+  );
+  $("githubIssueBtn").href = `https://github.com/BentzStudio/gap-online/issues/new?title=${title}&body=${body}`;
+}
+
 function openReportModal() {
   if (!lastErrorDetails) return;
-  const { message, tool: errTool, time, repo } = lastErrorDetails;
-  const toolName = TOOLS[errTool]?.label || errTool.toUpperCase();
-
-  $("reportModalDetails").textContent = `Engine: ${toolName}\nTime: ${time}\nRepository: ${repo}\nError: ${message}`;
-
-  const subject = encodeURIComponent(`[GAP Playground Issue] ${toolName} Run Error`);
-  const body = encodeURIComponent(
-    `Hi PY,\n\nI encountered the following issue while running computations on the GAP Playground:\n\n- Engine: ${toolName}\n- Time: ${time}\n- Error message: ${message}\n- Repository: ${repo}\n\n[Optional: describe what you were calculating or paste your code snippet below]:\n\n`
-  );
-  $("emailReportBtn").href = `mailto:pybentz@duck.com?subject=${subject}&body=${body}`;
-
-  const issueTitle = encodeURIComponent(`[Run Error] ${toolName}: ${message.slice(0, 50)}`);
-  const issueBody = encodeURIComponent(
-    `### Run Error Report\n\n- **Engine**: \`${toolName}\`\n- **Time**: \`${time}\`\n- **Error**: \`${message}\`\n- **Repository**: \`${repo}\`\n\n### Steps to Reproduce\n1. Select \`${toolName}\`\n2. Run calculation\n3. Encountered runner error\n`
-  );
-  $("githubIssueBtn").href = `https://github.com/BentzStudio/gap-online/issues/new?title=${issueTitle}&body=${issueBody}`;
-
+  ensureShareOption().checked = false;
+  updateReportLinks();
   openModal("reportModal");
 }
+
+// Email reporting was removed; hide the old button if the page markup still has it.
+$("emailReportBtn")?.remove();
 
 $("reportErrorBtn").onclick = openReportModal;
 $("closeReportModal").onclick = $("dismissReportModal").onclick = () => closeModal("reportModal");
