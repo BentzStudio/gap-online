@@ -85,8 +85,7 @@
       </div>
       <p class="hint wide">
         Use a fine-grained token limited to the target repository with <strong>Contents: read &amp; write</strong>
-        (dispatches runs), <strong>Actions: read</strong> (downloads outputs) and
-        <strong>Checks: read</strong> (backup output channel).
+        (dispatches runs) and <strong>Actions: read</strong> (downloads outputs).
       </p>
 
       <div class="wide">
@@ -129,9 +128,9 @@
               </div>
             </div>
 
-            <!-- 5 Easy Clicks Title -->
+            <!-- 6 Easy Steps Title -->
             <div style="font-weight: 700; font-size: .875rem; margin-bottom: 8px; color: var(--text);">
-              Generating your token in 5 easy clicks:
+              Generating your token in 6 easy steps:
             </div>
             <ol style="margin: 0 0 14px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: .85rem;">
               <li>Sign in to GitHub and open the <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener"><strong>Fine-grained tokens page</strong></a>.</li>
@@ -141,7 +140,6 @@
                 <ul style="margin: 6px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 3px;">
                   <li><strong>Contents</strong>: <code>Access: Read and write</code> (sends computation requests)</li>
                   <li><strong>Actions</strong>: <code>Access: Read-only</code> (downloads run results)</li>
-                  <li><strong>Checks</strong>: <code>Access: Read-only</code> (backup output channel)</li>
                 </ul>
               </li>
               <li>Click <strong>Generate token</strong> at the bottom. Copy the token (starts with <code>github_pat_...</code>).</li>

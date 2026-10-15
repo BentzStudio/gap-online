@@ -1,107 +1,118 @@
-# GAP & Mathematical Provers Playground
+# GAP Playground
 
-A free, serverless, privacy-preserving computational laboratory for [GAP](https://www.gap-system.org/) (Groups, Algorithms, Programming), [Prover9](https://prover9.org/), [Mace4](https://prover9.org/), and [Lean 4](https://lean-lang.org/) with [Mathlib 4](https://leanprover-community.github.io/mathlib4_docs/). Write code in your browser, dispatch runs to isolated cloud runners, and view output in high-precision raw text or typeset LaTeX.
+A free, serverless online playground for computational algebra and formal proof. Write code in the browser, run it on an isolated GitHub Actions runner, and read the result on the page as raw text or typeset LaTeX.
 
----
+**Live site:** <https://gap-online.pages.dev/>
 
-## Key Features
+## Engines
 
-- **Four Computational Engines**:
-  - **GAP 4.15.1**: Computational discrete algebra, group theory, representation theory, and semigroup theory (with pre-compiled `semigroups`, `digraphs`, `grape`, and `atlasrep`).
-  - **Prover9 (LADR)**: Automated first-order theorem proving and equational reasoning.
-  - **Mace4 (LADR)**: Finite model generation and counterexample search.
-  - **Lean 4 + Mathlib 4**: Interactive formal theorem proving powered by the community `mathlib4` library and `elan` toolchain manager.
-- **Run History (Up to 25 Runs)**:
-  - Quickly browse, review, and reload past computations and outputs from your current browser session (stored locally in `localStorage`).
-- **Continue in Local Prover**:
-  - One-click script export with copy-ready native CLI commands (`gap`, `prover9`, `mace4`, `lake`) and zero-install Docker commands (`ghcr.io/gap-system/gap:4.15.1-full`, `leanprover/lean4`).
-- **Scour arXiv & GitHub Public Repos**:
-  - Automatically extracts recognized mathematical concepts (e.g. *Alternating Group*, *Structure Description*, *Conjugacy Classes*, *Green's Relations*, *Mathlib*) into clean, natural multi-word phrases.
-  - Live preprints preview via the built-in server proxy `/api/arxiv` with automatic fallback to OpenAlex and 1-click deep links to arXiv Mathematics, zbMATH Open, Google Scholar, and GitHub theorem code.
-- **Privacy & Presentation / Classroom Mode**:
-  - One-click toggle masks repository names and credentials on screen during classroom lectures, recordings, or screen-sharing sessions.
-  - Personal Access Tokens reside strictly in your client browser's `localStorage` and communicate directly with GitHub's HTTPS API. No server-side databases or analytics trackers.
-- **Tasteful Colophon & Author's Note**:
-  - A traditional mathematical colophon documenting the engines, typesetting standards (KaTeX), security guarantees, and carbon-reduction design.
-  - Dedicated slot for the maintainer's personal note to students, collaborators, and researchers.
-- **Power-Saving OLED Black, Retro Terminal & Display Themes**:
-  - Pure `#000000` OLED Black theme reduces display power draw on modern laptop screens, OLED monitors, and mobile devices.
-  - High-contrast Retro-SciFi Terminal (Phosphor Green) and Cyber Amber (DEC VT220) modes with zero-runtime-cost CSS scanlines.
-  - Clean Light and Slate Dark modes.
-- **URL Permalink Sharing**:
-  - Click **🔗 Share** to copy a direct link encoding your exact code and tool choice in the URL fragment for zero-friction collaboration.
-
----
-
-## For Semigroup Theorists
-
-- **Mace4 model viewer**: finite models appear as colored multiplication tables with detected properties (commutative, monoid, band, regular, inverse, group, zero...). *Send to GAP* rebuilds the model as a semigroup.
-- **Prove / Refute**: one click runs Prover9, then Mace4 on the same input if there is no proof. Axiom sets (semigroup, band, inverse, nilpotent, ...) can be inserted from the editor.
-- **Diagrams**: any Graphviz DOT in the output is drawn as SVG. In GAP, `Dot(x)`, `DotDClassOrder(S)` and `DotCayley(S)` print DOT.
-- **GAP notebook**: split code into cells; each run replays the cells in order within one session.
-- **Export .tex** and **BibTeX** buttons for results and papers.
-
----
-
-## Repository Files
-
-| File | Purpose |
+| Engine | Purpose |
 | --- | --- |
-| `index.html` | Page markup, modals, KaTeX & JSZip CDN dependencies |
-| `src/main.js` | App wiring: tools, settings, history, GitHub Actions dispatch, output views |
-| `src/styles.css` | Styling, themes (Light, Dark, OLED, Terminal, Amber) and CRT scanlines |
-| `src/examples.js` | Example programs and the `TOOLS` table |
-| `src/axioms.js` | Semigroup axiom sets for Prover9 / Mace4 |
-| `src/mace4.js` | Mace4 model parser, property analysis, multiplication tables, GAP export, prove/refute verdict |
-| `src/dot.js` | Graphviz DOT detection and lazy-loaded Viz.js rendering |
-| `src/notebook.js` | GAP notebook cells (replayed as one session) |
-| `src/texexport.js` | Export code + output as a `.tex` document |
-| `src/latex.js` | GAP-output to LaTeX conversion |
-| `src/scour.js`, `src/concepts.js`, `src/bibtex.js` | Research modal, concept detection, BibTeX |
+| **GAP 4.15.1** | Groups, Algorithms, Programming, with compiled `semigroups`, `digraphs`, `grape` and `atlasrep` |
+| **Prover9** | Automated first-order and equational theorem proving (LADR) |
+| **Mace4** | Finite model and counterexample search (LADR) |
+| **Lean 4 + Mathlib 4** | Interactive theorem proving, installed with the `elan` toolchain manager |
+
+## How it works
+
+1. **Run** sends your code to the GitHub API as a `repository_dispatch` event.
+2. A workflow starts a clean Ubuntu runner and runs the chosen engine in a sandbox.
+3. The page polls the API, downloads the output and displays it.
+
+Every run executes the whole editor script from top to bottom in a fresh sandbox, so results do not depend on earlier runs.
+
+## Features
+
+- **Output:** raw text or LaTeX typeset with KaTeX, including automatic conversion of GAP results (permutations, matrices, fractions, powers, groups). Copy the output or export code and output as a `.tex` document.
+- **Sharing:** the **Share** button copies a link that encodes your code and tool in the URL fragment.
+- **Run history:** the last 25 runs and their outputs are kept in your browser and can be reloaded.
+- **Continue locally:** download the script and get the matching command-line or Docker command (`gap`, `prover9`, `mace4`, `lake`).
+- **Literature search:** concepts detected in your code (for example *Green's relations*) feed searches on arXiv, zbMATH Open, Google Scholar and GitHub, with a live arXiv preview.
+- **Themes:** Light, Dark (Slate), OLED Black, Retro Terminal and Cyber Amber.
+- **Presentation / Classroom mode:** masks the repository name and token on screen.
+- **Colophon:** a short note on the engines, typesetting, security model and the maintainer's dedication.
+
+## For semigroup theorists
+
+- **Mace4 model viewer:** finite models appear as colored multiplication tables with detected properties (commutative, monoid, band, regular, inverse, group, zero, and so on). *Send to GAP* rebuilds a model as a semigroup.
+- **Prove / Refute:** one click runs Prover9 and, if no proof is found, Mace4 on the same input. Axiom sets (semigroup, band, inverse, nilpotent, and others) can be inserted from the editor.
+- **Diagrams:** any Graphviz DOT in the output is drawn as SVG. In GAP, `Dot(x)`, `DotDClassOrder(S)` and `DotCayley(S)` print DOT.
+- **GAP notebook:** split code into cells; each run replays them in order within one session.
+- **Export:** `.tex` and BibTeX buttons for results and references.
+
+## Usage
+
+- Press **Run** or Ctrl/⌘ + Enter.
+- **GAP:** a statement ending in `;` shows its value and `;;` hides it, as at the GAP prompt. Load packages with `LoadPackage("semigroups");`. `Tex(obj)` prints an object as an equation. Runs stop after 120 seconds.
+- **Prover9 / Mace4:** write `formulas(assumptions). ... end_of_list.` and `formulas(goals). ... end_of_list.` Use `assign(domain_size, 6).` to fix the size Mace4 searches.
+- **Lean 4:** import modules such as `import Mathlib.Algebra.Group.Basic` or `import Mathlib.Tactic`, then use tactics, `#eval` and `#check`.
+
+## Repository layout
+
+| Path | Purpose |
+| --- | --- |
+| `index.html` | Page markup, dialogs, and the KaTeX and JSZip dependencies |
+| `src/main.js` | Application logic: tools, settings, history, GitHub Actions dispatch, output views |
+| `src/styles.css` | Styling and the five themes |
+| `src/examples.js`, `src/axioms.js` | Example programs and semigroup axiom sets |
+| `src/mace4.js`, `src/dot.js`, `src/notebook.js` | Model viewer and prove/refute verdict, DOT rendering, GAP notebook |
+| `src/latex.js`, `src/texexport.js`, `src/bibtex.js` | LaTeX conversion and export |
+| `src/scour.js`, `src/concepts.js` | Literature search and concept detection |
 | `src/logos.js`, `src/logos-data.js`, `src/util.js` | Emblem picker and shared helpers |
-| `server.js`, `vite.config.js`, `worker.js`, `wrangler.toml`, `functions/api/arxiv.js` | Hosting and the `/api/arxiv` proxy |
-| `.github/workflows/run_gap.yml` | Workflow running GAP, Prover9, Mace4, prove/refute and Lean 4 |
+| `server.js`, `vite.config.js`, `worker.js`, `wrangler.toml`, `functions/api/` | Hosting and the `/api/arxiv` proxy |
+| `.github/workflows/run_gap.yml` | Workflow that runs GAP, Prover9, Mace4 and Lean 4 |
 
----
+## Deployment
 
-## Deployment & Hosting Options
+**Cloudflare Pages (used by the live site).** The live site is deployed straight from this repository to Cloudflare Pages. Configuration lives in `wrangler.toml` and `functions/api/`, which provides the `/api/arxiv` proxy.
 
-### Option 1: Static Hosting (Cloudflare Pages, GitHub Pages)
-You can deploy `index.html` as a purely static site:
-- Direct API queries to GitHub Actions work completely client-side.
-- If `/api/arxiv` is not hosted on a server, the frontend automatically falls back to the open, CORS-enabled **OpenAlex** research index and provides 1-click search links to arXiv, zbMATH Open, and Google Scholar.
+**Other static hosts (for example GitHub Pages).** Serve the output of `npm run build` as static files. Dispatching runs works entirely in the browser. Without the `/api/arxiv` proxy, the literature preview falls back to OpenAlex and offers direct search links.
 
-### Option 2: Full-Stack Node.js (Render, Fly.io, Railway, Google Cloud Run)
-Run the included production server:
-```bash
+**Node.js server (Render, Fly.io, Railway, Cloud Run).**
+
+```
 npm install
 npm run build
 npm start
 ```
-`server.js` serves the production build on port 3000 and handles the live `/api/arxiv` proxy with automatic Atom XML parsing and caching.
 
-### Option 3: Local Development
-```bash
+`server.js` serves the build on port 3000 and provides the `/api/arxiv` proxy with caching.
+
+**Local development.**
+
+```
 npm install
 npm run dev
 ```
-Starts the Vite development server with hot-reload and the `/api/arxiv` proxy active.
 
----
+## Connecting to GitHub
 
-## GitHub Actions Setup & Token Guide
+Computations run in a repository you can write to, authorised by a **fine-grained personal access token** limited to that repository with:
 
-### Two Connection Methods
+- **Contents:** Read and write (sends the run request)
+- **Actions:** Read-only (downloads the output)
 
-#### Method A: Shared Department / Lab Repository
-If you are collaborating with the repository owner:
-1. Provide your GitHub username to the owner to receive a collaborator invite (**Settings → Collaborators**).
-2. Accept the invitation.
-3. Generate a fine-grained personal access token selecting that repository.
-4. Enter the repository (`owner/repo`) and your token in **Connection settings**, then click **Save settings**.
+Some accounts also offer **Checks: Read-only**, which enables an optional backup output channel. It is not required.
 
-#### Method B: Independent Fork (Zero Collaboration Needed)
-1. Fork this repository to your own personal GitHub account.
-2. Under **Settings → Actions → General**, ensure Actions are enabled on your fork.
-3. Generate a personal access token selecting your fork.
-4. Enter `your-username/repo-name` and your token in the playground settings.
+Enter `owner/repo` and the token under **Connection settings** and click **Save settings**. There are two ways to get access:
+
+- **Shared repository.** Ask the owner to invite you as a collaborator (Settings → Collaborators), accept the invitation, and create a token for that repository.
+- **Your own fork.** Fork this repository, enable Actions on the fork (Settings → Actions → General), and create a token for the fork.
+
+In a **public** repository, GitHub-hosted Linux runners are free. A private repository counts against your monthly Actions minutes.
+
+## Privacy and security
+
+- The token stays in your browser's local storage and is sent only to GitHub's HTTPS API. There is no server-side database.
+- Each run uses a clean runner that is discarded afterwards, and code runs sandboxed with a time limit.
+- No analytics, ad trackers, telemetry or third-party cookies.
+- Treat the token like a password. If it leaks, delete it in GitHub and create a new one.
+
+## Notes
+
+- The first run of each engine builds or downloads its dependencies (Semigroups, Prover9 and Mace4, Mathlib) and caches them, so it is slower. GitHub deletes caches unused for seven days, so an idle site may rebuild them once.
+- To change the GAP version, edit the image tag in the workflow.
+
+## Credits
+
+Designed and maintained by PY. Dedicated to WB. Built on [GAP](https://www.gap-system.org/), [Prover9 and Mace4](https://prover9.org/), [Lean 4](https://lean-lang.org/), [Mathlib](https://leanprover-community.github.io/mathlib4_docs/) and [KaTeX](https://katex.org/).
