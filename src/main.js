@@ -8,7 +8,6 @@ import { renderDotBlocks } from "./dot.js";
 import { buildTex, downloadText } from "./texexport.js";
 import { AXIOM_SETS, withAxioms } from "./axioms.js";
 import { notebook } from "./notebook.js";
-import { initGutter } from "./gutter.js";
 
 /* ---- Theme support (Dark / OLED Black / Retro Terminal / Cyber Amber / Light) ---- */
 function applyTheme(theme) {
@@ -501,7 +500,6 @@ $("copyDockerCmd").onclick = () => copyCodeText("dockerCmd", "copyDockerCmd");
 /* ---- Colophon, scour modal, emblem ---- */
 initScour({ getTool: () => tool, getCode: () => $("code").value });
 initLogos();
-initGutter();
 $("openColophonBtn").onclick = $("footerColophonBtn").onclick = () => { openModal("colophonModal"); renderGallery(); };
 $("closeColophonModal").onclick = $("dismissColophonModal").onclick = () => closeModal("colophonModal");
 
@@ -528,27 +526,46 @@ function updateReportLinks() {
   if (!lastErrorDetails) return;
   const { message, tool: errTool, time } = lastErrorDetails;
   const toolName = TOOLS[errTool]?.label || errTool.toUpperCase();
-  const include = ensureShareOption().checked;
+  
+  const box = ensureShareOption();
+  const fullLink = shareLink();
+  const isTooLong = encodeURIComponent(fullLink).length > 4000;
 
+  let warnEl = document.getElementById("reportLengthWarn");
+  if (isTooLong) {
+    box.checked = false;      
+    box.disabled = true;      
+    
+    if (!warnEl) {
+      warnEl = document.createElement("div");
+      warnEl.id = "reportLengthWarn";
+      warnEl.style.cssText = "color:var(--bad); font-size:0.78rem; font-weight:600; margin-top:4px; padding-left:22px;";
+      warnEl.textContent = "⚠️ Code is too long to link automatically. You will need to copy/paste it manually.";
+      box.parentElement.insertAdjacentElement("afterend", warnEl);
+    }
+  } else {
+    box.disabled = false;     
+    if (warnEl) warnEl.remove();
+  }
+
+  const include = box.checked;
   let codeNote = "_Paste the code that triggered the error here, if you can share it._";
   let link = "";
+  
   if (include) {
-    link = shareLink();
-    if (encodeURIComponent(link).length > 4000) {
-      link = "";
-      codeNote = "_The code was too long for a link. Please paste it here._";
-    }
+    link = fullLink;
   }
-  $("reportModalDetails").textContent =
+  
+  document.getElementById("reportModalDetails").textContent =
     `Engine: ${toolName}\nTime: ${time}\nError: ${message}` + (link ? "\nShare link: (included)" : "");
 
   const title = encodeURIComponent(`[Run Error] ${toolName}: ${message.slice(0, 50)}`);
   const body = encodeURIComponent(
-    `### Run Error Report\n\n- **Engine**: \`${toolName}\`\n- **Time**: \`${time}\`\n- **Error**: \`${message}\`\n` +
+    `### Run Error Report\n\n- **Engine**: \`\${toolName}\`\n- **Time**: \`\${time}\`\n- **Error**: \`\${message}\`\n` +
     (link ? `- **Share link**: ${link}\n` : "") +
     `\n### Code\n\n${codeNote}\n\n### What were you trying to do?\n\n`
   );
-  $("githubIssueBtn").href = `https://github.com/BentzStudio/gap-online/issues/new?title=${title}&body=${body}`;
+  document.getElementById("githubIssueBtn").href = `https://github.com{title}&body=${body}`;
 }
 
 function openReportModal() {
@@ -590,3 +607,57 @@ $("texBtn").onclick = () => {
   const code = notebook.isOn() && lastTool === "gap" ? notebook.joined() : $("code").value;
   downloadText("session.tex", buildTex({ toolLabel: TOOLS[lastTool]?.label || "Session", code, output: lastOutput, latexMode }), "application/x-tex");
 };
+
+/* ---- Non-Destructive Editor Gutter Logic ---- */
+(function() {
+  const codeArea = $("code");
+  const codeGutter = $("codeGutter");
+  if (!codeArea || !codeGutter) return;
+
+  let lastLineCount = 0;
+
+  function updateGutterLines() {
+    const lines = codeArea.value.split('\n');
+    const lineCount = lines.length || 1;
+
+    // Only rebuild DOM fragments if the row count actually changed
+    if (lineCount !== lastLineCount) {
+      const fragment = document.createDocumentFragment();
+      for (let i = 1; i <= lineCount; i++) {
+        const numSpan = document.createElement('span');
+        numSpan.className = 'gutter-num';
+        numSpan.textContent = i;
+        fragment.appendChild(numSpan);
+      }
+      codeGutter.replaceChildren(fragment);
+      lastLineCount = lineCount;
+    }
+    
+    // Always align the gutter scroll track to match text alterations
+    syncGutterScroll();
+  }
+
+  function syncGutterScroll() {
+    codeGutter.scrollTop = codeArea.scrollTop;
+  }
+
+  // Bind interface mutation observers
+  codeArea.addEventListener('input', updateGutterLines);
+  codeArea.addEventListener('scroll', syncGutterScroll);
+
+  // Sync calculations across platform window resized boundaries
+  window.addEventListener('resize', syncGutterScroll);
+
+  // Intercept system value changes (Theme loading, history swaps, examples)
+  const codeDescriptor = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+  Object.defineProperty(codeArea, 'value', {
+    ...codeDescriptor,
+    set: function(val) {
+      codeDescriptor.set.call(this, val);
+      updateGutterLines();
+    }
+  });
+
+  // Initial trigger calculation
+  setTimeout(updateGutterLines, 50);
+})();
