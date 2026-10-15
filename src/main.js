@@ -526,51 +526,27 @@ function updateReportLinks() {
   if (!lastErrorDetails) return;
   const { message, tool: errTool, time } = lastErrorDetails;
   const toolName = TOOLS[errTool]?.label || errTool.toUpperCase();
-  
-  // 1. Get the checkbox reference safely
-  const box = ensureShareOption();
-  
-  // 2. Calculate the exact link length constraint
-  const fullLink = shareLink();
-  const isTooLong = encodeURIComponent(fullLink).length > 4000;
+  const include = ensureShareOption().checked;
 
-  // 3. Manage the warning element and checkbox state interactively
-  let warnEl = \$("reportLengthWarn");
-  if (isTooLong) {
-    box.checked = false;      // 👈 Automatically forces it unchecked
-    box.disabled = true;      // 👈 Grays out the input so it can't be toggled
-    
-    if (!warnEl) {
-      warnEl = document.createElement("div");
-      warnEl.id = "reportLengthWarn";
-      warnEl.style.cssText = "color:var(--bad); font-size:0.78rem; font-weight:600; margin-top:4px; padding-left:22px;";
-      warnEl.textContent = "⚠️ Code is too long to link automatically. You will need to copy/paste it manually.";
-      box.parentElement.insertAdjacentElement("afterend", warnEl);
-    }
-  } else {
-    box.disabled = false;     // 👈 Restores normal operation if code size drops
-    if (warnEl) warnEl.remove();
-  }
-
-  // 4. Capture final evaluation status of the checked box state
-  const include = box.checked;
   let codeNote = "_Paste the code that triggered the error here, if you can share it._";
   let link = "";
-  
   if (include) {
-    link = fullLink;
+    link = shareLink();
+    if (encodeURIComponent(link).length > 4000) {
+      link = "";
+      codeNote = "_The code was too long for a link. Please paste it here._";
+    }
   }
-  
-  \$("reportModalDetails").textContent =
+  $("reportModalDetails").textContent =
     `Engine: ${toolName}\nTime: ${time}\nError: ${message}` + (link ? "\nShare link: (included)" : "");
 
   const title = encodeURIComponent(`[Run Error] ${toolName}: ${message.slice(0, 50)}`);
   const body = encodeURIComponent(
-    `### Run Error Report\n\n- **Engine**: \`\${toolName}\`\n- **Time**: \`\${time}\`\n- **Error**: \`\${message}\`\n` +
+    `### Run Error Report\n\n- **Engine**: \`${toolName}\`\n- **Time**: \`${time}\`\n- **Error**: \`${message}\`\n` +
     (link ? `- **Share link**: ${link}\n` : "") +
     `\n### Code\n\n${codeNote}\n\n### What were you trying to do?\n\n`
   );
-  \$("githubIssueBtn").href = `https://github.com{title}&body=${body}`;
+  $("githubIssueBtn").href = `https://github.com/BentzStudio/gap-online/issues/new?title=${title}&body=${body}`;
 }
 
 function openReportModal() {
