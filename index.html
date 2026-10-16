@@ -27,9 +27,10 @@
     <select id="themeSelect" aria-label="Display theme and power mode" title="Select theme / energy-saving mode">
       <option value="light">☀️ Light</option>
       <option value="dark">🌙 Dark (Slate)</option>
-      <option value="oled">🖤 OLED Black (Eco / Zero-Power)</option>
-      <option value="terminal">📟 Retro Terminal (Phosphor Green)</option>
-      <option value="amber">⚡ Cyber Amber (Sci-Fi / VT220)</option>
+      <option value="oled">🖤 OLED Black</option>
+      <option value="terminal">📟 Retro Terminal</option>
+      <option value="amber">⚡ Cyber Amber</option>
+      <option value="gameboy">🎮 Game Boy</option>
     </select>
   </div>
 </header>
@@ -207,7 +208,7 @@
     </div>
     <div class="editor-wrapper">
       <div id="codeGutter" class="editor-gutter" aria-hidden="true"></div>
-      <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+      <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off"></textarea>
     </div>
     <div id="notebook" hidden></div>
   </section>
@@ -229,7 +230,7 @@
     </div>
     <div id="status" role="status" aria-live="polite" aria-atomic="true">
       <span id="statusText">Ready. Press Run or ⌘/Ctrl + Enter.</span>
-      <button type="button" class="report-btn" id="reportErrorBtn" style="display:none;" title="Send an error report to PY (Maintainer)">✉️ Report Issue</button>
+      <button type="button" class="report-btn" id="reportErrorBtn" style="display:none;" title="Open a pre-filled issue report on GitHub">🐞 Report Issue</button>
     </div>
     <div id="out" tabindex="0" aria-label="Program output"><span class="placeholder">Output appears here.</span></div>
     <div id="extras" aria-live="polite"></div>
@@ -510,12 +511,12 @@
 <div class="modal-backdrop" id="reportModal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
   <div class="modal" style="max-width:540px;">
     <div class="modal-header">
-      <h3 id="reportModalTitle">✉️ Report a Run Issue to PY</h3>
+      <h3 id="reportModalTitle">🐞 Report a Run Issue</h3>
       <button type="button" class="modal-close" id="closeReportModal" aria-label="Close dialog">✕</button>
     </div>
     <div class="modal-body" style="display:flex; flex-direction:column; gap:12px;">
       <p style="margin:0; font-size:.875rem; color:var(--text); line-height:1.55;">
-        Encountered an unexpected runner failure, timeout, or glitch? You can send a pre-formatted report directly to PY (Maintainer) to help investigate and improve the playground.
+        Encountered an unexpected runner failure, timeout, or glitch? You can submit an issue report directly on GitHub to help investigate and improve the playground.
       </p>
 
       <div style="background:var(--panel-2); border:1px solid var(--line); border-left:3px solid var(--bad); border-radius:8px; padding:10px 12px; font-size:.825rem; font-family:var(--mono); color:var(--text); line-height:1.45;">
@@ -524,15 +525,9 @@
       </div>
 
       <div style="display:flex; flex-direction:column; gap:8px;">
-        <label style="font-weight:650; font-size:.85rem; color:var(--text);">Choose how you would like to report:</label>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;">
-          <a id="emailReportBtn" href="#" class="primary" style="text-decoration:none; padding:10px 12px; text-align:center; font-size:.85rem; display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:8px;">
-            📧 Open Email Draft
-          </a>
-          <a id="githubIssueBtn" href="#" target="_blank" rel="noopener" style="text-decoration:none; padding:10px 12px; text-align:center; font-size:.85rem; display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:8px; border:1px solid var(--line); background:var(--panel-2); color:var(--text);">
-            🐙 Open GitHub Issue ↗
-          </a>
-        </div>
+        <a id="githubIssueBtn" href="#" target="_blank" rel="noopener" class="primary" style="text-decoration:none; padding:10px 14px; text-align:center; font-size:.88rem; display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:8px; font-weight:600;">
+          🐙 Open Pre-Filled GitHub Issue ↗
+        </a>
       </div>
 
       <div style="display:flex; align-items:flex-start; gap:8px; background:var(--panel-2); border-radius:6px; padding:8px 10px; font-size:.78rem; color:var(--muted); line-height:1.45;">
