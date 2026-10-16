@@ -52,12 +52,12 @@ export const GAP_EXAMPLES = {
     'fi;'
   ].join("\n"),
   "Diagrams: D-class order and Cayley graph": [
-    '# Dot(...) prints Graphviz DOT; the page draws it below the output.',
+    '# DotString / DotLeftCayleyDigraph return DOT strings; Print them and the page draws the graph.',
     'LoadPackage("semigroups");;',
     'S := FullTransformationMonoid(3);;',
-    'DotDClassOrder(S);',
+    'Print(DotString(S), "\\n");',
     'M := Monoid(Transformation([2,3,1]), Transformation([2,1,3]));;',
-    'DotCayley(M);'
+    'Print(DotLeftCayleyDigraph(M), "\\n");'
   ].join("\n"),
   "Green's D-classes & Egg-boxes": [
     'LoadPackage("semigroups");;',
@@ -83,8 +83,11 @@ export const GAP_EXAMPLES = {
   ].join("\n"),
   "Brandt Semigroup B_2 (Rees 0-matrix)": [
     'LoadPackage("semigroups");;',
-    '# 5-element Brandt semigroup B_2: classic Perkins (1969) / Volkov counterexample to finite basis problem',
-    'B2 := ReesZeroMatrixSemigroup(Group(()), [[1, 0], [0, 1]]);;',
+    '# 5-element Brandt semigroup B_2 = Rees 0-matrix semigroup over the trivial group.',
+    '# Sandwich-matrix entries must be 0 or elements of the group; () is the identity of Group(()).',
+    '# (B_2 with an identity adjoined is Perkins\' 6-element non-finitely-based semigroup.)',
+    'G := Group(());;',
+    'B2 := ReesZeroMatrixSemigroup(G, [[(), 0], [0, ()]]);;',
     'Print("Size of B_2: ", Size(B2), "\\n");',
     'Print("Is inverse semigroup: ", IsInverseSemigroup(B2), "\\n");',
     'Print("Number of idempotents: ", Length(Idempotents(B2)), "\\n");',
@@ -155,17 +158,17 @@ export const PROVER9_EXAMPLES = {
     "% In a regular semigroup with commuting idempotents, inverses are unique (Clifford-Preston).",
     "formulas(assumptions).",
     "  (x * y) * z = x * (y * z).",
-    "  % y and z are both inverses of x",
-    "  (x * y) * x = x.",
-    "  (y * x) * y = y.",
-    "  (x * z) * x = x.",
-    "  (z * x) * z = z.",
+    "  % a, b, c are constants (Prover9 variables are u..z): b and c are both inverses of a",
+    "  (a * b) * a = a.",
+    "  (b * a) * b = b.",
+    "  (a * c) * a = a.",
+    "  (c * a) * c = c.",
     "  % Idempotents commute",
     "  (u * u = u & v * v = v) -> u * v = v * u.",
     "end_of_list.",
     "",
     "formulas(goals).",
-    "  y = z.",
+    "  b = c.",
     "end_of_list."
   ].join("\n"),
   "Clifford semigroup: central idempotents": [
@@ -266,14 +269,14 @@ export const LEAN_EXAMPLES = {
     'import Mathlib',
     '',
     '-- In a commutative semigroup, the product of idempotents is idempotent',
-    'def IsIdempotent {S : Type*} [Semigroup S] (e : S) : Prop :=',
+    'def IsIdem {S : Type*} [Semigroup S] (e : S) : Prop :=',
     '  e * e = e',
     '',
     'theorem mul_idempotent {S : Type*} [CommSemigroup S] (e f : S)',
-    '    (he : IsIdempotent e) (hf : IsIdempotent f) :',
-    '    IsIdempotent (e * f) := by',
-    '  unfold IsIdempotent at *',
-    '  calc (e * f) * (e * f) = (e * e) * (f * f) := by rw [mul_assoc, mul_left_comm f, ← mul_assoc]',
+    '    (he : IsIdem e) (hf : IsIdem f) :',
+    '    IsIdem (e * f) := by',
+    '  unfold IsIdem at *',
+    '  calc (e * f) * (e * f) = (e * e) * (f * f) := mul_mul_mul_comm e f e f',
     '       _                 = e * f             := by rw [he, hf]'
   ].join("\n"),
   "Green's R relation reflexivity": [
@@ -331,14 +334,14 @@ export const SNIPPETS_BY_TOOL = {
   gap: [
     { label: "⚡ Snippet: Load Semigroups package", code: 'LoadPackage("semigroups");;\n' },
     { label: "⚡ Snippet: Green's D-classes & report", code: 'dclasses := GreensDClasses(S);;\nPrint("D-classes: ", Length(dclasses), "\\n");\nPrint("Regular D-classes: ", Length(Filtered(dclasses, IsRegularDClass)), "\\n");\n' },
-    { label: "⚡ Snippet: Draw D-class order (Graphviz DOT)", code: 'DotDClassOrder(S);\n' },
-    { label: "⚡ Snippet: Draw Cayley graph (Graphviz DOT)", code: 'DotCayley(S);\n' },
+    { label: "⚡ Snippet: Draw D-class order (Graphviz DOT)", code: 'Print(DotString(S), "\\n");\n' },
+    { label: "⚡ Snippet: Draw Cayley graph (Graphviz DOT)", code: 'Print(DotLeftCayleyDigraph(S), "\\n");\n' },
     { label: "⚡ Snippet: Full transformation monoid T_n", code: 'S := FullTransformationMonoid(4);;\n' },
     { label: "⚡ Snippet: Symmetric inverse monoid I_n", code: 'S := SymmetricInverseMonoid(3);;\n' },
-    { label: "⚡ Snippet: Rees 0-matrix semigroup", code: 'R := ReesZeroMatrixSemigroup(Group(()), [[1, 0], [0, 1]]);;\n' },
+    { label: "⚡ Snippet: Rees 0-matrix semigroup", code: 'R := ReesZeroMatrixSemigroup(Group(()), [[(), 0], [0, ()]]);;\n' },
     { label: "⚡ Snippet: Check idempotents & regularity", code: 'Print("Idempotents: ", Length(Idempotents(S)), "\\n");\nPrint("Regular: ", IsRegularSemigroup(S), "\\n");\nPrint("Inverse: ", IsInverseSemigroup(S), "\\n");\n' },
     { label: "⚡ Snippet: Semigroup congruences", code: 'congs := CongruencesOfSemigroup(S);;\nPrint("Congruences: ", Length(congs), "\\n");\n' },
-    { label: "⚡ Snippet: Maximal subgroups", code: 'Print("Maximal subgroups: ", Length(MaximalSubgroups(S)), "\\n");\n' }
+    { label: "⚡ Snippet: Maximal subsemigroups", code: 'Print("Maximal subsemigroups: ", Length(MaximalSubsemigroups(S)), "\\n");\n' }
   ],
   prover9: [
     { label: "⚡ Snippet: Semigroup (associativity)", code: 'formulas(assumptions).\n  (x * y) * z = x * (y * z).\nend_of_list.\n' },
@@ -358,7 +361,7 @@ export const SNIPPETS_BY_TOOL = {
   ],
   lean: [
     { label: "⚡ Snippet: Import Mathlib and Semigroup type", code: 'import Mathlib\n\nvariable {S : Type*} [Semigroup S]\n' },
-    { label: "⚡ Snippet: Idempotent definition & theorem", code: 'def IsIdempotent {S : Type*} [Semigroup S] (e : S) : Prop := e * e = e\n' },
+    { label: "⚡ Snippet: Idempotent definition & theorem", code: 'def IsIdem {S : Type*} [Semigroup S] (e : S) : Prop := e * e = e\n' },
     { label: "⚡ Snippet: Commutative semigroup proof template", code: 'theorem mul_comm_example {S : Type*} [CommSemigroup S] (x y : S) : x * y = y * x := by\n  rw [mul_comm]\n' },
     { label: "⚡ Snippet: Prove by simp / aesop", code: 'by\n  simp\n' },
     { label: "⚡ Snippet: Evaluate & Check", code: '#check Semigroup\n#check CommSemigroup\n#check Monoid\n#eval 2^10\n' }

@@ -38,11 +38,11 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 
 - **Interactive Egg-Box Diagrams & Green's Relations:** finite models found by Mace4 include both a colored multiplication table and an interactive **Egg-Box diagram**. The app computes Green's $\mathcal{R}, \mathcal{L}, \mathcal{H}, \mathcal{D}$ equivalences, partitions each $\mathcal{D}$-class into its rows ($\mathcal{R}$-classes) and columns ($\mathcal{L}$-classes), flags regular $\mathcal{D}$-classes, and highlights group $\mathcal{H}$-classes with $\star$ (idempotents).
 - **Semigroup Classifications:** automatic detection of orthodox semigroups, completely regular semigroups (unions of groups), Clifford semigroups (semilattices of groups), aperiodic/combinatorial semigroups, bands, semilattices, and inverse semigroups.
-- **Quick Snippets Bar:** 1-click insertion of idiomatic semigroup code templates for GAP (`LoadPackage("semigroups");;`, `FullTransformationMonoid`, `SymmetricInverseMonoid`, `GreensDClasses`, `DotDClassOrder`), Prover9, Mace4, and Lean 4 Mathlib.
+- **Quick Snippets Bar:** 1-click insertion of idiomatic semigroup code templates for GAP (`LoadPackage("semigroups");;`, `FullTransformationMonoid`, `SymmetricInverseMonoid`, `GreensDClasses`, `DotString`), Prover9, Mace4, and Lean 4 Mathlib.
 - **Expanded Axiom Sets:** pre-defined axiom sets for bands (left/right regular, rectangular), regular, orthodox, completely regular, Clifford and inverse semigroups, Brandt semigroups (completely 0-simple inverse semigroups, and $B_2$ by its presentation), null and nilpotent semigroups ($S^2=0$, $S^3=0$, $S^4=0$), and the relation $pq=e$ that defines the bicyclic monoid. Each set states in a comment what it does and does not describe.
 - **Mace4 Model Viewer & Send to GAP:** convert any countermodel or finite magma into GAP code with 1 click (`SemigroupByMultiplicationTable`).
 - **Prove / Refute:** one click runs Prover9 and, if no proof is found, Mace4 on the same input.
-- **Diagrams:** Graphviz DOT in the output is drawn as SVG (e.g. `DotDClassOrder(S)` and `DotCayley(S)`).
+- **Diagrams:** Graphviz DOT in the output is drawn as SVG (e.g. `Print(DotString(S))` and `Print(DotLeftCayleyDigraph(S))`).
 - **GAP notebook:** split code into cells; each run replays them in order within one session.
 - **Export:** LaTeX `.tex` export (with preloaded Green's relations macros $\mathcal{R}, \mathcal{L}, \mathcal{H}, \mathcal{D}, \mathcal{J}$) and BibTeX export for literature citations.
 

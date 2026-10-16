@@ -36,6 +36,7 @@ export const AXIOM_SETS = {
   "Brandt semigroup (completely 0-simple inverse)": [
     ASSOC, ...ZERO, ...INVERSE_UNARY,
     "x = 0 | y = 0 | (f(x,y) * x) * g(x,y) = y.",
+    "((x * i(x)) * (y * i(y)) = x * i(x)) -> (x * i(x) = 0 | x * i(x) = y * i(y)).",
     "c != 0."
   ],
   "Brandt semigroup B_2 (5 elements, by presentation)": [
@@ -58,14 +59,14 @@ export const AXIOM_NOTES = {
   "Completely regular (union of groups)": "i(x) is the inverse of x inside its group H-class, so x * i(x) = i(x) * x.",
   "Inverse semigroup": "i(x) is the unique inverse of x. Prover9 derives that all idempotents commute from these axioms.",
   "Brandt semigroup (completely 0-simple inverse)":
-    "Includes G^0 (a group with a zero adjoined) as well as B_n(G). f, g witness 0-simplicity; c != 0 excludes the trivial semigroup.",
+    "Includes G^0 (a group with a zero adjoined) as well as B_n(G). f, g witness 0-simplicity; the implication says every nonzero idempotent is primitive (without it, e.g. the bicyclic monoid with a zero adjoined would also be a model); c != 0 excludes the trivial semigroup.",
   "Brandt semigroup B_2 (5 elements, by presentation)":
     "B_2 = <a, b | aba = a, bab = b, a^2 = b^2 = 0>. The last axiom says a and b generate. Use assign(domain_size, 5).",
   "Null semigroup (S^2 = 0)": "Every product is 0. This is the nilpotent semigroup of class 2.",
   "Nilpotent (S^3 = 0, with zero)": "Every product of three elements is 0.",
   "Nilpotent (S^4 = 0, with zero)": "Every product of four elements is 0.",
   "Monoid with p * q = e (bicyclic monoid presentation)":
-    "The bicyclic monoid <p, q | pq = 1> is the free monoid with this relation, so equations Prover9 derives hold in it. It is infinite and a finite monoid with p * q = e is a group, so Mace4 only finds degenerate models."
+    "The bicyclic monoid <p, q | pq = 1> is the monoid with this single relation, so ground equations in p, q that Prover9 derives hold in it. It is infinite. In a finite monoid pq = e forces qp = e, so p and q are mutually inverse units and Mace4 only finds models where the bicyclic structure collapses."
 };
 
 /** Return the editor text with an assumptions block for `name` placed at the top. */
