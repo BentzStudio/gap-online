@@ -1,8 +1,12 @@
 export const MATH_CONCEPT_PATTERNS = [
   // Semigroup & Monoid Theory
   { regex: /\b(full\s*transformation\s*monoid|transformation\s*monoid|transformation\s*semigroup)\b/i, term: "Transformation Semigroups", category: "math.GR" },
-  { regex: /\b(green['’]?s?\s*(relations|classes|dclass|hclass|rclass|lclass|jclass)|dclasses|hclasses|rclasses|lclasses|jclasses)\b/i, term: "Green's Relations", category: "math.GR" },
-  { regex: /\b(inverse\s*semigroup|inversesemigroup|symmetric\s*inverse\s*monoid)\b/i, term: "Inverse Semigroups", category: "math.GR" },
+  { regex: /\b(green['’]?s?\s*(relations|classes|dclass|hclass|rclass|lclass|jclass)|dclasses|hclasses|rclasses|lclasses|jclasses|egg[\s-]*box)\b/i, term: "Green's Relations", category: "math.GR" },
+  { regex: /\b(inverse\s*semigroup|inversesemigroup|symmetric\s*inverse\s*monoid|vagner[\s-]preston)\b/i, term: "Inverse Semigroups", category: "math.GR" },
+  { regex: /\b(brandt\s*semigroup|reeszeromatrix|rees\s*0\s*matrix)\b/i, term: "Brandt Semigroups", category: "math.GR" },
+  { regex: /\b(aperiodic\s*semigroup|aperiodic|syntactic\s*monoid)\b/i, term: "Aperiodic Semigroups", category: "math.GR" },
+  { regex: /\b(orthodox\s*semigroup|completely\s*regular|clifford\s*semigroup)\b/i, term: "Completely Regular & Orthodox", category: "math.GR" },
+  { regex: /\b(bicyclic\s*monoid|bicyclic)\b/i, term: "Bicyclic Monoid", category: "math.GR" },
   { regex: /\b(idempotent|idempotents)\b/i, term: "Idempotent Semigroups", category: "math.GR" },
   { regex: /\b(rees\s*matrix|reesmatrix)\b/i, term: "Rees Matrix Semigroups", category: "math.GR" },
   { regex: /\b(regular\s*semigroup|regularsemigroup)\b/i, term: "Regular Semigroups", category: "math.GR" },
@@ -47,11 +51,12 @@ export const MATH_CONCEPT_PATTERNS = [
 
 export const PRESETS_BY_TOOL = {
   gap: [
+    { label: "Egg-Box & Green's Relations", term: "Green's Relations", cat: "math.GR" },
+    { label: "Brandt Semigroups", term: "Brandt Semigroups", cat: "math.GR" },
     { label: "Semigroup Congruences", term: "Semigroup Congruences", cat: "math.GR" },
     { label: "Krohn-Rhodes", term: "Krohn-Rhodes Theory", cat: "math.GR" },
     { label: "Rees Matrix", term: "Rees Matrix Semigroups", cat: "math.GR" },
     { label: "Transformation Semigroups", term: "Transformation Semigroups", cat: "math.GR" },
-    { label: "Green's Relations", term: "Green's Relations", cat: "math.GR" },
     { label: "Inverse Semigroups", term: "Inverse Semigroups", cat: "math.GR" },
     { label: "Idempotents", term: "Idempotent Semigroups", cat: "math.GR" },
     { label: "Alternating Groups", term: "Alternating Groups", cat: "math.GR" },
@@ -60,12 +65,15 @@ export const PRESETS_BY_TOOL = {
   prover9: [
     { label: "Equational theories of semigroups", term: "Equational Theories of Semigroups", cat: "math.GR" },
     { label: "Finite basis problem", term: "Finite Basis Problem Semigroups", cat: "math.GR" },
+    { label: "Inverse semigroups", term: "Inverse Semigroups", cat: "math.GR" },
     { label: "Robbins Algebra", term: "Robbins Algebra", cat: "math.LO" },
     { label: "Equational Logic", term: "Equational Logic", cat: "math.LO" },
     { label: "Lattice Theory", term: "Lattice Theory", cat: "math.LO" },
     { label: "Automated Proving", term: "Automated Theorem Proving", cat: "math.LO" }
   ],
   mace4: [
+    { label: "Egg-Box Models", term: "Green's Relations", cat: "math.GR" },
+    { label: "Brandt Semigroups", term: "Brandt Semigroups", cat: "math.GR" },
     { label: "Finite Models", term: "Finite Model Finding", cat: "math.LO" },
     { label: "Counterexamples", term: "Finite Models and Counterexamples", cat: "math.LO" },
     { label: "Semigroup Bands", term: "Bands and Semilattices", cat: "math.GR" },

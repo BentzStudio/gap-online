@@ -23,9 +23,17 @@ export function buildTex({ toolLabel, code, output, latexMode }) {
 
   return `\\documentclass[11pt]{article}
 \\usepackage[T1]{fontenc}
-\\usepackage{amsmath,amssymb}
+\\usepackage{amsmath,amssymb,booktabs}
 \\usepackage{fvextra}
 \\usepackage[margin=2.5cm]{geometry}
+
+% Semigroup Theory Green's relations macros
+\\newcommand{\\Rrel}{\\mathcal{R}}
+\\newcommand{\\Lrel}{\\mathcal{L}}
+\\newcommand{\\Hrel}{\\mathcal{H}}
+\\newcommand{\\Drel}{\\mathcal{D}}
+\\newcommand{\\Jrel}{\\mathcal{J}}
+
 \\title{${toolLabel} session}
 \\date{${new Date().toISOString().slice(0, 10)}}
 \\begin{document}

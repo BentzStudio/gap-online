@@ -1,9 +1,9 @@
 import { $, store, sleep, toBase64, copyText, openModal, closeModal, escapeHtml } from "./util.js";
-import { TOOLS } from "./examples.js";
+import { TOOLS, SNIPPETS_BY_TOOL } from "./examples.js";
 import { latexify } from "./latex.js";
 import { initScour } from "./scour.js";
 import { initLogos, renderGallery } from "./logos.js";
-import { parseMace4Models, analyseModel, modelTableHtml, modelToGap, splitRefuteOutput } from "./mace4.js";
+import { parseMace4Models, analyseModel, modelTableHtml, eggBoxHtml, modelToGap, splitRefuteOutput } from "./mace4.js";
 import { renderDotBlocks } from "./dot.js";
 import { buildTex, downloadText } from "./texexport.js";
 import { AXIOM_SETS, withAxioms } from "./axioms.js";
@@ -137,12 +137,44 @@ function applyTool() {
     $("axiomSel").add(new Option("＋ Axioms…", ""));
     for (const name of Object.keys(AXIOM_SETS)) $("axiomSel").add(new Option(name, name));
   }
+
+  const snips = SNIPPETS_BY_TOOL[tool] || [];
+  const snipSel = $("snippetSel");
+  if (snipSel) {
+    snipSel.length = 0;
+    snipSel.add(new Option("⚡ Snippets…", ""));
+    for (let i = 0; i < snips.length; i++) {
+      snipSel.add(new Option(snips[i].label, String(i)));
+    }
+  }
 }
 applyTool();
 $("tool").onchange = () => { tool = $("tool").value; store.set("gap.tool", tool); applyTool(); };
 $("examples").onchange = () => {
   $("code").value = TOOLS[tool].examples[$("examples").value];
   store.set(TOOLS[tool].codeKey, $("code").value);
+};
+$("snippetSel").onchange = () => {
+  const idx = $("snippetSel").value;
+  if (!idx) return;
+  const snips = SNIPPETS_BY_TOOL[tool] || [];
+  const snip = snips[parseInt(idx, 10)];
+  if (snip) {
+    const codeArea = $("code");
+    const start = codeArea.selectionStart;
+    const end = codeArea.selectionEnd;
+    const current = codeArea.value;
+    if (typeof start === "number" && typeof end === "number" && current) {
+      codeArea.value = current.slice(0, start) + snip.code + current.slice(end);
+      codeArea.selectionStart = codeArea.selectionEnd = start + snip.code.length;
+    } else {
+      codeArea.value = (current ? current.trim() + "\n\n" : "") + snip.code;
+    }
+    store.set(TOOLS[tool].codeKey, codeArea.value);
+    codeArea.dispatchEvent(new Event("input"));
+    codeArea.focus();
+  }
+  $("snippetSel").value = "";
 };
 $("code").addEventListener("input", () => store.set(TOOLS[tool].codeKey, $("code").value));
 
@@ -308,10 +340,46 @@ function renderExtras() {
     const card = document.createElement("div");
     card.className = "model-card";
     const badges = info.props.map(([t, good]) => `<span class="badge ${good ? "good" : "neg"}">${escapeHtml(t)}</span>`).join("");
-    card.innerHTML = `<div class="model-head"><strong>Model ${idx + 1}: order ${info.n}</strong>
-      <span><button type="button" class="mini-btn" data-act="gap">→ Send to GAP</button>
-      <button type="button" class="mini-btn" data-act="copy">Copy GAP code</button></span></div>
-      <div class="badges">${badges}</div><div class="table-scroll">${modelTableHtml(m, info)}</div>`;
+    const hasGreens = info.associative && info.greens;
+    card.innerHTML = `<div class="model-head">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <strong>Model ${idx + 1}: order ${info.n}</strong>
+        ${hasGreens ? `
+        <div class="view-switch" role="group" aria-label="Model view selector">
+          <button type="button" class="mini-btn view-btn active" data-view="table">Multiplication Table</button>
+          <button type="button" class="mini-btn view-btn" data-view="eggbox">Egg-Box (Green's D)</button>
+        </div>` : ""}
+      </div>
+      <span>
+        <button type="button" class="mini-btn" data-act="gap">→ Send to GAP</button>
+        <button type="button" class="mini-btn" data-act="copy">Copy GAP code</button>
+      </span>
+    </div>
+    <div class="badges">${badges}</div>
+    <div class="view-container">
+      <div class="table-scroll model-view-table">${modelTableHtml(m, info)}</div>
+      ${hasGreens ? `<div class="model-view-eggbox" style="display:none;">${eggBoxHtml(m, info)}</div>` : ""}
+    </div>`;
+
+    if (hasGreens) {
+      const tableEl = card.querySelector(".model-view-table");
+      const eggBoxEl = card.querySelector(".model-view-eggbox");
+      const btns = card.querySelectorAll(".view-btn");
+      btns.forEach(btn => {
+        btn.onclick = () => {
+          const view = btn.getAttribute("data-view");
+          btns.forEach(b => b.classList.toggle("active", b === btn));
+          if (view === "table") {
+            tableEl.style.display = "";
+            eggBoxEl.style.display = "none";
+          } else {
+            tableEl.style.display = "none";
+            eggBoxEl.style.display = "";
+          }
+        };
+      });
+    }
+
     const code = modelToGap(m, info, idx + 1);
     card.querySelector('[data-act="gap"]').onclick = () => sendToGap(code);
     card.querySelector('[data-act="copy"]').onclick = e => copyText(code, e.target);

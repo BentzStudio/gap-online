@@ -36,11 +36,15 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 
 ## For semigroup theorists
 
-- **Mace4 model viewer:** finite models appear as colored multiplication tables with detected properties (commutative, monoid, band, regular, inverse, group, zero, and so on). *Send to GAP* rebuilds a model as a semigroup.
-- **Prove / Refute:** one click runs Prover9 and, if no proof is found, Mace4 on the same input. Axiom sets (semigroup, band, inverse, nilpotent, and others) can be inserted from the editor.
-- **Diagrams:** any Graphviz DOT in the output is drawn as SVG. In GAP, `Dot(x)`, `DotDClassOrder(S)` and `DotCayley(S)` print DOT.
+- **Interactive Egg-Box Diagrams & Green's Relations:** finite models found by Mace4 include both a colored multiplication table and an interactive **Egg-Box diagram**. The app computes Green's $\mathcal{R}, \mathcal{L}, \mathcal{H}, \mathcal{D}$ equivalences, partitions each $\mathcal{D}$-class into its rows ($\mathcal{R}$-classes) and columns ($\mathcal{L}$-classes), flags regular $\mathcal{D}$-classes, and highlights group $\mathcal{H}$-classes with $\star$ (idempotents).
+- **Semigroup Classifications:** automatic detection of orthodox semigroups, completely regular semigroups (unions of groups), Clifford semigroups (semilattices of groups), aperiodic/combinatorial semigroups, bands, semilattices, and inverse semigroups.
+- **Quick Snippets Bar:** 1-click insertion of idiomatic semigroup code templates for GAP (`LoadPackage("semigroups");;`, `FullTransformationMonoid`, `SymmetricInverseMonoid`, `GreensDClasses`, `DotDClassOrder`), Prover9, Mace4, and Lean 4 Mathlib.
+- **Expanded Axiom Sets:** pre-defined equational varieties for Orthodox semigroups, Completely regular semigroups, Clifford semigroups, Left/Right regular bands, Brandt semigroups ($B_2$), Bicyclic monoid, and Nilpotent semigroups.
+- **Mace4 Model Viewer & Send to GAP:** convert any countermodel or finite magma into GAP code with 1 click (`SemigroupByMultiplicationTable`).
+- **Prove / Refute:** one click runs Prover9 and, if no proof is found, Mace4 on the same input.
+- **Diagrams:** Graphviz DOT in the output is drawn as SVG (e.g. `DotDClassOrder(S)` and `DotCayley(S)`).
 - **GAP notebook:** split code into cells; each run replays them in order within one session.
-- **Export:** `.tex` and BibTeX buttons for results and references.
+- **Export:** LaTeX `.tex` export (with preloaded Green's relations macros $\mathcal{R}, \mathcal{L}, \mathcal{H}, \mathcal{D}, \mathcal{J}$) and BibTeX export for literature citations.
 
 ## Usage
 

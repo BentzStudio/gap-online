@@ -70,6 +70,20 @@ export function analyseModel(model) {
   const leftZero = range.every(a => range.every(b => mul(a, b) === a));
   const rightZero = range.every(a => range.every(b => mul(a, b) === b));
 
+  // Advanced Semigroup Varieties
+  const orthodox = regular && idempotents.every(e => idempotents.every(f => idempotents.includes(mul(e, f))));
+  const completelyRegular = associative && range.every(a => range.some(x => mul(mul(a, x), a) === a && mul(a, x) === mul(x, a)));
+  const clifford = completelyRegular && range.every(a => idempotents.every(e => mul(a, e) === mul(e, a)));
+  const aperiodic = associative && range.every(a => {
+    const seen = [];
+    let curr = a;
+    while (!seen.includes(curr)) { seen.push(curr); curr = mul(curr, a); }
+    const cycleLen = seen.length - seen.indexOf(curr);
+    return cycleLen === 1;
+  });
+
+  const greens = associative ? computeGreensStructure({ n, mul, associative, idempotents }) : null;
+
   const props = [];
   props.push(associative ? ["associative (a semigroup)", true] : ["not associative (only a magma)", false]);
   if (associative) {
@@ -81,11 +95,128 @@ export function analyseModel(model) {
     if (leftZero) props.push(["left-zero band", true]);
     if (rightZero) props.push(["right-zero band", true]);
     if (regular) props.push(["regular", true]);
+    if (orthodox) props.push(["orthodox", true]);
+    if (completelyRegular) props.push(["completely regular (union of groups)", true]);
+    if (clifford) props.push(["clifford", true]);
     if (inverse) props.push(["inverse", true]);
     if (group) props.push(["group", true]);
+    if (aperiodic) props.push(["aperiodic", true]);
     if (nullSg) props.push(["null semigroup", true]);
+    if (greens) props.push([`${greens.nrD} D-classes (${greens.nrRegularD} regular)`, true]);
   }
-  return { name, n, mul, associative, props, idempotents };
+  return { name, n, mul, associative, props, idempotents, greens };
+}
+
+/** Compute Green's equivalence relations R, L, H, D and Egg-Box grid for finite semigroups. */
+export function computeGreensStructure(info) {
+  if (!info.associative) return null;
+  const { n, mul, idempotents } = info;
+  const range = [...Array(n).keys()];
+
+  // Principal right ideals: aS^1 = {a} U { a * x | x in S }
+  const rightIdeals = range.map(a => {
+    const s = new Set([a]);
+    for (const x of range) s.add(mul(a, x));
+    return [...s].sort((x, y) => x - y);
+  });
+  // Principal left ideals: S^1 a = {a} U { x * a | x in S }
+  const leftIdeals = range.map(a => {
+    const s = new Set([a]);
+    for (const x of range) s.add(mul(x, a));
+    return [...s].sort((x, y) => x - y);
+  });
+
+  const eqArray = (ar1, ar2) => ar1.length === ar2.length && ar1.every((v, i) => v === ar2[i]);
+
+  // R-relation: a R b iff R(a) == R(b)
+  const rClasses = [];
+  const assignedR = new Set();
+  for (const a of range) {
+    if (assignedR.has(a)) continue;
+    const cls = range.filter(b => eqArray(rightIdeals[a], rightIdeals[b]));
+    cls.forEach(x => assignedR.add(x));
+    rClasses.push(cls);
+  }
+
+  // L-relation: a L b iff L(a) == L(b)
+  const lClasses = [];
+  const assignedL = new Set();
+  for (const a of range) {
+    if (assignedL.has(a)) continue;
+    const cls = range.filter(b => eqArray(leftIdeals[a], leftIdeals[b]));
+    cls.forEach(x => assignedL.add(x));
+    lClasses.push(cls);
+  }
+
+  // D-relation: connected components of R and L (in finite semigroups D = R o L = J)
+  const dClasses = [];
+  const assignedD = new Set();
+  for (const a of range) {
+    if (assignedD.has(a)) continue;
+    const dSet = new Set();
+    const queue = [a];
+    dSet.add(a);
+    while (queue.length > 0) {
+      const cur = queue.pop();
+      const curR = rClasses.find(rc => rc.includes(cur)) || [];
+      for (const el of curR) {
+        if (!dSet.has(el)) { dSet.add(el); queue.push(el); }
+      }
+      const curL = lClasses.find(lc => lc.includes(cur)) || [];
+      for (const el of curL) {
+        if (!dSet.has(el)) { dSet.add(el); queue.push(el); }
+      }
+    }
+
+    const dArr = [...dSet].sort((x, y) => x - y);
+    dArr.forEach(x => assignedD.add(x));
+
+    // Rows = R-classes within D, Columns = L-classes within D
+    const dRClasses = rClasses.filter(rc => rc.some(x => dSet.has(x)));
+    const dLClasses = lClasses.filter(lc => lc.some(x => dSet.has(x)));
+
+    let isRegularD = false;
+    let hClassesCount = 0;
+    const grid = [];
+    for (let r = 0; r < dRClasses.length; r++) {
+      const row = [];
+      for (let c = 0; c < dLClasses.length; c++) {
+        const h = dRClasses[r].filter(x => dLClasses[c].includes(x));
+        if (h.length > 0) hClassesCount++;
+        const hasIdem = h.some(x => idempotents.includes(x));
+        if (hasIdem) isRegularD = true;
+        row.push({ elements: h, hasIdem, isGroup: hasIdem });
+      }
+      grid.push(row);
+    }
+
+    dClasses.push({
+      elements: dArr,
+      rClasses: dRClasses,
+      lClasses: dLClasses,
+      grid,
+      isRegular: isRegularD,
+      size: dArr.length,
+      hClassesCount
+    });
+  }
+
+  // Count total H-classes
+  let totalHClasses = 0;
+  for (const d of dClasses) {
+    totalHClasses += d.hClassesCount;
+  }
+
+  return {
+    rClasses,
+    lClasses,
+    dClasses,
+    nrR: rClasses.length,
+    nrL: lClasses.length,
+    nrH: totalHClasses,
+    nrD: dClasses.length,
+    nrRegularD: dClasses.filter(d => d.isRegular).length
+  };
 }
 
 /** Multiplication table as HTML (colour = product, bold border = idempotent on the diagonal). */
@@ -105,6 +236,56 @@ export function modelTableHtml(model, info) {
     h += "</tr>";
   }
   return h + "</tbody></table>";
+}
+
+/** Egg-Box diagram HTML for Green's D-classes. */
+export function eggBoxHtml(model, info) {
+  const greens = info.greens || computeGreensStructure(info);
+  if (!greens) {
+    return `<div class="eggbox-empty">Egg-Box diagrams are defined for associative semigroups. This model is not associative.</div>`;
+  }
+
+  let h = `<div class="eggbox-wrap">`;
+  h += `<div class="eggbox-summary">` +
+       `<span><strong>Green's classes:</strong> ${greens.nrD} <em>D</em>, ${greens.nrR} <em>R</em>, ${greens.nrL} <em>L</em>, ${greens.nrH} <em>H</em> (${greens.nrRegularD} regular)</span>` +
+       `<span class="eggbox-legend"><span class="eggbox-star">★</span> = idempotent (group <em>H</em>-class)</span>` +
+       `</div>`;
+
+  greens.dClasses.forEach((d, idx) => {
+    const regBadge = d.isRegular 
+      ? `<span class="badge good">Regular <em>D</em></span>` 
+      : `<span class="badge neg">Non-regular <em>D</em></span>`;
+    h += `<div class="eggbox-card">`;
+    h += `<div class="eggbox-head">` +
+         `<strong><em>D</em><sub>${idx + 1}</sub> (size ${d.size})</strong>` +
+         `<span>${regBadge} <span class="eggbox-dims">${d.rClasses.length} <em>R</em> &times; ${d.lClasses.length} <em>L</em></span></span>` +
+         `</div>`;
+
+    h += `<div class="table-scroll"><table class="eggbox-table">`;
+    h += `<thead><tr><th><em>R</em> \\ <em>L</em></th>`;
+    d.lClasses.forEach((_, colIdx) => {
+      h += `<th><em>L</em><sub>${colIdx + 1}</sub></th>`;
+    });
+    h += `</tr></thead><tbody>`;
+
+    d.grid.forEach((row, rowIdx) => {
+      h += `<tr><th><em>R</em><sub>${rowIdx + 1}</sub></th>`;
+      row.forEach(cell => {
+        const isGroup = cell.hasIdem;
+        const cls = isGroup ? "eggbox-cell group-cell" : "eggbox-cell";
+        const content = cell.elements.length > 0 
+          ? cell.elements.map(e => (info.idempotents.includes(e) ? `<span class="cell-idem" title="Idempotent: ${e}*${e}=${e}">★${e}</span>` : `${e}`)).join(", ")
+          : "&empty;";
+        h += `<td class="${cls}" title="${isGroup ? 'Group H-class (contains idempotent)' : 'H-class'}">${content}</td>`;
+      });
+      h += `</tr>`;
+    });
+
+    h += `</tbody></table></div></div>`;
+  });
+
+  h += `</div>`;
+  return h;
 }
 
 /** GAP code that rebuilds the model (indices shifted from 0-based to 1-based). */

@@ -81,6 +81,33 @@ export const GAP_EXAMPLES = {
     'Print("Idempotent semilattice size: ", Length(Idempotents(S)), "\\n");',
     'Print("Maximal subsemigroups: ", Length(MaximalSubsemigroups(S)), "\\n");'
   ].join("\n"),
+  "Brandt Semigroup B_2 (Rees 0-matrix)": [
+    'LoadPackage("semigroups");;',
+    '# 5-element Brandt semigroup B_2: classic Perkins (1969) / Volkov counterexample to finite basis problem',
+    'B2 := ReesZeroMatrixSemigroup(Group(()), [[1, 0], [0, 1]]);;',
+    'Print("Size of B_2: ", Size(B2), "\\n");',
+    'Print("Is inverse semigroup: ", IsInverseSemigroup(B2), "\\n");',
+    'Print("Number of idempotents: ", Length(Idempotents(B2)), "\\n");',
+    'Print("Green\'s D-classes: ", Length(GreensDClasses(B2)), "\\n");',
+    'Print("Is 0-simple: ", IsZeroSimpleSemigroup(B2), "\\n");'
+  ].join("\n"),
+  "Krohn-Rhodes & Aperiodic Monoids": [
+    'LoadPackage("semigroups");;',
+    '# Transformation monoid: checking aperiodicity (group-free / H-trivial)',
+    'S := Monoid(Transformation([1, 1, 2]), Transformation([2, 2, 3]));;',
+    'Print("Size of S: ", Size(S), "\\n");',
+    'Print("Is aperiodic: ", IsAperiodicSemigroup(S), "\\n");',
+    'Print("Trivial H-classes: ", ForAll(GreensHClasses(S), h -> Size(h) = 1), "\\n");',
+    'Print("Idempotents: ", Length(Idempotents(S)), "\\n");'
+  ].join("\n"),
+  "Bicyclic Monoid (relations)": [
+    '# Bicyclic monoid B = <p, q | pq = 1> (fundamental bisimple inverse monoid)',
+    'F := FreeMonoid("p", "q");;',
+    'p := F.1;; q := F.2;;',
+    'B := F / [[p*q, One(F)]];;',
+    'Print("Bicyclic monoid presentation: <p, q | p*q = 1>\\n");',
+    'Print("Relations: ", RelationsOfFpMonoid(B), "\\n");'
+  ].join("\n"),
   "Groups and LaTeX": [
     'G := AlternatingGroup(5);;',
     'Print("Order: ", Size(G), "\\n");',
@@ -123,6 +150,38 @@ export const PROVER9_EXAMPLES = {
     "formulas(goals).",
     "  x * y = y * x.",
     "end_of_list."
+  ].join("\n"),
+  "Inverse semigroup: unique inverses": [
+    "% In a regular semigroup with commuting idempotents, inverses are unique (Clifford-Preston).",
+    "formulas(assumptions).",
+    "  (x * y) * z = x * (y * z).",
+    "  % y and z are both inverses of x",
+    "  (x * y) * x = x.",
+    "  (y * x) * y = y.",
+    "  (x * z) * x = x.",
+    "  (z * x) * z = z.",
+    "  % Idempotents commute",
+    "  (u * u = u & v * v = v) -> u * v = v * u.",
+    "end_of_list.",
+    "",
+    "formulas(goals).",
+    "  y = z.",
+    "end_of_list."
+  ].join("\n"),
+  "Clifford semigroup: central idempotents": [
+    "% In a completely regular semigroup with commuting idempotents, idempotents are central.",
+    "formulas(assumptions).",
+    "  (x * y) * z = x * (y * z).",
+    "  (x * i(x)) * x = x.",
+    "  (i(x) * x) * i(x) = i(x).",
+    "  x * i(x) = i(x) * x.",
+    "  % Idempotents commute",
+    "  (u * u = u & v * v = v) -> u * v = v * u.",
+    "end_of_list.",
+    "",
+    "formulas(goals).",
+    "  (x * i(x)) * y = y * (x * i(x)).",
+    "end_of_list."
   ].join("\n")
 };
 
@@ -140,6 +199,34 @@ export const MACE4_EXAMPLES = {
     "",
     "formulas(goals).",
     "  x * (y * x) = y * x.",
+    "end_of_list."
+  ].join("\n"),
+  "Brandt semigroup B_2 (order 5)": [
+    "% Search for the 5-element Brandt inverse semigroup B_2 with zero.",
+    "assign(domain_size, 5).",
+    "",
+    "formulas(assumptions).",
+    "  (x * y) * z = x * (y * z).",
+    "  0 * x = 0.",
+    "  x * 0 = 0.",
+    "  (x * i(x)) * x = x.",
+    "  (i(x) * x) * i(x) = i(x).",
+    "  (x * i(x)) * (y * i(y)) = (y * i(y)) * (x * i(x)).",
+    "  i(0) = 0.",
+    "end_of_list."
+  ].join("\n"),
+  "Orthodox not inverse": [
+    "% Regular semigroup with subsemigroup of idempotents, where idempotents do not commute.",
+    "assign(domain_size, 4).",
+    "",
+    "formulas(assumptions).",
+    "  (x * y) * z = x * (y * z).",
+    "  (x * r(x)) * x = x.",
+    "  (x * x = x & y * y = y) -> (x * y) * (x * y) = x * y.",
+    "end_of_list.",
+    "",
+    "formulas(goals).",
+    "  (x * x = x & y * y = y) -> x * y = y * x.",
     "end_of_list."
   ].join("\n"),
   "Non-abelian group of order 6": [
@@ -186,6 +273,18 @@ export const LEAN_EXAMPLES = {
     '  calc (e * f) * (e * f) = (e * e) * (f * f) := by rw [mul_assoc, mul_left_comm f, ← mul_assoc]',
     '       _                 = e * f             := by rw [he, hf]'
   ].join("\n"),
+  "Green's R relation reflexivity": [
+    'import Mathlib',
+    '',
+    '-- Green\'s R relation in a semigroup S',
+    'def GreensR {S : Type*} [Semigroup S] (x y : S) : Prop :=',
+    '  (∃ u : S, x * u = y ∨ x = y) ∧ (∃ v : S, y * v = x ∨ y = x)',
+    '',
+    'theorem greens_R_refl {S : Type*} [Semigroup S] (x : S) : GreensR x x := by',
+    '  constructor',
+    '  · exact ⟨x, Or.inr rfl⟩',
+    '  · exact ⟨x, Or.inr rfl⟩'
+  ].join("\n"),
   "Inverse elements": [
     'import Mathlib',
     '',
@@ -223,6 +322,44 @@ export const LEAN_EXAMPLES = {
     '#check Ring',
     '#check Semigroup'
   ].join("\n")
+};
+
+export const SNIPPETS_BY_TOOL = {
+  gap: [
+    { label: "⚡ Snippet: Load Semigroups package", code: 'LoadPackage("semigroups");;\n' },
+    { label: "⚡ Snippet: Green's D-classes & report", code: 'dclasses := GreensDClasses(S);;\nPrint("D-classes: ", Length(dclasses), "\\n");\nPrint("Regular D-classes: ", Length(Filtered(dclasses, IsRegularDClass)), "\\n");\n' },
+    { label: "⚡ Snippet: Draw D-class order (Graphviz DOT)", code: 'DotDClassOrder(S);\n' },
+    { label: "⚡ Snippet: Draw Cayley graph (Graphviz DOT)", code: 'DotCayley(S);\n' },
+    { label: "⚡ Snippet: Full transformation monoid T_n", code: 'S := FullTransformationMonoid(4);;\n' },
+    { label: "⚡ Snippet: Symmetric inverse monoid I_n", code: 'S := SymmetricInverseMonoid(3);;\n' },
+    { label: "⚡ Snippet: Rees 0-matrix semigroup", code: 'R := ReesZeroMatrixSemigroup(Group(()), [[1, 0], [0, 1]]);;\n' },
+    { label: "⚡ Snippet: Check idempotents & regularity", code: 'Print("Idempotents: ", Length(Idempotents(S)), "\\n");\nPrint("Regular: ", IsRegularSemigroup(S), "\\n");\nPrint("Inverse: ", IsInverseSemigroup(S), "\\n");\n' },
+    { label: "⚡ Snippet: Semigroup congruences", code: 'congs := CongruencesOfSemigroup(S);;\nPrint("Congruences: ", Length(congs), "\\n");\n' },
+    { label: "⚡ Snippet: Maximal subgroups", code: 'Print("Maximal subgroups: ", Length(MaximalSubgroups(S)), "\\n");\n' }
+  ],
+  prover9: [
+    { label: "⚡ Snippet: Semigroup (associativity)", code: 'formulas(assumptions).\n  (x * y) * z = x * (y * z).\nend_of_list.\n' },
+    { label: "⚡ Snippet: Commutative semigroup", code: 'formulas(assumptions).\n  (x * y) * z = x * (y * z).\n  x * y = y * x.\nend_of_list.\n' },
+    { label: "⚡ Snippet: Regular semigroup", code: 'formulas(assumptions).\n  (x * y) * z = x * (y * z).\n  (x * r(x)) * x = x.\nend_of_list.\n' },
+    { label: "⚡ Snippet: Inverse semigroup (Clifford-Preston)", code: 'formulas(assumptions).\n  (x * y) * z = x * (y * z).\n  (x * i(x)) * x = x.\n  (i(x) * x) * i(x) = i(x).\n  (x * i(x)) * (y * i(y)) = (y * i(y)) * (x * i(x)).\nend_of_list.\n' },
+    { label: "⚡ Snippet: Idempotents form a subsemigroup (orthodox)", code: 'formulas(assumptions).\n  (x * y) * z = x * (y * z).\n  (x * x = x & y * y = y) -> (x * y) * (x * y) = x * y.\nend_of_list.\n' },
+    { label: "⚡ Snippet: Goal block", code: 'formulas(goals).\n  % your goal equation here\nend_of_list.\n' }
+  ],
+  mace4: [
+    { label: "⚡ Snippet: Search order (assign domain_size)", code: 'assign(domain_size, 4).\n' },
+    { label: "⚡ Snippet: Max models limit", code: 'assign(max_models, 5).\n' },
+    { label: "⚡ Snippet: Non-associative magma search", code: 'assign(domain_size, 3).\nformulas(goals).\n  (x * y) * z = x * (y * z).\nend_of_list.\n' },
+    { label: "⚡ Snippet: Band (idempotent)", code: 'formulas(assumptions).\n  (x * y) * z = x * (y * z).\n  x * x = x.\nend_of_list.\n' },
+    { label: "⚡ Snippet: Left-regular band countermodel", code: 'assign(domain_size, 3).\nformulas(assumptions).\n  (x * y) * z = x * (y * z).\n  x * x = x.\n  x * (y * x) = x * y.\nend_of_list.\nformulas(goals).\n  x * (y * x) = y * x.\nend_of_list.\n' },
+    { label: "⚡ Snippet: Non-commutative monoid search", code: 'assign(domain_size, 6).\nformulas(assumptions).\n  (x * y) * z = x * (y * z).\n  e * x = x.\n  x * e = x.\nend_of_list.\nformulas(goals).\n  x * y = y * x.\nend_of_list.\n' }
+  ],
+  lean: [
+    { label: "⚡ Snippet: Import Mathlib and Semigroup type", code: 'import Mathlib\n\nvariable {S : Type*} [Semigroup S]\n' },
+    { label: "⚡ Snippet: Idempotent definition & theorem", code: 'def IsIdempotent {S : Type*} [Semigroup S] (e : S) : Prop := e * e = e\n' },
+    { label: "⚡ Snippet: Commutative semigroup proof template", code: 'theorem mul_comm_example {S : Type*} [CommSemigroup S] (x y : S) : x * y = y * x := by\n  rw [mul_comm]\n' },
+    { label: "⚡ Snippet: Prove by simp / aesop", code: 'by\n  simp\n' },
+    { label: "⚡ Snippet: Evaluate & Check", code: '#check Semigroup\n#check CommSemigroup\n#check Monoid\n#eval 2^10\n' }
+  ]
 };
 
 export const TOOLS = {
