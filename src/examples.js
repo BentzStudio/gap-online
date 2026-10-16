@@ -52,12 +52,12 @@ export const GAP_EXAMPLES = {
     'fi;'
   ].join("\n"),
   "Diagrams: D-class order and Cayley graph": [
-    '# DotString / DotLeftCayleyDigraph return DOT strings; Print them and the page draws the graph.',
+    '# Dot(...) prints Graphviz DOT; the page draws it below the output.',
     'LoadPackage("semigroups");;',
     'S := FullTransformationMonoid(3);;',
-    'Print(DotString(S), "\\n");',
+    'DotDClassOrder(S);',
     'M := Monoid(Transformation([2,3,1]), Transformation([2,1,3]));;',
-    'Print(DotLeftCayleyDigraph(M), "\\n");'
+    'DotCayley(M);'
   ].join("\n"),
   "Green's D-classes & Egg-boxes": [
     'LoadPackage("semigroups");;',
@@ -334,8 +334,8 @@ export const SNIPPETS_BY_TOOL = {
   gap: [
     { label: "⚡ Snippet: Load Semigroups package", code: 'LoadPackage("semigroups");;\n' },
     { label: "⚡ Snippet: Green's D-classes & report", code: 'dclasses := GreensDClasses(S);;\nPrint("D-classes: ", Length(dclasses), "\\n");\nPrint("Regular D-classes: ", Length(Filtered(dclasses, IsRegularDClass)), "\\n");\n' },
-    { label: "⚡ Snippet: Draw D-class order (Graphviz DOT)", code: 'Print(DotString(S), "\\n");\n' },
-    { label: "⚡ Snippet: Draw Cayley graph (Graphviz DOT)", code: 'Print(DotLeftCayleyDigraph(S), "\\n");\n' },
+    { label: "⚡ Snippet: Draw D-class order (Graphviz DOT)", code: 'DotDClassOrder(S);\n' },
+    { label: "⚡ Snippet: Draw Cayley graph (Graphviz DOT)", code: 'DotCayley(S);\n' },
     { label: "⚡ Snippet: Full transformation monoid T_n", code: 'S := FullTransformationMonoid(4);;\n' },
     { label: "⚡ Snippet: Symmetric inverse monoid I_n", code: 'S := SymmetricInverseMonoid(3);;\n' },
     { label: "⚡ Snippet: Rees 0-matrix semigroup", code: 'R := ReesZeroMatrixSemigroup(Group(()), [[(), 0], [0, ()]]);;\n' },
