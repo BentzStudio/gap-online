@@ -9,9 +9,9 @@ import { buildTex, downloadText } from "./texexport.js";
 import { AXIOM_SETS, withAxioms } from "./axioms.js";
 import { notebook } from "./notebook.js";
 
-/* ---- Theme support (Dark / OLED Black / Retro Terminal / Cyber Amber / Light) ---- */
+/* ---- Theme support (Dark / OLED Black / Retro Terminal / Cyber Amber / Light / Game Boy) ---- */
 function applyTheme(theme) {
-  if (["light", "oled", "terminal", "amber"].includes(theme)) {
+  if (["light", "oled", "terminal", "amber", "gameboy"].includes(theme)) {
     document.documentElement.setAttribute("data-theme", theme);
   } else {
     document.documentElement.removeAttribute("data-theme");
@@ -206,9 +206,10 @@ let lastErrorDetails = null;
 /** Errors worth reporting (runner failures, timeouts, unreadable output); everything else is a user/setup mistake. */
 class ReportableError extends Error {}
 
-/** Remove the repository name and any GitHub links so nothing private reaches a public issue. */
+/** Remove the token, repository name, and any GitHub links so nothing private reaches a public issue. */
 function scrubMessage(msg) {
   let out = String(msg);
+  if (cfg.token) out = out.split(cfg.token).join("[token-redacted]");
   if (cfg.repo) out = out.split(cfg.repo).join("[repository]");
   return out.replace(/https?:\/\/(?:api\.)?github\.com\/\S+/gi, "[GitHub link removed]");
 }
@@ -556,16 +557,20 @@ function updateReportLinks() {
     link = fullLink;
   }
   
+  const userRepo = (cfg.repo || "").trim();
+  const targetRepo = userRepo.includes("/") ? userRepo : "BentzStudio/gap-online";
+  const displayRepo = cfg.mask ? "[masked-repo]" : targetRepo;
+
   document.getElementById("reportModalDetails").textContent =
-    `Engine: ${toolName}\nTime: ${time}\nError: ${message}` + (link ? "\nShare link: (included)" : "");
+    `Target Repo: ${displayRepo}\nEngine: ${toolName}\nTime: ${time}\nError: ${message}` + (link ? "\nShare link: (included)" : "");
 
   const title = encodeURIComponent(`[Run Error] ${toolName}: ${message.slice(0, 50)}`);
   const body = encodeURIComponent(
-    `### Run Error Report\n\n- **Engine**: \`\${toolName}\`\n- **Time**: \`\${time}\`\n- **Error**: \`\${message}\`\n` +
+    `### Run Error Report\n\n- **Target Repo**: \`${targetRepo}\`\n- **Engine**: \`${toolName}\`\n- **Time**: \`${time}\`\n- **Error**: \`${message}\`\n` +
     (link ? `- **Share link**: ${link}\n` : "") +
     `\n### Code\n\n${codeNote}\n\n### What were you trying to do?\n\n`
   );
-  document.getElementById("githubIssueBtn").href = `https://github.com{title}&body=${body}`;
+  document.getElementById("githubIssueBtn").href = `https://github.com/${targetRepo}/issues/new?title=${title}&body=${body}`;
 }
 
 function openReportModal() {
@@ -574,9 +579,6 @@ function openReportModal() {
   updateReportLinks();
   openModal("reportModal");
 }
-
-// Email reporting was removed; hide the old button if the page markup still has it.
-$("emailReportBtn")?.remove();
 
 $("reportErrorBtn").onclick = openReportModal;
 $("closeReportModal").onclick = $("dismissReportModal").onclick = () => closeModal("reportModal");
@@ -629,6 +631,11 @@ $("texBtn").onclick = () => {
         numSpan.textContent = i;
         fragment.appendChild(numSpan);
       }
+      // Bottom spacer ensures the last line number is never clipped or hidden by scrollbars
+      const spacer = document.createElement('div');
+      spacer.className = 'gutter-spacer';
+      fragment.appendChild(spacer);
+
       codeGutter.replaceChildren(fragment);
       lastLineCount = lineCount;
     }
@@ -644,19 +651,26 @@ $("texBtn").onclick = () => {
   // Bind interface mutation observers
   codeArea.addEventListener('input', updateGutterLines);
   codeArea.addEventListener('scroll', syncGutterScroll);
+  codeArea.addEventListener('keyup', updateGutterLines);
+  codeArea.addEventListener('click', syncGutterScroll);
 
   // Sync calculations across platform window resized boundaries
-  window.addEventListener('resize', syncGutterScroll);
+  window.addEventListener('resize', () => {
+    syncGutterScroll();
+    updateGutterLines();
+  });
 
   // Intercept system value changes (Theme loading, history swaps, examples)
   const codeDescriptor = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
-  Object.defineProperty(codeArea, 'value', {
-    ...codeDescriptor,
-    set: function(val) {
-      codeDescriptor.set.call(this, val);
-      updateGutterLines();
-    }
-  });
+  if (codeDescriptor && codeDescriptor.set) {
+    Object.defineProperty(codeArea, 'value', {
+      ...codeDescriptor,
+      set: function(val) {
+        codeDescriptor.set.call(this, val);
+        updateGutterLines();
+      }
+    });
+  }
 
   // Initial trigger calculation
   setTimeout(updateGutterLines, 50);

@@ -34,6 +34,13 @@
   --out-bg: #ffffff;
   --glow: none;
 }
+:root[data-theme="gameboy"] {
+  --bg: #8b956d; --panel: #97a178; --panel-2: #a2ad83; --line: #5c6843;
+  --text: #0f2d0f; --muted: #2d4520; --accent: #8b1d43; --accent-ink: #ffffff;
+  --ok: #154515; --bad: #801826;
+  --out-bg: #828c64;
+  --glow: none;
+}
 * { box-sizing: border-box; }
 html, body {
   margin: 0;
@@ -91,7 +98,17 @@ header {
 }
 h1 { margin: 0; font-size: 1.52rem; font-weight: 750; letter-spacing: -.02em; line-height: 1.2; }
 header p { margin: 3px 0 0; color: var(--muted); font-size: .875rem; }
-.header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+#themeSelect {
+  max-width: 100%;
+  cursor: pointer;
+}
 
 /* Buttons & Inputs */
 select, input[type=text], input[type=password], textarea, button { font: inherit; color: inherit; }
@@ -102,6 +119,7 @@ input[type=text], input[type=password], select {
   padding: 8px 10px;
   min-height: 44px; /* iOS min touch target */
   font-size: 16px; /* Prevents auto-zoom in iOS Safari */
+  box-sizing: border-box;
 }
 button {
   cursor: pointer;
@@ -182,11 +200,14 @@ main { flex: 1; display: grid; gap: 16px; }
   border: 0;
   background: transparent;
   padding: 14px;
-  font: .9375rem/1.55 var(--mono);
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 24px;
   tab-size: 2;
   color: inherit;
   -webkit-overflow-scrolling: touch;
   white-space: pre;
+  word-wrap: normal;
   overflow-x: auto;
 }
 #code:focus-visible { outline-offset: -3px; }
@@ -470,7 +491,8 @@ button.active { border-color: var(--accent); color: var(--accent); }
    ========================================================================== */
 
 :root[data-theme="terminal"] body,
-:root[data-theme="amber"] body {
+:root[data-theme="amber"] body,
+:root[data-theme="gameboy"] body {
   position: relative;
 }
 
@@ -492,31 +514,50 @@ button.active { border-color: var(--accent); color: var(--accent); }
   opacity: 0.45;
 }
 
-/* Monospace Headings & Mainframe Aesthetic */
+/* Subtle Game Boy LCD Dot Matrix Grid */
+:root[data-theme="gameboy"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: radial-gradient(rgba(15, 45, 15, 0.15) 18%, transparent 19%);
+  background-size: 3px 3px;
+  opacity: 0.55;
+}
+
+/* Monospace Headings & Mainframe / Handheld Aesthetic */
 :root[data-theme="terminal"] h1,
 :root[data-theme="amber"] h1,
+:root[data-theme="gameboy"] h1,
 :root[data-theme="terminal"] h2,
 :root[data-theme="amber"] h2,
+:root[data-theme="gameboy"] h2,
 :root[data-theme="terminal"] .bar h2,
-:root[data-theme="amber"] .bar h2 {
+:root[data-theme="amber"] .bar h2,
+:root[data-theme="gameboy"] .bar h2 {
   font-family: var(--mono);
   letter-spacing: -0.01em;
   text-shadow: var(--glow);
 }
 
-/* Monospace Form Controls in Terminal Mode */
+/* Monospace Form Controls in Terminal & Game Boy Mode */
 :root[data-theme="terminal"] select,
 :root[data-theme="amber"] select,
+:root[data-theme="gameboy"] select,
 :root[data-theme="terminal"] input[type=text],
 :root[data-theme="amber"] input[type=text],
+:root[data-theme="gameboy"] input[type=text],
 :root[data-theme="terminal"] input[type=password],
 :root[data-theme="amber"] input[type=password],
+:root[data-theme="gameboy"] input[type=password],
 :root[data-theme="terminal"] button,
-:root[data-theme="amber"] button {
+:root[data-theme="amber"] button,
+:root[data-theme="gameboy"] button {
   font-family: var(--mono);
 }
 
-/* Terminal Command Prompt Status Indicator */
+/* Terminal & Handheld Command Prompt Status Indicator */
 :root[data-theme="terminal"] #status::before {
   content: "SYS_TERM [GAP 4.15] ❯ ";
   font-family: var(--mono);
@@ -533,10 +574,35 @@ button.active { border-color: var(--accent); color: var(--accent); }
   opacity: 0.85;
 }
 
-/* Primary Button Glow and Inverted Hover Effect */
+:root[data-theme="gameboy"] #status::before {
+  content: "GAME BOY [DMG-01] ❯ ";
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+/* Primary Button Styling */
 :root[data-theme="terminal"] button.primary,
 :root[data-theme="amber"] button.primary {
   box-shadow: var(--glow);
+}
+
+:root[data-theme="gameboy"] button.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: #63122e;
+  box-shadow: 0 2px 0 #4a0c21;
+  font-weight: 650;
+}
+
+:root[data-theme="gameboy"] button.primary:hover:not(:disabled) {
+  background: #9d224d;
+}
+
+:root[data-theme="gameboy"] button.primary:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #4a0c21;
 }
 
 :root[data-theme="terminal"] button:hover:not(:disabled) {
@@ -565,7 +631,7 @@ button.active { border-color: var(--accent); color: var(--accent); }
   50% { opacity: 0.75; }
 }
 
-/* KaTeX Mathematical Expressions in Phosphor / Amber Mode */
+/* KaTeX Mathematical Expressions */
 :root[data-theme="terminal"] #out.latex,
 :root[data-theme="terminal"] .katex,
 :root[data-theme="amber"] #out.latex,
@@ -587,14 +653,21 @@ button.active { border-color: var(--accent); color: var(--accent); }
   box-shadow: 0 0 6px var(--accent);
 }
 
+:root[data-theme="gameboy"] :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Accessibility: Strict Reduced Motion & High Contrast Compliance */
 @media (prefers-reduced-motion: reduce) {
   :root[data-theme="terminal"] body::before,
-  :root[data-theme="amber"] body::before {
+  :root[data-theme="amber"] body::before,
+  :root[data-theme="gameboy"] body::before {
     display: none !important;
   }
   :root[data-theme="terminal"] *,
-  :root[data-theme="amber"] * {
+  :root[data-theme="amber"] *,
+  :root[data-theme="gameboy"] * {
     text-shadow: none !important;
     box-shadow: none !important;
     animation: none !important;
@@ -603,7 +676,8 @@ button.active { border-color: var(--accent); color: var(--accent); }
 
 @media (forced-colors: active) {
   :root[data-theme="terminal"] body::before,
-  :root[data-theme="amber"] body::before {
+  :root[data-theme="amber"] body::before,
+  :root[data-theme="gameboy"] body::before {
     display: none !important;
   }
 }
@@ -626,14 +700,16 @@ button.active { border-color: var(--accent); color: var(--accent); }
 }
 
 .editor-gutter {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  display: block;
+  box-sizing: border-box;
   padding: 14px 8px 14px 12px;
   background: var(--panel-2);
-  font: .9375rem/1.55 var(--mono);
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 24px;
   color: var(--muted);
   user-select: none;
+  -webkit-user-select: none;
   overflow: hidden;
   text-align: right;
   min-width: 44px;
@@ -641,8 +717,18 @@ button.active { border-color: var(--accent); color: var(--accent); }
 
 .gutter-num {
   display: block;
-  height: 1.55em; /* Explicitly bound to match textarea line-height */
+  box-sizing: border-box;
+  height: 24px;
+  line-height: 24px;
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
+  margin: 0;
+  padding: 0;
+}
+
+.gutter-spacer {
+  display: block;
+  height: 28px;
 }
 
 /* Theme overrides to keep aesthetics consistent */
@@ -671,12 +757,40 @@ button.active { border-color: var(--accent); color: var(--accent); }
   text-shadow: var(--glow); /* Adds the vintage CRT amber glow to the numbers */
 }
 
-/* Mobile responsive constraints: minimize gutter real estate on small viewport screens */
+/* 🎮 Extra UI Juice for Game Boy Theme */
+:root[data-theme="gameboy"] .editor-gutter {
+  background: var(--bg);
+  border-right: 1px solid var(--line);
+  color: var(--muted);
+}
+
+/* Mobile responsive constraints: prevent header overflow and minimize gutter on small screens */
 @media (max-width: 600px) {
+  header {
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+  .title-group {
+    min-width: 0;
+    width: 100%;
+  }
+  .header-actions {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #openColophonBtn {
+    flex-shrink: 0;
+  }
+  #themeSelect {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
   .editor-gutter {
     padding-left: 4px;
     padding-right: 4px;
     min-width: 32px;
-    font-size: .85rem;
   }
 }

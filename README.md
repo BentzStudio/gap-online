@@ -28,7 +28,9 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 - **Run history:** the last 25 runs and their outputs are kept in your browser and can be reloaded.
 - **Continue locally:** download the script and get the matching command-line or Docker command (`gap`, `prover9`, `mace4`, `lake`).
 - **Literature search:** concepts detected in your code (for example *Green's relations*) feed searches on arXiv, zbMATH Open, Google Scholar and GitHub, with a live arXiv preview.
-- **Themes:** Light, Dark (Slate), OLED Black, Retro Terminal and Cyber Amber.
+- **Themes:** Light, Dark (Slate), OLED Black, Retro Terminal, Cyber Amber, and Classic Nintendo Game Boy (DMG-01).
+- **Editor gutter:** pixel-aligned line numbers with row synchronization and horizontal scroll clearance.
+- **Error reporting:** if a runner failure or timeout occurs, a pre-filled issue report with scrubbed diagnostics can be opened directly on GitHub, automatically routed to your configured fork or upstream repository.
 - **Presentation / Classroom mode:** masks the repository name and token on screen.
 - **Colophon:** a short note on the engines, typesetting, security model and the maintainer's dedication.
 
@@ -53,7 +55,7 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 | --- | --- |
 | `index.html` | Page markup, dialogs, and the KaTeX and JSZip dependencies |
 | `src/main.js` | Application logic: tools, settings, history, GitHub Actions dispatch, output views |
-| `src/styles.css` | Styling and the five themes |
+| `src/styles.css` | Styling and the six selectable themes |
 | `src/examples.js`, `src/axioms.js` | Example programs and semigroup axiom sets |
 | `src/mace4.js`, `src/dot.js`, `src/notebook.js` | Model viewer and prove/refute verdict, DOT rendering, GAP notebook |
 | `src/latex.js`, `src/texexport.js`, `src/bibtex.js` | LaTeX conversion and export |
@@ -106,6 +108,7 @@ In a **public** repository, GitHub-hosted Linux runners are free. A private repo
 - The token stays in your browser's local storage and is sent only to GitHub's HTTPS API. There is no server-side database.
 - Each run uses a clean runner that is discarded afterwards, and code runs sandboxed with a time limit.
 - No analytics, ad trackers, telemetry or third-party cookies.
+- Zero email scraping exposure: error reporting uses pre-formatted GitHub issues, automatically scrubbing tokens, repository identifiers, and sensitive credentials.
 - Treat the token like a password. If it leaks, delete it in GitHub and create a new one.
 
 ## Notes
