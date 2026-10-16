@@ -202,17 +202,20 @@ export const MACE4_EXAMPLES = {
     "end_of_list."
   ].join("\n"),
   "Brandt semigroup B_2 (order 5)": [
-    "% Search for the 5-element Brandt inverse semigroup B_2 with zero.",
+    "% B_2 = <a, b | aba = a, bab = b, a^2 = b^2 = 0>, the 5-element Brandt semigroup.",
+    "% The last assumption says a and b generate, so Mace4 finds exactly this semigroup.",
     "assign(domain_size, 5).",
     "",
     "formulas(assumptions).",
     "  (x * y) * z = x * (y * z).",
     "  0 * x = 0.",
     "  x * 0 = 0.",
-    "  (x * i(x)) * x = x.",
-    "  (i(x) * x) * i(x) = i(x).",
-    "  (x * i(x)) * (y * i(y)) = (y * i(y)) * (x * i(x)).",
-    "  i(0) = 0.",
+    "  (a * b) * a = a.",
+    "  (b * a) * b = b.",
+    "  a * a = 0.",
+    "  b * b = 0.",
+    "  a != 0.",
+    "  x = a | x = b | x = a * b | x = b * a | x = 0.",
     "end_of_list."
   ].join("\n"),
   "Orthodox not inverse": [
