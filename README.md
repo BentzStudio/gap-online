@@ -1,6 +1,6 @@
 # GAP Playground
 
-A free, serverless online playground for computational algebra and formal proof. Write code in the browser, run it on an isolated GitHub Actions runner, and read the result on the page as raw text or typeset LaTeX.
+An online playground for computational algebra and formal proof. Write code in the browser, run it on an isolated GitHub Actions runner, and read the result on the page as raw text or typeset LaTeX.
 
 **Live site:** <https://gap-online.pages.dev/>
 
