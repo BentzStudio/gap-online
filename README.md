@@ -124,4 +124,4 @@ A collaborator with write access can change the repository and run code on its r
 
 ## Credits
 
-Designed and maintained by PY. Dedicated to WB. Built on [GAP](https://www.gap-system.org/), [Prover9 and Mace4](https://prover9.org/), [Lean 4](https://lean-lang.org/), [Mathlib](https://leanprover-community.github.io/mathlib4_docs/) and [KaTeX](https://katex.org/).
+Personally designed and maintained by PY for WB. Built on [GAP](https://www.gap-system.org/), [Prover9 and Mace4](https://prover9.org/), [Lean 4](https://lean-lang.org/), [Mathlib](https://leanprover-community.github.io/mathlib4_docs/) and [KaTeX](https://katex.org/).
