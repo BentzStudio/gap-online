@@ -1,5 +1,5 @@
 import { $, store, sleep, toBase64, copyText, openModal, closeModal, escapeHtml } from "./util.js";
-import { TOOLS, SNIPPETS_BY_TOOL } from "./examples.js";
+import { TOOLS } from "./examples.js";
 import { latexify } from "./latex.js";
 import { initScour } from "./scour.js";
 import { initLogos, renderGallery } from "./logos.js";
@@ -138,15 +138,7 @@ function applyTool() {
     for (const name of Object.keys(AXIOM_SETS)) $("axiomSel").add(new Option(name, name));
   }
 
-  const snips = SNIPPETS_BY_TOOL[tool] || [];
-  const snipSel = $("snippetSel");
-  if (snipSel) {
-    snipSel.length = 0;
-    snipSel.add(new Option("⚡ Snippets…", ""));
-    for (let i = 0; i < snips.length; i++) {
-      snipSel.add(new Option(snips[i].label, String(i)));
-    }
-  }
+  $("loadSgBtn").hidden = tool !== "gap";
 }
 applyTool();
 $("tool").onchange = () => { tool = $("tool").value; store.set("gap.tool", tool); applyTool(); };
@@ -154,27 +146,14 @@ $("examples").onchange = () => {
   $("code").value = TOOLS[tool].examples[$("examples").value];
   store.set(TOOLS[tool].codeKey, $("code").value);
 };
-$("snippetSel").onchange = () => {
-  const idx = $("snippetSel").value;
-  if (!idx) return;
-  const snips = SNIPPETS_BY_TOOL[tool] || [];
-  const snip = snips[parseInt(idx, 10)];
-  if (snip) {
-    const codeArea = $("code");
-    const start = codeArea.selectionStart;
-    const end = codeArea.selectionEnd;
-    const current = codeArea.value;
-    if (typeof start === "number" && typeof end === "number" && current) {
-      codeArea.value = current.slice(0, start) + snip.code + current.slice(end);
-      codeArea.selectionStart = codeArea.selectionEnd = start + snip.code.length;
-    } else {
-      codeArea.value = (current ? current.trim() + "\n\n" : "") + snip.code;
-    }
-    store.set(TOOLS[tool].codeKey, codeArea.value);
-    codeArea.dispatchEvent(new Event("input"));
-    codeArea.focus();
-  }
-  $("snippetSel").value = "";
+$("loadSgBtn").onclick = () => {
+  if (notebook.isOn()) { setStatus('Notebook mode: put LoadPackage("semigroups");; in your first cell.', "err"); return; }
+  const codeArea = $("code");
+  if (/LoadPackage\(\s*"semigroups"/.test(codeArea.value)) { setStatus("The semigroups package is already loaded in this script.", "ok"); return; }
+  codeArea.value = 'LoadPackage("semigroups");;\n' + codeArea.value;
+  store.set(TOOLS.gap.codeKey, codeArea.value);
+  codeArea.dispatchEvent(new Event("input"));
+  codeArea.focus();
 };
 $("code").addEventListener("input", () => store.set(TOOLS[tool].codeKey, $("code").value));
 
