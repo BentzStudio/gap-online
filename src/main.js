@@ -503,13 +503,10 @@ function getLocalFileDetails() {
     docker = `docker run --rm -it -v "$PWD":/work -w /work ghcr.io/gap-system/gap:4.15.1-full gap -q ${filename}`;
   } else if (tool === "prover9") {
     native = `prover9 -f ${filename} > proof.out`;
-    docker = `docker run --rm -it -v "$PWD":/work -w /work ghcr.io/gap-system/gap:4.15.1-full prover9 -f ${filename}`;
   } else if (tool === "mace4") {
     native = `mace4 -c -f ${filename} > model.out`;
-    docker = `docker run --rm -it -v "$PWD":/work -w /work ghcr.io/gap-system/gap:4.15.1-full mace4 -c -f ${filename}`;
   } else if (tool === "lean") {
     native = `lake env lean ${filename}`;
-    docker = `docker run --rm -it -v "$PWD":/work -w /work leanprover/lean4:v4.15.0 lean ${filename}`;
   }
   return { filename, code, native, docker };
 }
@@ -519,6 +516,7 @@ function openLocalModal() {
   $("localFilename").textContent = details.filename;
   $("nativeCmd").textContent = details.native;
   $("dockerCmd").textContent = details.docker;
+  $("dockerBlock").hidden = !details.docker; // only GAP has a published image we can point to
   openModal("localModal");
 }
 const closeLocalModal = () => closeModal("localModal");

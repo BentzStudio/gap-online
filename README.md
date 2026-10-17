@@ -26,7 +26,7 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 - **Output:** raw text or LaTeX typeset with KaTeX, including automatic conversion of GAP results (permutations, matrices, fractions, powers, groups). Copy the output or export code and output as a `.tex` document.
 - **Sharing:** the **Share** button copies a link that encodes your code and tool in the URL fragment.
 - **Run history:** the last 25 runs and their outputs are kept in your browser and can be reloaded.
-- **Continue locally:** download the script and get the matching command-line or Docker command (`gap`, `prover9`, `mace4`, `lake`).
+- **Continue locally:** download the script and get the matching command-line command (`gap`, `prover9`, `mace4`, `lake`). A Docker command is offered for GAP only.
 - **Literature search:** concepts detected in your code (for example *Green's relations*) feed searches on arXiv, zbMATH Open, Google Scholar and GitHub, with a live arXiv preview.
 - **Themes:** Light, Dark (Slate), OLED Black, Retro Terminal, Cyber Amber, and Classic Nintendo Game Boy (DMG-01).
 - **Editor gutter:** pixel-aligned line numbers with row synchronization and horizontal scroll clearance.
@@ -38,8 +38,8 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 
 - **Interactive Egg-Box Diagrams & Green's Relations:** finite models found by Mace4 include both a colored multiplication table and an interactive **Egg-Box diagram**. The app computes Green's $\mathcal{R}, \mathcal{L}, \mathcal{H}, \mathcal{D}$ equivalences, partitions each $\mathcal{D}$-class into its rows ($\mathcal{R}$-classes) and columns ($\mathcal{L}$-classes), flags regular $\mathcal{D}$-classes, and highlights group $\mathcal{H}$-classes with $\star$ (idempotents).
 - **Semigroup Classifications:** automatic detection of orthodox semigroups, completely regular semigroups (unions of groups), Clifford semigroups (semilattices of groups), aperiodic/combinatorial semigroups, bands, semilattices, and inverse semigroups.
-- **Quick Snippets Bar:** 1-click insertion of idiomatic semigroup code templates for GAP (`LoadPackage("semigroups");;`, `FullTransformationMonoid`, `SymmetricInverseMonoid`, `GreensDClasses`, `DotString`), Prover9, Mace4, and Lean 4 Mathlib.
-- **Expanded Axiom Sets:** pre-defined axiom sets for bands (left/right regular, rectangular), regular, orthodox, completely regular, Clifford and inverse semigroups, Brandt semigroups (completely 0-simple inverse semigroups, and $B_2$ by its presentation), null and nilpotent semigroups ($S^2=0$, $S^3=0$, $S^4=0$), and the relation $pq=e$ that defines the bicyclic monoid. Each set states in a comment what it does and does not describe.
+- **Load semigroups button:** one click adds `LoadPackage("semigroups");;` at the top of a GAP script (it does nothing if the line is already there).
+- **Axiom sets:** a short menu for Prover9 and Mace4 (semigroup, commutative semigroup, monoid, group, band, semilattice, regular and inverse semigroup), inserted as an `assumptions` block. The Brandt semigroup $B_2$ is kept as a Mace4 example.
 - **Mace4 Model Viewer & Send to GAP:** convert any countermodel or finite magma into GAP code with 1 click (`SemigroupByMultiplicationTable`).
 - **Prove / Refute:** one click runs Prover9 and, if no proof is found, Mace4 on the same input.
 - **Diagrams:** Graphviz DOT in the output is drawn as SVG (e.g. `Print(DotString(S))` and `Print(DotLeftCayleyDigraph(S))`).
@@ -60,7 +60,7 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 | `index.html` | Page markup, dialogs, and the KaTeX and JSZip dependencies |
 | `src/main.js` | Application logic: tools, settings, history, GitHub Actions dispatch, output views |
 | `src/styles.css` | Styling and the six selectable themes |
-| `src/examples.js`, `src/axioms.js` | Example programs and semigroup axiom sets |
+| `src/examples.js`, `src/axioms.js` | A few short examples per tool, and the axiom sets |
 | `src/mace4.js`, `src/dot.js`, `src/notebook.js` | Model viewer and prove/refute verdict, DOT rendering, GAP notebook |
 | `src/latex.js`, `src/texexport.js`, `src/bibtex.js` | LaTeX conversion and export |
 | `src/scour.js`, `src/concepts.js` | Literature search and concept detection |
@@ -105,14 +105,16 @@ Enter `owner/repo` and the token under **Connection settings** and click **Save 
 - **Shared repository.** Ask the owner to invite you as a collaborator (Settings → Collaborators), accept the invitation, and create a token for that repository.
 - **Your own fork.** Fork this repository, enable Actions on the fork (Settings → Actions → General), and create a token for the fork.
 
-In a **public** repository, GitHub-hosted Linux runners are free. A private repository counts against your monthly Actions minutes.
+GitHub currently does not charge minutes for standard GitHub-hosted Linux runners in a **public** repository; a private repository counts against your monthly Actions minutes. GitHub's terms limit what Actions may be used for (for example, they name serverless computing and activity unrelated to the repository's software project), so a personal or small-group playground is the safe reading; read the current [Actions terms](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features) before offering it to a wider community.
+
+A collaborator with write access can change the repository and run code on its runners. Invite only people you trust and keep repository secrets empty.
 
 ## Privacy and security
 
 - The token stays in your browser's local storage and is sent only to GitHub's HTTPS API. There is no server-side database.
 - Each run uses a clean runner that is discarded afterwards, and code runs sandboxed with a time limit.
 - No analytics, ad trackers, telemetry or third-party cookies.
-- Zero email scraping exposure: error reporting uses pre-formatted GitHub issues, automatically scrubbing tokens, repository identifiers, and sensitive credentials.
+- Error reporting opens a pre-filled GitHub issue and scrubs tokens, repository identifiers and credentials from the diagnostics. Check the text before you submit it.
 - Treat the token like a password. If it leaks, delete it in GitHub and create a new one.
 
 ## Notes

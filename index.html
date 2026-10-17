@@ -44,7 +44,7 @@
         Type code on the left and press <strong>Run</strong> (or <code>⌘/Ctrl + Enter</code>). Your code runs in an isolated runner, and results appear on the right, usually within a minute.
       </p>
       <p class="hint wide" style="font-size:.875rem; color: var(--muted); background: var(--panel-2); border-left: 3px solid var(--ok); padding: 8px 12px; border-radius: 4px; margin-top: 4px;">
-        ⚡ <strong>Batch Execution Model:</strong> Each run executes the complete script in your editor from top to bottom in a clean, isolated cloud sandbox. All variables, functions, and theorems defined within your editor work together seamlessly. Because each run starts fresh, there is no lingering or hidden state from previous runs&mdash;ensuring 100% reproducible computations and proofs.
+        ⚡ <strong>Batch Execution Model:</strong> Each run executes the complete script in your editor from top to bottom in a clean, isolated cloud sandbox. All variables, functions, and theorems defined within your editor work together seamlessly. Because each run starts fresh, there is no lingering or hidden state from previous runs&mdash;so results do not depend on earlier runs (randomised searches and time limits can still change an outcome).
       </p>
       <p class="hint wide" style="font-size:.95rem;color:var(--text)">
         <strong>GAP:</strong> Like the GAP prompt, a statement ending in <code>;</code> shows its value,
@@ -106,7 +106,7 @@
                   Option A &mdash; Shared / Department Repo
                 </div>
                 <div style="color: var(--muted); font-size: .835rem; line-height: 1.5;">
-                  If invited as a collaborator on a shared runner repository, accept the email invitation, create a token selecting that repository, and enter its <code>owner/name</code> above.
+                  If invited as a collaborator on a shared runner repository, accept the email invitation, create a token selecting that repository, and enter its <code>owner/name</code> above. Collaborators with write access can change the repository and run code on its runners, so only share with people you trust and keep repository secrets empty.
                 </div>
               </div>
 
@@ -125,7 +125,7 @@
               <span style="font-size: 1.15rem; line-height: 1; flex-shrink: 0; margin-top: 1px;">✨</span>
               <div>
                 <strong style="color: var(--text);">Public vs. Private Repositories:</strong>
-                <span style="color: var(--text);"> If your repository is <strong>public</strong>, standard GitHub-hosted Linux runners are <strong>completely free and unlimited</strong> (0 minute consumption)! The 2,000-minute monthly allotment only counts down if you run actions inside a private repository.</span>
+                <span style="color: var(--text);"> If your repository is <strong>public</strong>, GitHub currently does not charge minutes for standard GitHub-hosted Linux runners, while private repositories count against your monthly allotment. GitHub's terms also limit what Actions may be used for, so read the current Actions terms before using this beyond personal use.</span>
               </div>
             </div>
 
@@ -147,11 +147,11 @@
               <li>Paste the repository name above and your token, then click <strong>Save settings</strong>.</li>
             </ol>
 
-            <!-- Complete Privacy Guarantee Banner -->
+            <!-- Token handling banner -->
             <div style="display: flex; align-items: flex-start; gap: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: .8125rem; color: var(--muted); line-height: 1.5;">
               <span style="font-size: 1rem; line-height: 1; flex-shrink: 0;">🔒</span>
               <div>
-                <strong style="color: var(--text);">Complete Privacy Guarantee:</strong> Your token is stored <em>only</em> in your own browser's local storage (<code>localStorage</code>) and sent directly to GitHub's HTTPS API. It is never transmitted to any third party, database, or server.
+                <strong style="color: var(--text);">How your token is handled:</strong> this page keeps it in your browser's local storage (<code>localStorage</code>) and sends it only to GitHub's HTTPS API. It does not send it to any other server or database.
               </div>
             </div>
           </div>
@@ -247,7 +247,7 @@
     </div>
     <div class="modal-body">
       <p style="margin:0; font-size:.9rem; color:var(--text);">
-        You can export this computation directly to your local workstation or high-performance compute cluster to run with unlimited memory and time.
+        You can export this computation directly to your local workstation or high-performance compute cluster without the runner's time limit.
       </p>
 
       <div>
