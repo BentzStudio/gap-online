@@ -93,6 +93,7 @@ $("settingsForm").onsubmit = e => {
   store.set("gap.repo", cfg.repo);
   store.set("gap.token", cfg.token);
   store.set("gap.mask", cfg.mask ? "true" : "false");
+  updateReadmeLink();
   setStatus("Settings saved locally.", "ok");
   $("settings").open = false;
 };
@@ -540,6 +541,113 @@ $("downloadScriptBtn").onclick = () => {
 function copyCodeText(targetId, btnId) { copyText($(targetId).textContent, $(btnId)); }
 $("copyNativeCmd").onclick = () => copyCodeText("nativeCmd", "copyNativeCmd");
 $("copyDockerCmd").onclick = () => copyCodeText("dockerCmd", "copyDockerCmd");
+
+/* ---- Feature: File Upload & Drag-and-Drop Script Loader ---- */
+function detectToolForFile(fileName, content) {
+  const lower = (fileName || "").toLowerCase();
+  if (lower.endsWith(".lean")) return "lean";
+  if (lower.endsWith(".g") || lower.endsWith(".gap")) return "gap";
+  if (lower.endsWith(".m4")) return "mace4";
+  if (lower.endsWith(".p9")) return "prover9";
+  if (lower.endsWith(".in")) {
+    if (/assign\s*\(\s*(?:domain_size|max_models|max_seconds)/i.test(content)) return "mace4";
+    return "prover9";
+  }
+  // Generic / .txt fallback: sniff content signatures
+  if (/\b(?:import\s+Mathlib|#check|#eval|def\s+\w+|theorem\s+\w+)\b/.test(content)) return "lean";
+  if (/\b(?:formulas\s*\(\s*assumptions\s*\)|formulas\s*\(\s*goals\s*\))\b/.test(content)) {
+    if (/assign\s*\(\s*domain_size/i.test(content)) return "mace4";
+    return "prover9";
+  }
+  if (/\b(?:LoadPackage|Transformation|SymmetricGroup|FreeSemigroup|FreeMonoid|Print\s*\(|:=)\b/.test(content)) return "gap";
+  return tool;
+}
+
+function handleUploadedFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const content = e.target?.result;
+    if (typeof content !== "string") return;
+
+    const detected = detectToolForFile(file.name, content);
+    if (detected !== tool) {
+      tool = detected;
+      store.set("gap.tool", tool);
+      applyTool();
+    }
+
+    if (notebook.isOn() && tool === "gap") {
+      notebook.setOn(false);
+    }
+
+    $("code").value = content;
+    store.set(TOOLS[tool].codeKey, content);
+    $("code").dispatchEvent(new Event("input"));
+    $("code").focus();
+
+    const kb = (file.size / 1024).toFixed(1);
+    const toolLabel = TOOLS[tool]?.label || tool.toUpperCase();
+    if (content.length > 45000) {
+      setStatus(`Loaded "${file.name}" (${kb} KB) as ${toolLabel} script. ⚠️ Scripts > 45 KB may exceed the cloud runner payload limit.`, "warn");
+    } else {
+      setStatus(`Loaded "${file.name}" (${kb} KB) into ${toolLabel} editor. Ready to run.`, "ok");
+    }
+    showPanel("editor");
+  };
+  reader.onerror = () => {
+    setStatus(`Could not read "${file.name}".`, "err");
+  };
+  reader.readAsText(file);
+}
+
+const uploadBtn = $("uploadFileBtn");
+const fileInput = $("scriptFileInput");
+if (uploadBtn && fileInput) {
+  uploadBtn.onclick = () => fileInput.click();
+  fileInput.onchange = e => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleUploadedFile(file);
+      e.target.value = "";
+    }
+  };
+}
+
+// Drag & drop support onto editor
+const edWrapper = document.querySelector(".editor-wrapper");
+if (edWrapper) {
+  ["dragenter", "dragover"].forEach(name => {
+    edWrapper.addEventListener(name, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      edWrapper.classList.add("drag-over");
+    });
+  });
+  ["dragleave", "drop"].forEach(name => {
+    edWrapper.addEventListener(name, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      edWrapper.classList.remove("drag-over");
+    });
+  });
+  edWrapper.addEventListener("drop", e => {
+    e.preventDefault();
+    e.stopPropagation();
+    edWrapper.classList.remove("drag-over");
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handleUploadedFile(file);
+  });
+}
+
+function updateReadmeLink() {
+  const readmeLink = $("footerReadmeLink");
+  if (!readmeLink) return;
+  const userRepo = (cfg.repo || "").trim();
+  const targetRepo = userRepo.includes("/") ? userRepo : "BentzStudio/gap-online";
+  readmeLink.href = `https://github.com/${targetRepo}#readme`;
+}
+updateReadmeLink();
 
 
 

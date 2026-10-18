@@ -709,6 +709,27 @@ button.active { border-color: var(--accent); color: var(--accent); }
   min-height: 380px;
   position: relative;
 }
+.editor-wrapper.drag-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+.editor-wrapper.drag-over::after {
+  content: "📂 Drop script file here to open";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: .88rem;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  z-index: 10;
+}
 
 /* Force the existing textarea to drop standard side-borders and share sizing */
 .editor-wrapper #code {

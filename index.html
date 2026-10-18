@@ -188,6 +188,10 @@
       <button type="button" id="loadSgBtn" title="Add LoadPackage(&quot;semigroups&quot;);; at the top of the editor">＋ Load semigroups</button>
       
       <!-- Action Buttons -->
+      <button type="button" id="uploadFileBtn" title="Upload a script file from your computer (.g, .in, .lean, .txt)" aria-label="Upload script file to editor">
+        📂 Upload
+      </button>
+      <input type="file" id="scriptFileInput" accept=".g,.gap,.in,.p9,.m4,.lean,.txt" style="display:none;" aria-hidden="true">
       <button type="button" id="localBtn" title="Continue calculations in your own installed prover" aria-label="Continue calculations locally">
         💻 Continue Locally
       </button>
@@ -545,6 +549,7 @@
 <footer>
   <p>
     Documentation &amp; tools:
+    <a id="footerReadmeLink" href="https://github.com/BentzStudio/gap-online#readme" target="_blank" rel="noopener">Playground README</a>,
     <a href="https://docs.gap-system.org/doc/tut/chap0_mj.html" target="_blank" rel="noopener">GAP Tutorial</a>,
     <a href="https://docs.gap-system.org/doc/ref/chap0_mj.html" target="_blank" rel="noopener">Reference Manual</a>,
     <a href="https://docs.gap-system.org/pkg/semigroups/doc/chap0.html" target="_blank" rel="noopener">Semigroups manual</a>,
