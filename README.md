@@ -27,6 +27,7 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 - **Sharing:** the **Share** button copies a link that encodes your code and tool in the URL fragment.
 - **Run history:** the last 25 runs and their outputs are kept in your browser and can be reloaded.
 - **Continue locally:** download the script and get the matching command-line command (`gap`, `prover9`, `mace4`, `lake`). A Docker command is offered for GAP only.
+- **File upload:** load an existing script (`.g`, `.gap`, `.in`, `.p9`, `.m4`, `.lean`, `.txt`) using the **Upload** button or by dropping the file directly onto the editor. The engine is detected automatically.
 - **Literature search:** concepts detected in your code (for example *Green's relations*) feed searches on arXiv, zbMATH Open, Google Scholar and GitHub, with a live arXiv preview.
 - **Themes:** Light, Dark (Slate), OLED Black, Retro Terminal, Cyber Amber, and Classic Nintendo Game Boy (DMG-01).
 - **Editor gutter:** pixel-aligned line numbers with row synchronization and horizontal scroll clearance.
@@ -49,6 +50,7 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 ## Usage
 
 - Press **Run** or Ctrl/⌘ + Enter.
+- **Upload or drag-and-drop:** load an existing script using the **Upload** button or drop a file onto the editor. The app detects the appropriate engine and prepares the script.
 - **GAP:** a statement ending in `;` shows its value and `;;` hides it, as at the GAP prompt. Load packages with `LoadPackage("semigroups");`. `Tex(obj)` prints an object as an equation. Runs stop after 120 seconds.
 - **Prover9 / Mace4:** write `formulas(assumptions). ... end_of_list.` and `formulas(goals). ... end_of_list.` Use `assign(domain_size, 6).` to fix the size Mace4 searches.
 - **Lean 4:** import modules such as `import Mathlib.Algebra.Group.Basic` or `import Mathlib.Tactic`, then use tactics, `#eval` and `#check`.
@@ -58,7 +60,7 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 | Path | Purpose |
 | --- | --- |
 | `index.html` | Page markup, dialogs, and the KaTeX and JSZip dependencies |
-| `src/main.js` | Application logic: tools, settings, history, GitHub Actions dispatch, output views |
+| `src/main.js` | Application logic: tools, settings, history, file upload & drag-and-drop, GitHub Actions dispatch, output views |
 | `src/styles.css` | Styling and the six selectable themes |
 | `src/examples.js`, `src/axioms.js` | A few short examples per tool, and the axiom sets |
 | `src/mace4.js`, `src/dot.js`, `src/notebook.js` | Model viewer and prove/refute verdict, DOT rendering, GAP notebook |
