@@ -462,7 +462,7 @@ button.active { border-color: var(--accent); color: var(--accent); }
 .verdict.ok { border-color: var(--accent); background: rgba(34, 197, 94, .12); }
 .verdict.bad { border-color: #e5484d; background: rgba(229, 72, 77, .12); }
 .verdict.warn { border-color: #d9a400; background: rgba(217, 164, 0, .12); }
-.model-card, .dot-card { margin: 10px 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
+.model-card, .dot-card, .eggbox-panel { margin: 10px 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
 .model-card .model-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
 .badges { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0 8px; }
 .badge { font-size: .72rem; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); }

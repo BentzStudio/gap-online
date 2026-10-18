@@ -37,7 +37,7 @@ Every run executes the whole editor script from top to bottom in a fresh sandbox
 
 ## For semigroup theorists
 
-- **Interactive Egg-Box Diagrams & Green's Relations:** finite models found by Mace4 include both a colored multiplication table and an interactive **Egg-Box diagram**. The app computes Green's $\mathcal{R}, \mathcal{L}, \mathcal{H}, \mathcal{D}$ equivalences, partitions each $\mathcal{D}$-class into its rows ($\mathcal{R}$-classes) and columns ($\mathcal{L}$-classes), flags regular $\mathcal{D}$-classes, and highlights group $\mathcal{H}$-classes with $\star$ (idempotents).
+- **Interactive Egg-Box Diagrams & Green's Relations:** finite models found by Mace4 and semigroup scripts in GAP produce interactive **Egg-Box diagrams**. The app detects Green's $\mathcal{R}, \mathcal{L}, \mathcal{H}, \mathcal{D}$ equivalences from models and text tables, partitions each $\mathcal{D}$-class into its rows ($\mathcal{R}$-classes) and columns ($\mathcal{L}$-classes), flags regular $\mathcal{D}$-classes, highlights group $\mathcal{H}$-classes with $\star$ (idempotents), and offers one-click LaTeX tabular export.
 - **Semigroup Classifications:** automatic detection of orthodox semigroups, completely regular semigroups (unions of groups), Clifford semigroups (semilattices of groups), aperiodic/combinatorial semigroups, bands, semilattices, and inverse semigroups.
 - **Load semigroups button:** one click adds `LoadPackage("semigroups");;` at the top of a GAP script (it does nothing if the line is already there).
 - **Axiom sets:** a short menu for Prover9 and Mace4 (semigroup, commutative semigroup, monoid, group, band, semilattice, regular and inverse semigroup), inserted as an `assumptions` block. The Brandt semigroup $B_2$ is kept as a Mace4 example.

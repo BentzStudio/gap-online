@@ -332,3 +332,287 @@ export function splitRefuteOutput(text) {
   } else verdict = { kind: "warn", text: "⚠️ Inconclusive: no proof and no counterexample within the time limits." };
   return { verdict, prover, mace };
 }
+
+/** Split elements while respecting balanced brackets [], (), {} */
+function splitBracketSafe(str) {
+  const tokens = [];
+  let cur = "";
+  let depth = 0;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (ch === "[" || ch === "(" || ch === "{") depth++;
+    else if (ch === "]" || ch === ")" || ch === "}") depth = Math.max(0, depth - 1);
+
+    if (depth === 0 && (ch === "," || ch === ";")) {
+      const trimmed = cur.trim();
+      if (trimmed) tokens.push(trimmed);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  const last = cur.trim();
+  if (last) tokens.push(last);
+  return tokens;
+}
+
+function splitCellElements(str) {
+  if (!str) return [];
+  const byComma = splitBracketSafe(str);
+  if (byComma.length > 1) return byComma;
+  const bracketMatches = str.match(/\[[^\]]+\]\*?|\([^\)]+\)\*?|\{[^\}]+\}\*?/g);
+  if (bracketMatches && bracketMatches.length > 1) return bracketMatches;
+  const words = str.split(/\s+/).map(s => s.trim()).filter(Boolean);
+  return words.length > 0 ? words : (str ? [str] : []);
+}
+
+/** Detect and parse ASCII / text Egg-Box diagrams from GAP or custom scripts. */
+export function parseAsciiEggBoxes(text) {
+  if (!text || typeof text !== "string") return [];
+  const lines = text.split(/\r?\n/);
+  const rawBlocks = [];
+  let cur = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const trimmed = raw.trim();
+
+    // Match D-class or Egg-box header line
+    const isHeader = /^(?:.*?\b)?(?:Greens\s*)?D-class(?:\s*#?\s*([0-9a-zA-Z_]+))?[:\s]+(?:(\d+)\s*R-class(?:es)?\s*(?:by|x|×|,)\s*(\d+)\s*L-class(?:es)?)?(?:.*?(\d+)\s*elements?)?/i.exec(trimmed) ||
+                     /^(?:.*?\b)?Egg-?[Bb]ox(?:\s*(?:diagram|table|of|for)?)?(?:\s*#?\s*([0-9a-zA-Z_]+))?[:\s]*(?:(\d+)\s*R-class(?:es)?)?/i.exec(trimmed);
+
+    if (isHeader) {
+      if (cur && cur.rows.length > 0) rawBlocks.push(cur);
+      cur = {
+        title: isHeader[1] ? `D-class ${isHeader[1]}` : `D-class`,
+        declaredR: isHeader[2] ? parseInt(isHeader[2], 10) : null,
+        declaredL: isHeader[3] ? parseInt(isHeader[3], 10) : null,
+        declaredSize: isHeader[4] ? parseInt(isHeader[4], 10) : null,
+        rows: []
+      };
+      continue;
+    }
+
+    // Check if table row with |
+    if (trimmed.startsWith("|") && trimmed.endsWith("|") && trimmed.length > 1) {
+      // Ignore divider rows like |---|---| or +---+
+      if (/^\|[\s\-+=|:]+\|$/.test(trimmed)) continue;
+
+      if (!cur) {
+        cur = {
+          title: "D-class",
+          declaredR: null,
+          declaredL: null,
+          declaredSize: null,
+          rows: []
+        };
+      }
+      const rawCells = trimmed.slice(1, -1).split("|");
+      cur.rows.push(rawCells.map(c => c.trim()));
+      continue;
+    }
+
+    // End of table on blank line or non-table line
+    if (cur && cur.rows.length > 0 && !trimmed.startsWith("+")) {
+      rawBlocks.push(cur);
+      cur = null;
+    }
+  }
+  if (cur && cur.rows.length > 0) rawBlocks.push(cur);
+
+  // Post-process blocks
+  const results = [];
+  rawBlocks.forEach((b, idx) => {
+    if (!b.rows.length) return;
+
+    let rows = b.rows;
+    let colHeaders = null;
+    if (rows.length > 1 && rows[0].some(c => /^(?:R\s*\\?\s*L|L_?\d+|col|class)/i.test(c))) {
+      colHeaders = rows[0];
+      rows = rows.slice(1);
+    }
+
+    let rowHeaders = null;
+    if (rows.every(r => r.length > 1 && /^(?:R_?\d+|row|rclass)/i.test(r[0]))) {
+      rowHeaders = rows.map(r => r[0]);
+      rows = rows.map(r => r.slice(1));
+    }
+
+    const grid = rows.map(r => {
+      return r.map(c => {
+        if (!c || c === "Ø" || c === "empty" || c === "-" || c === "·" || c === ".") {
+          return { elements: [], hasIdem: false, raw: "" };
+        }
+        const elements = splitCellElements(c);
+        const hasIdem = elements.some(el => /\*|★/.test(el));
+        return { elements, hasIdem, raw: c };
+      });
+    });
+
+    const numR = grid.length;
+    const numL = Math.max(...grid.map(r => r.length), 0);
+    if (numR === 0 || numL === 0) return;
+
+    let totalElements = 0;
+    let anyIdem = false;
+    let idemCount = 0;
+    grid.forEach(r => {
+      r.forEach(c => {
+        totalElements += c.elements.length;
+        if (c.hasIdem) anyIdem = true;
+        c.elements.forEach(el => {
+          if (/\*|★/.test(el)) idemCount++;
+        });
+      });
+    });
+
+    results.push({
+      index: idx + 1,
+      title: b.title === "D-class" ? `D-class ${idx + 1}` : b.title,
+      numR: b.declaredR || numR,
+      numL: b.declaredL || numL,
+      size: b.declaredSize || totalElements,
+      isRegular: anyIdem,
+      idemCount,
+      grid,
+      colHeaders,
+      rowHeaders
+    });
+  });
+
+  return results;
+}
+
+/** LaTeX representation of an Egg-Box diagram table. */
+export function eggBoxToLatex(d) {
+  const cols = d.numL;
+  const colFmt = "|" + Array(cols + 1).fill("c").join("|") + "|";
+  const lines = [
+    "% Egg-box diagram for " + d.title,
+    "\\begin{table}[h]",
+    "\\centering",
+    `\\begin{tabular}{${colFmt}}`,
+    "\\hline",
+    "$\\mathcal{R} \\setminus \\mathcal{L}$ & " + Array.from({ length: cols }, (_, j) => `$\\mathcal{L}_{${j + 1}}$`).join(" & ") + " \\\\",
+    "\\hline"
+  ];
+  d.grid.forEach((row, i) => {
+    const cells = row.map(c => {
+      if (!c.elements || !c.elements.length) return "$\\emptyset$";
+      return c.elements.map(el => {
+        const isIdem = /\*|★/.test(el);
+        const clean = el.replace(/\*|★/g, "").trim();
+        return isIdem ? `\\star\\text{${clean}}` : `\\text{${clean}}`;
+      }).join(", ");
+    });
+    lines.push(`$\\mathcal{R}_{${i + 1}}$ & ` + cells.join(" & ") + " \\\\");
+    lines.push("\\hline");
+  });
+  lines.push("\\end{tabular}");
+  lines.push(`\\caption{Egg-box diagram for ${d.title} (${d.size} elements, ${d.isRegular ? "regular" : "non-regular"}).}`);
+  lines.push("\\end{table}");
+  return lines.join("\n");
+}
+
+/** Render parsed ASCII eggbox diagrams into rich HTML cards. */
+export function asciiEggBoxesHtml(diagrams) {
+  if (!diagrams || !diagrams.length) return "";
+  const totalRegular = diagrams.filter(d => d.isRegular).length;
+  const totalIdems = diagrams.reduce((sum, d) => sum + d.idemCount, 0);
+
+  let h = `<div class="eggbox-panel">`;
+  h += `<div class="extras-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">` +
+       `<span>Green's Relations &amp; Egg-Box Diagrams (${diagrams.length} <em>D</em>-classes)</span>` +
+       `<span class="badge ${totalRegular === diagrams.length ? 'good' : 'neg'}">${totalRegular} regular / ${diagrams.length - totalRegular} non-regular</span>` +
+       `</div>`;
+
+  h += `<div class="eggbox-wrap">`;
+  h += `<div class="eggbox-summary">` +
+       `<span><strong>Semigroup decomposition:</strong> ${diagrams.length} <em>D</em>-classes, ${totalIdems} idempotents detected</span>` +
+       `<span class="eggbox-legend"><span class="eggbox-star">★</span> = idempotent (group <em>H</em>-class)</span>` +
+       `</div>`;
+
+  diagrams.forEach((d, idx) => {
+    const regBadge = d.isRegular
+      ? `<span class="badge good">Regular <em>D</em></span>`
+      : `<span class="badge neg">Non-regular <em>D</em></span>`;
+
+    h += `<div class="eggbox-card" data-dindex="${idx}">`;
+    h += `<div class="eggbox-head">` +
+         `<strong><em>D</em><sub>${idx + 1}</sub> (size ${d.size})</strong>` +
+         `<span style="display:flex; align-items:center; gap:6px;">${regBadge} <span class="eggbox-dims">${d.numR} <em>R</em> &times; ${d.numL} <em>L</em></span>` +
+         `<button type="button" class="mini-btn copy-egg-tex" data-idx="${idx}" title="Copy LaTeX tabular code for this D-class">Copy LaTeX</button>` +
+         `</span>` +
+         `</div>`;
+
+    h += `<div class="table-scroll"><table class="eggbox-table">`;
+    h += `<thead><tr><th><em>R</em> \\ <em>L</em></th>`;
+    for (let c = 0; c < d.numL; c++) {
+      const colLabel = d.colHeaders && d.colHeaders[c] ? escapeHtml(d.colHeaders[c]) : `<em>L</em><sub>${c + 1}</sub>`;
+      h += `<th>${colLabel}</th>`;
+    }
+    h += `</tr></thead><tbody>`;
+
+    d.grid.forEach((row, rowIdx) => {
+      const rowLabel = d.rowHeaders && d.rowHeaders[rowIdx] ? escapeHtml(d.rowHeaders[rowIdx]) : `<em>R</em><sub>${rowIdx + 1}</sub>`;
+      h += `<tr><th>${rowLabel}</th>`;
+      row.forEach(cell => {
+        const isGroup = cell.hasIdem;
+        const cls = isGroup ? "eggbox-cell group-cell" : "eggbox-cell";
+        let content = "&empty;";
+        if (cell.elements && cell.elements.length > 0) {
+          content = cell.elements.map(el => {
+            const isIdem = /\*|★/.test(el);
+            const clean = el.replace(/\*|★/g, "").trim();
+            if (isIdem) {
+              return `<span class="cell-idem" title="Idempotent: element satisfies e*e = e">★${escapeHtml(clean)}</span>`;
+            }
+            return `<span>${escapeHtml(clean || el)}</span>`;
+          }).join(", ");
+        }
+        h += `<td class="${cls}" title="${isGroup ? 'Group H-class (contains idempotent)' : 'H-class'}">${content}</td>`;
+      });
+      h += `</tr>`;
+    });
+
+    h += `</tbody></table></div></div>`;
+  });
+
+  h += `</div></div>`;
+  return h;
+}
+
+/** Check if GAP output contains a 2D multiplication table matrix of order 2..20. */
+export function parseGapMatrix(text) {
+  if (!text || typeof text !== "string") return null;
+  const matMatch = text.match(/\[\s*(\[\s*\d+(?:\s*,\s*\d+)*\s*\](?:\s*,\s*\[\s*\d+(?:\s*,\s*\d+)*\s*\])*)\s*\]/);
+  if (!matMatch) return null;
+  try {
+    const rawRows = matMatch[1].split(/\],\s*\[/).map(r => r.replace(/[\[\]]/g, "").split(",").map(v => parseInt(v.trim(), 10)));
+    const n = rawRows.length;
+    if (n < 2 || n > 20) return null;
+    if (!rawRows.every(r => r.length === n)) return null;
+    const flat = rawRows.flat();
+    const min = Math.min(...flat);
+    const max = Math.max(...flat);
+    let table = null;
+    if (min === 1 && max === n) {
+      table = rawRows.map(r => r.map(x => x - 1));
+    } else if (min === 0 && max === n - 1) {
+      table = rawRows;
+    } else {
+      return null;
+    }
+    return {
+      n,
+      ops: {
+        "*": {
+          arity: 2,
+          vals: table.flat()
+        }
+      }
+    };
+  } catch (e) {
+    return null;
+  }
+}

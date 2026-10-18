@@ -3,7 +3,7 @@ import { TOOLS } from "./examples.js";
 import { latexify } from "./latex.js";
 import { initScour } from "./scour.js";
 import { initLogos, renderGallery } from "./logos.js";
-import { parseMace4Models, analyseModel, modelTableHtml, eggBoxHtml, modelToGap, splitRefuteOutput } from "./mace4.js";
+import { parseMace4Models, analyseModel, modelTableHtml, eggBoxHtml, modelToGap, splitRefuteOutput, parseAsciiEggBoxes, asciiEggBoxesHtml, eggBoxToLatex, parseGapMatrix } from "./mace4.js";
 import { renderDotBlocks } from "./dot.js";
 import { buildTex, downloadText } from "./texexport.js";
 import { AXIOM_SETS, withAxioms } from "./axioms.js";
@@ -313,7 +313,11 @@ function renderExtras() {
     ex.appendChild(v);
   }
   const modelText = refute ? refute.mace : lastOutput;
-  const models = /interpretation\(/.test(modelText) ? parseMace4Models(modelText) : [];
+  let models = /interpretation\(/.test(modelText) ? parseMace4Models(modelText) : [];
+  if (models.length === 0 && (lastTool === "gap" || !lastTool)) {
+    const gapMat = parseGapMatrix(modelText);
+    if (gapMat) models = [gapMat];
+  }
   models.slice(0, 5).forEach((m, idx) => {
     const info = analyseModel(m);
     if (!info) return;
@@ -366,6 +370,22 @@ function renderExtras() {
     ex.appendChild(card);
   });
   if (models.length > 5) ex.insertAdjacentHTML("beforeend", `<div class="dot-status" style="margin:0 14px 10px">Showing the first 5 of ${models.length} models.</div>`);
+
+  // Detect and render ASCII / text Egg-Box diagrams (e.g. from GAP scripts or Semigroups package)
+  const asciiDiagrams = parseAsciiEggBoxes(lastOutput);
+  if (asciiDiagrams.length > 0) {
+    const eggWrap = document.createElement("div");
+    eggWrap.innerHTML = asciiEggBoxesHtml(asciiDiagrams);
+    eggWrap.querySelectorAll(".copy-egg-tex").forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.getAttribute("data-idx"), 10);
+        const d = asciiDiagrams[idx];
+        if (d) copyText(eggBoxToLatex(d), btn);
+      };
+    });
+    ex.appendChild(eggWrap);
+  }
+
   renderDotBlocks(lastOutput, ex);
 }
 
